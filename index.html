@@ -75,6 +75,13 @@ canvas{display:block;cursor:pointer}
 .mobile-team{display:flex;gap:8px}
 .mobile-team .ibtn{flex:1;padding:10px;font-size:12.5px}
 
+.goals-m{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.goals{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.goals li{display:grid;grid-template-columns:18px 1fr;gap:8px;align-items:start;color:var(--ink)}
+.goals .box{width:16px;height:16px;border:1px solid var(--muted);border-radius:4px;display:grid;place-items:center;font:600 11px var(--f-mono);margin-top:2px}
+.goals li.done{color:var(--muted)}
+.goals li.done .box{background:var(--good);border-color:var(--good);color:#0D1217}
+.goals li.done span:last-child{text-decoration:line-through}
 .side{display:none}
 .side .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
 
@@ -151,7 +158,7 @@ canvas{display:block;cursor:pointer}
 @media (min-width:960px){
   .stage{grid-template-columns:minmax(0,1fr) 300px}
   .side{display:flex;flex-direction:column;gap:12px;position:sticky;top:10px}
-  .mobile-team{display:none}
+  .mobile-team,.goals-m{display:none}
   .scrim{align-items:center}
   .sheet{border-radius:18px;border-bottom:1px solid var(--line)}
 }
@@ -169,6 +176,7 @@ canvas{display:block;cursor:pointer}
       <div class="hud" id="hud"></div>
       <div class="canvas-wrap"><canvas id="cv"></canvas><div class="toast" id="toast"></div></div>
       <p class="hint" id="hint"></p>
+      <div class="goals-m" id="goalsM"></div>
       <div class="mobile-team"><button class="ibtn" data-ui="team" id="mteam"></button><button class="ibtn" data-ui="log" id="mlog"></button></div>
     </section>
     <aside class="side" id="side"></aside>
@@ -193,10 +201,11 @@ const UI={
   basis:L('Paremta Patricko Lencioni komandos disfunkcijų modeliu. Prototipas.','Based on Patrick Lencioni’s model of team dysfunctions. Prototype.'),
   howH:L('Kaip žaisti','How to play'),
   how:[L('Paspausk ant grindų, ir tavo personažas ten nueis.','Tap the floor and your character walks there.'),
-       L('Paspausk ant žmogaus, kad pasikalbėtum. Pokalbis užima pusvalandį.','Tap a person to talk. A conversation takes half an hour.'),
+       L('Paspausk ant žmogaus, kad pasikalbėtum. Pokalbis užima 20 min.','Tap a person to talk. A conversation takes 20 minutes.'),
        L('Stresą matai virš galvų: debesėlis reiškia, kad žmogui sunku. Pasiekęs 100 jis lūžta.','Stress shows above heads: a cloud means someone is struggling. At 100 they break.'),
        L('Šauktukas reiškia, kad kažkas laukia tavęs. Jei nespėsi, bus pasekmių.','An exclamation mark means someone is waiting for you. If you don’t get there, there are consequences.'),
-       L('Paspausk ant susitikimų kambario, kad sušauktum susirinkimą, o ant savo stalo – kad dirbtum ar atsiskaitytum vadovybei.','Tap the meeting room to call a meeting, or your desk to work or report to leadership.')],
+       L('Paspausk ant susitikimų kambario, kad sušauktum susirinkimą, o ant savo stalo – kad dirbtum ar atsiskaitytum vadovybei.','Tap the meeting room to call a meeting, or your desk to work or report to leadership.'),
+       L('Diena trunka apie 10 minučių. Progresas išsaugomas automatiškai: gali uždaryti ir vėliau tęsti.','A day lasts about 10 minutes. Progress saves automatically: close the game and continue later.')],
   go:L('Pradėti pirmadienį','Start Monday'),
   talkDone:L('Šiandien jau kalbėjotės. Rytoj vėl galėsi.','You already talked today. Try again tomorrow.'),
   listen:L('Paklausti ir klausytis: „Kas tau dabar svarbiausia?“','Ask and listen: “What matters most to you right now?”'),
@@ -207,7 +216,7 @@ const UI={
   min:L('min','min'),h:L('val.','h'),
   stress:L('Stresas','Stress'),trust:L('Pasitikėjimas','Trust'),motive:L('Motyvacija','Motivation'),
   allTeam:L('Visa komanda','Whole team'),
-  meetH:L('Komandos susirinkimas','Team meeting'),meetAsk:L('Sušaukti visus į susitikimų kambarį? Užtruks valandą.','Call everyone to the meeting room? It takes an hour.'),
+  meetH:L('Komandos susirinkimas','Team meeting'),meetAsk:L('Sušaukti visus į susitikimų kambarį? Užtruks 45 min.','Call everyone to the meeting room? It takes 45 min.'),
   meetCall:L('Sušaukti','Call the meeting'),meetDone:L('Šiandien susirinkimas jau buvo.','You already held a meeting today.'),
   meetPick:L('Pasirink du ėjimus. Liko: ','Choose two moves. Left: '),
   harmonyLow:L('Visi linksi. Niekas neprieštarauja. Per tylu.','Everyone nods. Nobody disagrees. It’s too quiet.'),
@@ -238,11 +247,11 @@ const UI={
 };
 
 const PEOPLE={
-  tomas:{n:L('Tomas','Tom'),base:30,stress:35,trust:45,seat:[2,8],shirt:'#3A6EA5',skin:'#E8B896',hair:'#3B2A20',role:{sales:L('Geriausias pardavėjas','Top seller'),project:L('Vyresnysis inžinierius','Senior engineer')}},
-  lina:{n:L('Lina','Lena'),f:true,base:22,stress:30,trust:40,seat:[6,8],shirt:'#A0527E',skin:'#F1CDB0',hair:'#7A3B22',long:true,role:{sales:L('Analitikė, rengia pasiūlymus','Analyst, builds proposals'),project:L('Analitikė','Analyst')}},
-  darius:{n:L('Darius','Dan'),base:20,stress:45,trust:30,seat:[10,8],shirt:'#6E7F3C',skin:'#C98E66',hair:'#8C8C8C',role:{sales:L('Veteranas, didieji klientai','Veteran, key accounts'),project:L('Veteranas, palaikymas','Veteran, support')}},
-  egle:{n:L('Eglė','Emma'),f:true,base:14,stress:40,trust:45,seat:[2,11],shirt:'#D48A3A',skin:'#F3D3B8',hair:'#D9B25F',long:true,role:{sales:L('Naujokė','Newcomer'),project:L('Naujokė, testuotoja','Newcomer, QA')}},
-  marius:{n:L('Marius','Mark'),base:18,stress:25,trust:50,seat:[6,11],shirt:'#3E8C86',skin:'#DDA47E',hair:'#1E1B1A',role:{sales:L('Pardavimų vadybininkas','Account manager'),project:L('Programuotojas','Developer')}}
+  tomas:{n:L('Tomas','Tom'),gen:L('Tomo','Tom’s'),acc:'Tomą',base:30,stress:35,trust:45,seat:[2,8],shirt:'#3A6EA5',skin:'#E8B896',hair:'#3B2A20',role:{sales:L('Geriausias pardavėjas','Top seller'),project:L('Vyresnysis inžinierius','Senior engineer')}},
+  lina:{n:L('Lina','Lena'),gen:L('Linos','Lena’s'),acc:'Liną',f:true,base:22,stress:30,trust:40,seat:[6,8],shirt:'#A0527E',skin:'#F1CDB0',hair:'#7A3B22',long:true,role:{sales:L('Analitikė, rengia pasiūlymus','Analyst, builds proposals'),project:L('Analitikė','Analyst')}},
+  darius:{n:L('Darius','Dan'),gen:L('Dariaus','Dan’s'),acc:'Darių',base:20,stress:45,trust:30,seat:[10,8],shirt:'#6E7F3C',skin:'#C98E66',hair:'#8C8C8C',role:{sales:L('Veteranas, didieji klientai','Veteran, key accounts'),project:L('Veteranas, palaikymas','Veteran, support')}},
+  egle:{n:L('Eglė','Emma'),gen:L('Eglės','Emma’s'),acc:'Eglę',f:true,base:14,stress:40,trust:45,seat:[2,11],shirt:'#D48A3A',skin:'#F3D3B8',hair:'#D9B25F',long:true,role:{sales:L('Naujokė','Newcomer'),project:L('Naujokė, testuotoja','Newcomer, QA')}},
+  marius:{n:L('Marius','Mark'),gen:L('Mariaus','Mark’s'),acc:'Marių',base:18,stress:25,trust:50,seat:[6,11],shirt:'#3E8C86',skin:'#DDA47E',hair:'#1E1B1A',role:{sales:L('Pardavimų vadybininkas','Account manager'),project:L('Programuotojas','Developer')}}
 };
 const IDS=Object.keys(PEOPLE);
 
@@ -377,6 +386,116 @@ const CONS={
     fx:g=>{extra(-12);dB(-5);return L('Tylus sutikimas nėra įsipareigojimas. Kai žmonės neišsako abejonių, sprendimas neprigyja.','Silent agreement isn’t commitment. When people don’t voice doubts, the decision doesn’t stick.')}}
 };
 
+/* ================= micro-events & daily goals ================= */
+const NM=a=>PEOPLE[a].n,GEN=a=>PEOPLE[a].gen;
+const ok=i=>act(i)&&RT.chars[i]&&RT.chars[i].state!=='leaving';
+const pickOne=a=>a.length?rnd(a):null;
+const MICRO={
+  star:{icon:'star',pick:()=>pickOne(IDS.filter(i=>ok(i)&&G.people[i].stress<70&&!G.people[i].trait)),title:L('Puikus darbas','Great work'),
+    text:a=>L(`${NM(a).lt} ką tik užbaigė sudėtingą užduotį anksčiau termino ir patenkintas atsilošė kėdėje.`,`${NM(a).en} just finished a tough task ahead of schedule and is leaning back, pleased.`),
+    opts:[
+      {n:L('Pagirti prie visų už konkretų darbą','Praise the specific work in front of everyone'),fx:a=>{RT.cnt.praise++;if(G.people[a].mot==='recognition'){if(!G.people[a].known)RT.cnt.reveal++;G.people[a].known=true;dT(a,10);dS(a,-8);return L('Pataikei: pripažinimas šiam žmogui svarbiausias. Matei, kaip jis nušvito?','Spot on: recognition matters most to this person. Did you see them light up?')}dT(a,4);return L('Pagyrimas veikia, kai jis konkretus ir laiku. Vieniems jis labai svarbus, kitiems mažiau.','Praise works when it’s specific and timely. It matters a lot to some people, less to others.')}},
+      {n:L('Padėkoti asmeniškai','Thank them privately'),fx:a=>{RT.cnt.praise++;dT(a,5);dS(a,-4);return L('Asmeninė padėka saugi ir nuoširdi. Kai kuriems ji vertingesnė nei vieša.','A private thank-you is safe and sincere. For some it’s worth more than public praise.')}},
+      {n:L('Iškart duoti kitą užduotį','Hand over the next task right away'),fx:a=>{dS(a,8);dT(a,-4);extra(4);return L('Rezultatas auga, bet žmogus išmoko: geras darbas čia atneša tik daugiau darbo.','Output goes up, but the lesson learned is: good work here just earns more work.')}}],
+    miss:a=>{dT(a,-3);return L(`${GEN(a).lt} geras darbas liko nepastebėtas`,`${NM(a).en}’s good work went unnoticed`)}},
+  q:{icon:'q',pick:()=>ok('egle')&&Math.random()<0.6?'egle':pickOne(IDS.filter(ok).sort((a,b)=>G.people[a].trust-G.people[b].trust).slice(0,2)),title:L('Klausimas','A question'),
+    text:a=>L(`${NM(a).lt}: „Nežinau, kaip tai padaryti. Gal gali parodyti?“`,`${NM(a).en}: “I’m not sure how to do this. Could you show me?”`),
+    opts:[
+      {n:L('Atsisėsti šalia ir padaryti kartu','Sit down and do it together'),cost:30,fx:a=>{dS(a,-8);dT(a,4);return L('Žmogus išmoko ir jaučiasi palaikomas. Bet tai kainavo tavo pusvalandį.','They learned and feel supported. But it cost you half an hour.')}},
+      {n:L('Paklausti: „O kaip manai tu?“','Ask: “What do you think?”'),fx:a=>{if(G.people[a].trust>=40){dS(a,-4);dT(a,5);dC('accountability',2);return L('Tu nedavei atsakymo, o padėjai jį rasti. Kitą kartą jis bandys pats.','You didn’t give the answer, you helped them find it. Next time they’ll try on their own.')}
+        dS(a,5);return L('Kai pasitikėjimas žemas, toks klausimas atrodo kaip egzaminas. Žmogus pasijuto dar labiau pasimetęs.','When trust is low, that question feels like a test. They feel even more lost.')}},
+      {n:a=>{const h=a!=='tomas'&&ok('tomas')?'tomas':'marius';return L(`Paprašyti ${GEN(h).lt} padėti`,`Ask ${NM(h).en} to help`)},fx:a=>{const h=a!=='tomas'&&ok('tomas')?'tomas':'marius';dS(a,-5);dS(h,4);dC('accountability',3);return L('Komanda mokosi padėti vieni kitiems, o ne viską nešti tau.','The team learns to help each other instead of bringing everything to you.')}}],
+    miss:a=>{dS(a,8);return L(`${NM(a).lt} liko įstrigęs su klausimu`,`${NM(a).en} stayed stuck with their question`)}},
+  papers:{icon:'papers',pick:()=>{const c=IDS.filter(i=>ok(i)&&G.people[i].stress>=55).sort((a,b)=>G.people[b].stress-G.people[a].stress);return c[0]||null},title:L('Per daug darbų','Too much on the plate'),
+    text:a=>L(`${NM(a).lt}: „Turiu tris skubius darbus vienu metu. Nespėsiu.“`,`${NM(a).en}: “I’ve got three urgent things at once. I won’t make it.”`),
+    opts:[
+      {n:L('Kartu nuspręsti, kas svarbiausia','Decide together what matters most'),fx:a=>{dS(a,-12);dT(a,5);return L('Aiškūs prioritetai sumažina stresą labiau nei papildomos valandos.','Clear priorities reduce stress more than extra hours do.')}},
+      {n:L('Perskirstyti dalį darbų kitiems','Hand some of the work to others'),fx:a=>{dS(a,-15);IDS.filter(i=>i!==a&&ok(i)).slice(0,2).forEach(i=>dS(i,5));dC('commitment',2);return L('Krūvis pasiskirstė, bet kitiems padaugėjo. Verta paaiškinti, kodėl.','The load is shared, but the others got more. Worth explaining why.')}},
+      {n:L('„Susitvarkysi, tu stiprus“','“You’ll manage, you’re strong”'),fx:a=>{dS(a,10);dT(a,-6);return L('Padrąsinimas be pagalbos skamba kaip „tai tavo problema“.','Encouragement without help sounds like “that’s your problem”.')}}],
+    miss:a=>{dS(a,10);return L(`${NM(a).lt} skendo darbuose be pagalbos`,`${NM(a).en} drowned in work without help`)}},
+  late:{icon:'clock',pick:()=>pickOne(IDS.filter(i=>ok(i)&&i!=='tomas')),title:L('Vėlavimas','Running late'),
+    text:a=>L(`${NM(a).lt} šią savaitę jau trečią kartą vėluoja. Kiti tai mato.`,`${NM(a).en} is late for the third time this week. Everyone notices.`),
+    opts:[
+      {n:L('Privačiai paklausti: „Kas vyksta?“','Ask privately: “What’s going on?”'),fx:a=>{dT(a,5);dC('accountability',4);if(G.people[a].mot==='stability'){if(!G.people[a].known)RT.cnt.reveal++;G.people[a].known=true}
+        return L('Paaiškėjo, kad namuose sunkus laikotarpis. Klausdamas „kas vyksta“, o ne „kodėl vėluoji“, išgirsti tiesą.','Turns out things are hard at home. Ask “what’s going on” rather than “why are you late”, and you hear the truth.')}},
+      {n:L('Pajuokauti apie tai prie visų','Make a joke about it in front of everyone'),fx:a=>{dS(a,6);dT(a,-8);return L('Kiti nusijuokė, bet žmogus pasijuto pažemintas. Atskaitomybė ir gėda nėra tas pats.','The others laughed, but they felt humiliated. Accountability and shame are not the same thing.')}},
+      {n:L('Nieko nesakyti','Say nothing'),cost:5,fx:a=>{dC('accountability',-5);allT(-1);return L('Kiti mato, kad taisyklės galioja ne visiems. Atskaitomybė tirpsta tyliai.','The others see the rules don’t apply to everyone. Accountability melts away quietly.')}}],
+    miss:a=>{dC('accountability',-5);return L(`${GEN(a).lt} vėlavimas liko be dėmesio`,`${NM(a).en}’s lateness went unaddressed`)}},
+  credit:{icon:'!',once:true,pick:()=>!G.flags.m_credit&&ok('tomas')&&ok('lina')?'tomas':null,title:L('Svetima idėja','Someone else’s idea'),
+    text:a=>L('Tomas komandos pokalbyje pristatė Linos idėją kaip savo. Lina tyli.','In the team chat, Tom presented Lena’s idea as his own. Lena says nothing.'),
+    opts:[
+      {n:L('Viešai paminėti, kad idėja Linos','Say publicly that it was Lena’s idea'),fx:a=>{dT('lina',8);dT('tomas',-4);dC('results',4);return L('Teisingumas viešai stiprina visą komandą. Tomas nepatenkintas, bet supranta ribas.','Fairness in public strengthens the whole team. Tom isn’t happy, but he knows the line.')}},
+      {n:L('Pasikalbėti su Tomu privačiai','Talk to Tom privately'),fx:a=>{dT('lina',2);dC('accountability',4);return L('Tomas suprato, bet Lina nežino, kad ją užstojai.','Tom got the message, but Lena doesn’t know you stood up for her.')}},
+      {n:L('Nieko nedaryti','Do nothing'),cost:5,fx:a=>{dT('lina',-8);dC('results',-4);return L('Lina išmoko, kad idėjų čia geriau garsiai nesakyti.','Lena learned it’s better not to share ideas out loud here.')}}],
+    miss:a=>{dT('lina',-8);dC('results',-4);return L('Tomas pasisavino Linos idėją, ir niekas nieko nepasakė','Tom took credit for Lena’s idea, and nobody said a word')}},
+  dayoff:{icon:'q',pick:()=>pickOne(IDS.filter(ok)),title:L('Prašymas','A request'),
+    text:a=>L(`${NM(a).lt}: „Ar galėčiau išeiti po pietų? Vaikas susirgo.“`,`${NM(a).en}: “Could I leave after lunch? My kid is sick.”`),
+    opts:[
+      {n:L('Leisti be klausimų','Say yes, no questions'),cost:5,fx:a=>{dT(a,10);dS(a,-10);extra(-6);return L('Pasitikėjimas kaupiasi tokiomis akimirkomis. Žmonės prisimena, kaip elgeisi, kai jiems buvo sunku.','Trust is built in moments like this. People remember how you acted when things were hard.')}},
+      {n:L('Leisti, bet paprašyti perduoti skubius darbus','Say yes, but ask them to hand over urgent work'),fx:a=>{dT(a,6);dS(a,-6);extra(-3);dC('commitment',2);return L('Rūpestis ir atsakomybė kartu: darbas nesustojo, žmogus jaučiasi išgirstas.','Care and responsibility together: work didn’t stop, and they feel heard.')}},
+      {n:L('Atsisakyti: terminas','Say no: there’s a deadline'),cost:5,fx:a=>{dS(a,12);dT(a,-12);return L('Terminas išsaugotas, bet žmogus dirbs galvodamas apie namus. Ir prisimins.','The deadline is safe, but they’ll work with their mind at home. And they’ll remember.')}}],
+    miss:a=>{dT(a,-6);dS(a,6);return L(`${NM(a).lt} prašė laisvos popietės, bet atsakymo nesulaukė`,`${NM(a).en} asked for the afternoon off and got no answer`)}},
+  gossip:{icon:'dots',pick:()=>{const t=IDS.filter(i=>ok(i)&&G.people[i].trait&&G.people[i].trait!=='resolute');return t[0]||pickOne(IDS.filter(ok))},title:L('Apkalbos','Gossip'),
+    text:a=>L(`Virtuvėje ${NM(a).lt} skundžiasi kolegomis, kai jų nėra šalia.`,`In the kitchen, ${NM(a).en} is complaining about colleagues behind their backs.`),
+    opts:[
+      {n:L('Pasakyti: „Apie tai verta kalbėti tiesiai jiems“','Say: “That’s worth saying to them directly”'),fx:a=>{dC('conflict',5);dT(a,-2);allT(2);return L('Tu nustatei normą: nesutarimai sprendžiami atvirai. Nemalonu, bet sveika.','You set a norm: disagreements are handled openly. Uncomfortable, but healthy.')}},
+      {n:L('Paklausti, kas iš tikrųjų erzina','Ask what’s really bothering them'),fx:a=>{dT(a,5);dS(a,-6);return L('Po skundu dažnai slypi nuovargis ar neišspręsta problema. Dabar ją žinai.','Behind a complaint there’s often fatigue or an unsolved problem. Now you know what it is.')}},
+      {n:L('Apsimesti, kad negirdėjai','Pretend you didn’t hear'),cost:5,fx:a=>{allT(-2);dC('conflict',-3);return L('Apkalbos tęsiasi. Komanda mato, kad vadovas tai toleruoja.','The gossip goes on. The team sees their manager tolerates it.')}}],
+    miss:a=>{allT(-2);dC('conflict',-3);return L('Apkalbos virtuvėje liko be atsako','Kitchen gossip went unanswered')}},
+  idea:{icon:'bulb',pick:()=>pickOne(IDS.filter(i=>ok(i)&&G.people[i].trust>=35)),title:L('Nedrąsi idėja','A shy idea'),
+    text:a=>L(`${NM(a).lt} pusbalsiu užsimena, kad žino, kaip pagreitinti darbą, bet „turbūt nieko čia nepakeisi“.`,`${NM(a).en} mentions under their breath that they know how to speed things up, but “nothing ever changes here anyway”.`),
+    opts:[
+      {n:L('Pakviesti išbandyti idėją šią savaitę','Invite them to try the idea this week'),fx:a=>{dT(a,6);extra(6);const m=G.people[a].mot;if(m==='autonomy'||m==='growth'){dS(a,-6);if(!G.people[a].known)RT.cnt.reveal++;G.people[a].known=true}return L('Žmonės, kurių idėjos išbandomos, jaučiasi atsakingi už rezultatą.','People whose ideas get tried feel responsible for the result.')}},
+      {n:L('Paprašyti pristatyti idėją visai komandai','Ask them to present it to the whole team'),fx:a=>{dT(a,3);dC('conflict',4);dS(a,4);return L('Idėją išgirs visi, bet tyliam žmogui tai nemenkas iššūkis.','Everyone will hear the idea, but for a quiet person that’s a real challenge.')}},
+      {n:L('„Dabar ne laikas“','“Now’s not the time”'),cost:5,fx:a=>{dT(a,-6);return L('Kitą kartą idėjos nebus. Ne todėl, kad jų nėra, o todėl, kad neverta sakyti.','Next time there won’t be an idea. Not because there aren’t any, but because it isn’t worth saying.')}}],
+    miss:a=>{dT(a,-4);return L(`${GEN(a).lt} idėja liko neišgirsta`,`${NM(a).en}’s idea went unheard`)}}
+};
+function spawnMicro(){
+  for(const k of shuffle(Object.keys(MICRO)).filter(k=>(RT.usedMicro[k]||0)<2)){
+    const M=MICRO[k],a=M.pick();
+    if(!a||!RT.chars[a]||RT.markers.some(m=>m.who===a||m.also===a)||['meeting','visit','fight','leaving','wait'].includes(RT.chars[a].state))continue;
+    RT.usedMicro[k]=(RT.usedMicro[k]||0)+1;if(M.once)G.flags['m_'+k]=1;
+    addMarker({kind:'npc',who:a,micro:k,icon:M.icon,until:RT.time+55,miss:'micro'});
+    toast(`<b>${esc(pn(a))}</b> · ${t(M.title)}`);return;
+  }
+}
+const optN=(o,a)=>typeof o.n==='function'?o.n(a):o.n;
+function openMicro(m){
+  const M=MICRO[m.micro],a=m.who,st={res:null};
+  openSheet({cost:0,render:()=>`${personHead(a)}<h2>${t(M.title)}</h2><p class="lead">${t(M.text(a))}</p>
+    ${st.res?`<p class="quote">${t(optN(M.opts[st.res.i],a))}</p>${fxH(st.res.fx)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`
+      :`<div class="opts">${M.opts.map((o,k)=>`<button class="opt" data-mi="${k}"><span>${t(optN(o,a))}</span><span class="cost">${o.cost||20} ${u('min')}</span></button>`).join('')}</div>`}`,
+    mi:k=>{FX=[];const ins=M.opts[k].fx(a);st.res={i:k,fx:FX,ins};FX=null;SH.cost=M.opts[k].cost||20;renderSheet()},
+    after:()=>sendBack(a)});
+}
+
+const GOALS={
+  talk3:{n:L('Pasikalbėk su 3 žmonėmis','Talk to 3 people'),ok:()=>RT.cnt.talks>=3,prog:()=>` (${Math.min(3,RT.cnt.talks)}/3)`},
+  reveal:{n:L('Sužinok, kas motyvuoja bent vieną žmogų','Find out what drives at least one person'),ok:()=>RT.cnt.reveal>=1},
+  noMiss:{n:L('Nepraleisk nė vieno įvykio','Don’t miss a single event'),ok:()=>RT.cnt.miss===0,end:true},
+  calm:{n:L('Dienos pabaigoje niekieno stresas neviršija 80','End the day with nobody above 80 stress'),ok:()=>IDS.filter(act).every(i=>G.people[i].stress<=80),end:true},
+  praise:{n:L('Laiku pripažink kieno nors darbą','Recognise someone’s work at the right moment'),ok:()=>RT.cnt.praise>=1},
+  meet:{n:L('Surenk komandos susirinkimą','Hold a team meeting'),ok:()=>RT.meetToday}
+};
+function pickGoals(){
+  if(G.day===0)return ['talk3','reveal','noMiss'];
+  const end=rnd(['noMiss','calm']);return [end,...shuffle(Object.keys(GOALS).filter(k=>!GOALS[k].end)).slice(0,2)];
+}
+function goalsH(){
+  if(!RT||!RT.goals)return '';
+  return `<p class="eyebrow">${t(L('Šios dienos tikslai','Today’s goals'))}</p><ul class="goals">${RT.goals.map(k=>{const g=GOALS[k],d=g.ok();
+    return `<li class="${d?(g.end?'pend':'done'):''}"><span class="box">${d?(g.end?'·':'✓'):''}</span><span>${t(g.n)}${g.prog?g.prog():''}</span></li>`}).join('')}</ul>`;
+}
+function idleHint(){
+  const c=IDS.filter(i=>ok(i)&&!RT.talked[i]&&RT.chars[i].state==='work').sort((a,b)=>G.people[b].stress-G.people[a].stress);
+  const top=c[0];
+  if(top&&G.people[top].stress>=50){RT.suggest=top;toast(`<b>${t(L('Patarimas','Tip'))}:</b> ${t(L(`${GEN(top).lt} stresas jau ${Math.round(G.people[top].stress)}. Gal verta pasikalbėti?`,`${NM(top).en}’s stress is at ${Math.round(G.people[top].stress)}. Maybe have a word?`))}`,true);return}
+  const unk=c.find(i=>!G.people[i].known);
+  if(unk){RT.suggest=unk;toast(`<b>${t(L('Patarimas','Tip'))}:</b> ${t(L(`Dar nežinai, kas motyvuoja ${PEOPLE[unk].acc}. Paspausk ir paklausk.`,`You don’t know yet what drives ${NM(unk).en}. Tap and ask.`))}`,true);return}
+  if(!RT.meetToday){toast(`<b>${t(L('Patarimas','Tip'))}:</b> ${t(L('Šiandien dar nebuvo susirinkimo. Paspausk susitikimų kambarį.','No meeting yet today. Tap the meeting room.'))}`,true);return}
+  toast(`<b>${t(L('Patarimas','Tip'))}:</b> ${t(L('Ramu. Gali atsiskaityti vadovybei prie savo stalo arba paspartinti laiką ×2.','All quiet. Report to leadership at your desk, or speed up time ×2.'))}`,true);
+}
+
 const ENDINGS={
   fired:{t:L('Tave atleido','You were let go'),d:L('Vadovybė prarado kantrybę. Rezultatai ir santykiai su vadovybe yra tavo darbo dalis.','Leadership ran out of patience. Results and your relationship with leadership are part of the job.')},
   collapse:{t:L('Komanda subyrėjo','The team fell apart'),d:L('Trys žmonės išėjo. Stresas, kurio laiku nepastebėjai, virto išėjimais.','Three people left. Stress you didn’t catch in time turned into resignations.')},
@@ -459,11 +578,12 @@ function newGame(type){
 }
 
 /* ================= runtime world ================= */
-const SPEEDS=[4,10];
+const SPEEDS=[0.9,1.8,3.6];
 function startDay(){
-  S.G=JSON.parse(JSON.stringify(G));save();
+  S.G=JSON.parse(JSON.stringify(G));S.RT=null;save();
   RT={time:9*60,paused:false,speed:RT?RT.speed:0,chars:{},player:{x:SPOT.start[0],y:SPOT.start[1],path:[],pending:null,face:1},
-      markers:[],talked:{},meetToday:false,fired:{},toasts:[],dayIns:[],meeting:null,visitCheck:0,mentorShown:G.mentorShown||{}};
+      markers:[],talked:{},meetToday:false,fired:{},toasts:[],dayIns:[],meeting:null,visitCheck:0,mentorShown:G.mentorShown||{},microT:15,cnt:{talks:0,reveal:0,miss:0,praise:0},usedMicro:{},idle:0,suggest:null,goals:null};
+  RT.goals=pickGoals();
   G.dayOut=0;G.sick=null;
   IDS.forEach(id=>{if(G.people[id].quit)return;const [x,y]=PEOPLE[id].seat;RT.chars[id]={id,x,y,path:[],state:'work',timer:30+Math.random()*90,next:null,say:null,sayT:0,phase:Math.random()*6}});
   // consequences due today
@@ -471,8 +591,9 @@ function startDay(){
   dueToday.forEach(d=>{FX=[];const ins=CONS[d.id].fx(G);const fx=FX;FX=null;logE('bad',CONS[d.id].title);
     RT.queue=(RT.queue||[]).concat([{kind:'cons',id:d.id,from:d.from,fx,ins}])});
   if(G.sick&&RT.chars[G.sick])delete RT.chars[G.sick];
-  if(RT.queue&&RT.queue.length)setTimeout(()=>openCons(RT.queue.shift()),600);
+  setTimeout(nextCons,600);
 }
+function nextCons(){if(!RT||SH||!RT.queue||!RT.queue.length||!over.hidden)return;openCons(RT.queue.shift())}
 function charAt(id){return id==='player'?RT.player:RT.chars[id]}
 function findPath(sx,sy,tx,ty){
   sx=Math.round(sx);sy=Math.round(sy);
@@ -490,15 +611,23 @@ function mentor(key,msg){if(RT.mentorShown[key])return;RT.mentorShown[key]=1;G.m
 
 /* ---- scheduled events ---- */
 const SCHED=[
-  {d:0,t:9*60+40,run:()=>addMarker({kind:'phone',ev:0,x:3,y:1,until:RT.time+120,miss:()=>{FX=null;dB(-10);G.stats.missed++;logE('bad',L('Neatsiliepei vadovybei','Didn’t answer leadership’s call'));toast(t(L('Vadovybė neprisiskambino. Pasitikėjimas krito.','Leadership couldn’t reach you. Confidence dropped.')))}})},
-  {d:1,t:11*60,run:()=>{spawnClient();addMarker({kind:'npc',who:'client',ev:1,until:RT.time+100,miss:()=>{dB(-10);if(act('egle'))G.people.egle.stress=clamp(G.people.egle.stress+10,0,100);G.stats.missed++;logE('bad',L('Piktas klientas išėjo neišklausytas','The angry client left without being heard'));toast(t(L('Klientas išėjo piktas. Vadovybė jau žino.','The client left angry. Leadership already knows.')));leaveClient()}})}},
-  {d:2,t:14*60,run:()=>{if(!act('lina'))return;const c=RT.chars.lina;if(!c)return;c.state='visit';c.timer=90;walkTo(c,...SPOT.door);
-     addMarker({kind:'npc',who:'lina',ev:2,until:RT.time+90,miss:()=>{due('bigDealFail',4);dT('lina',-8);G.stats.missed++;logE('bad',L('Lina bandė tave įspėti, bet neradai laiko','Lena tried to warn you, but you had no time'));toast(t(L('Lina nusivylusi grįžo prie stalo.','Lena went back to her desk, disappointed.')));sendBack('lina')}})}},
+  {d:0,t:9*60+40,run:()=>addMarker({kind:'phone',ev:0,x:3,y:1,until:RT.time+120,miss:'ev0'})},
+  {d:1,t:11*60,run:()=>{spawnClient();addMarker({kind:'npc',who:'client',ev:1,until:RT.time+100,miss:'ev1'})}},
+  {d:2,t:14*60,run:()=>{if(!act('lina'))return;const c=RT.chars.lina;if(!c)return;c.state='visit';c.timer=90;walkTo(c,...SPOT.door);addMarker({kind:'npc',who:'lina',ev:2,until:RT.time+90,miss:'ev2'})}},
   {d:3,t:10*60+30,run:()=>{const pair=['tomas','darius'].every(act)?['tomas','darius']:IDS.filter(act).slice(0,2);if(pair.length<2)return;G.fight=pair;
      pair.forEach((id,i)=>{const c=RT.chars[id];if(!c)return;c.state='fight';c.timer=120;walkTo(c,...SPOT.kitchen[i+1])});
-     addMarker({kind:'npc',who:pair[0],also:pair[1],ev:3,until:RT.time+80,miss:()=>{pair.forEach(id=>dS(id,10));allS(3);dC('conflict',-4);G.stats.missed++;logE('bad',L('Ginčas virtuvėje liko neišspręstas','The kitchen argument was left unresolved'));toast(t(L('Ginčas baigėsi savaime. Įtampa liko.','The argument fizzled out. The tension stayed.')));pair.forEach(sendBack)}})}},
-  {d:4,t:15*60,run:()=>addMarker({kind:'phone',ev:4,x:3,y:1,until:RT.time+120,miss:()=>{dB(-8);G.stats.missed++;logE('bad',L('Neatsiliepei vadovybei','Didn’t answer leadership’s call'));toast(t(L('Vadovybė premijas paskirstė pati. Komanda nusivylusi.','Leadership split the bonus without you. The team is disappointed.')));allT(-3)}})}
+     addMarker({kind:'npc',who:pair[0],also:pair[1],ev:3,until:RT.time+80,miss:'ev3'})}},
+  {d:4,t:15*60,run:()=>addMarker({kind:'phone',ev:4,x:3,y:1,until:RT.time+120,miss:'ev4'})}
 ];
+const MISS={
+  ev0:()=>{dB(-10);G.stats.missed++;logE('bad',L('Neatsiliepei vadovybei','Didn’t answer leadership’s call'));toast(t(L('Vadovybė neprisiskambino. Pasitikėjimas krito.','Leadership couldn’t reach you. Confidence dropped.')))},
+  ev1:()=>{dB(-10);if(act('egle'))G.people.egle.stress=clamp(G.people.egle.stress+10,0,100);G.stats.missed++;logE('bad',L('Piktas klientas išėjo neišklausytas','The angry client left without being heard'));toast(t(L('Klientas išėjo piktas. Vadovybė jau žino.','The client left angry. Leadership already knows.')));leaveClient()},
+  ev2:()=>{due('bigDealFail',4);dT('lina',-8);G.stats.missed++;logE('bad',L('Lina bandė tave įspėti, bet neradai laiko','Lena tried to warn you, but you had no time'));toast(t(L('Lina nusivylusi grįžo prie stalo.','Lena went back to her desk, disappointed.')));sendBack('lina')},
+  ev3:()=>{const pair=G.fight||[];pair.forEach(id=>dS(id,10));allS(3);dC('conflict',-4);G.stats.missed++;logE('bad',L('Ginčas virtuvėje liko neišspręstas','The kitchen argument was left unresolved'));toast(t(L('Ginčas baigėsi savaime. Įtampa liko.','The argument fizzled out. The tension stayed.')));pair.forEach(sendBack)},
+  ev4:()=>{dB(-8);G.stats.missed++;logE('bad',L('Neatsiliepei vadovybei','Didn’t answer leadership’s call'));toast(t(L('Vadovybė premijas paskirstė pati. Komanda nusivylusi.','Leadership split the bonus without you. The team is disappointed.')));allT(-3)},
+  visit:m=>{const id=m.who;dS(id,6);dT(id,-6);G.stats.missed++;logE('bad',NL(id,' ieškojo tavęs, bet nesulaukė',' looked for you but you never came'));toast(`<b>${esc(pn(id))}</b> ${t(L('nesulaukė tavęs ir grįžo prie stalo.','gave up waiting and went back.'))}`);sendBack(id)},
+  micro:m=>{FX=null;const lg=MICRO[m.micro].miss(m.who);logE('bad',lg);toast(t(lg))}
+};
 function addMarker(m){m.id=Math.random().toString(36).slice(2);RT.markers.push(m);if(m.kind==='phone')toast(`<b>☎</b> ${t(L('Skambina telefonas tavo kabinete.','The phone is ringing in your office.'))}`);
   if(m.who==='client')toast(t(L('Į biurą įėjo piktas klientas.','An angry client has walked in.')));
   if(m.who==='lina'&&m.ev===2)toast(`${esc(pn('lina'))} ${u('waiting')}.`);
@@ -537,6 +666,7 @@ function updateNPC(c,dm,dt){
   const id=c.id,P=G.people[id];
   if(c.sayT>0)c.sayT-=dt;
   if(c.path.length){moveAlong(c,dt,2.6);if(!c.path.length)arrived(c);return}
+  if(c.state==='walk'){arrived(c);return}
   if(c.state==='leaving'){delete RT.chars[id];return}
   if(['wait','meeting','visit','client','fight','held'].includes(c.state)){
     if(c.state==='fight'&&Math.random()<dt*0.5)say(id,rnd([L('Tu nesupranti!','You don’t get it!'),L('Čia mano sritis!','This is my area!'),L('Nesutinku!','I disagree!')]),2);
@@ -578,12 +708,15 @@ function step(dtReal){
   tickSim(dm);
   // markers
   SCHED.forEach((e,i)=>{if(e.d===G.day&&!RT.fired[i]&&RT.time>=e.t){RT.fired[i]=1;e.run()}});
-  RT.markers=RT.markers.filter(m=>{if(RT.time>m.until){m.miss&&m.miss();return false}return true});
+  RT.markers=RT.markers.filter(m=>{if(RT.time>m.until){RT.cnt.miss++;MISS[m.miss]&&MISS[m.miss](m);return false}return true});
+  RT.microT-=dm;if(RT.microT<=0){RT.microT=25+Math.random()*20;if(RT.markers.length<2&&RT.time<17*60+15)spawnMicro()}
+  if(!RT.player.path.length&&!RT.player.pending&&!RT.meeting)RT.idle+=dm;else RT.idle=0;
+  if(RT.idle>=30&&!RT.markers.length){RT.idle=-25;idleHint()}
   // stressed people come to you
   RT.visitCheck-=dm;if(RT.visitCheck<=0){RT.visitCheck=30;
     const id=IDS.find(id=>act(id)&&RT.chars[id]&&RT.chars[id].state==='work'&&G.people[id].stress>=82&&!RT.talked[id]&&!RT.markers.some(m=>m.who===id)&&!(RT.visited||{})[id]);
     if(id&&RT.time<17*60){RT.visited=RT.visited||{};RT.visited[id]=1;const c=RT.chars[id];c.state='visit';walkTo(c,SPOT.door[0]+1,SPOT.door[1]);
-      addMarker({kind:'npc',who:id,ev:'visit',until:RT.time+60,miss:()=>{dS(id,6);dT(id,-6);G.stats.missed++;logE('bad',NL(id,' ieškojo tavęs, bet nesulaukė',' looked for you but you never came'));toast(`<b>${esc(pn(id))}</b> ${t(L('nesulaukė tavęs ir grįžo prie stalo.','gave up waiting and went back.'))}`);sendBack(id)}});
+      addMarker({kind:'npc',who:id,ev:'visit',until:RT.time+60,miss:'visit'});
       toast(`<b>${esc(pn(id))}</b> ${t(L('ateina pasikalbėti.','is coming to talk to you.'))}`);
       mentor('visit',L('Kai žmogus pats ateina pas vadovą, tai signalas. Jei jo neišklausysi, kitą kartą jis nebeateis.','When someone comes to you on their own, it’s a signal. Ignore it, and next time they won’t come.'))}}
   const near=IDS.find(id=>act(id)&&G.people[id].stress>=85&&!G.people[id].trait);
@@ -634,6 +767,7 @@ function approach(a){
 function doAction(a){
   if(a.kind==='npc'){
     const m=RT.markers.find(m=>m.who===a.id||m.also===a.id);
+    if(m&&m.micro){RT.markers=RT.markers.filter(x=>x!==m);openMicro(m);return}
     if(m&&typeof m.ev==='number'){RT.markers=RT.markers.filter(x=>x!==m);openEvent(m.ev,a.id);return}
     if(m&&m.ev==='visit'){RT.markers=RT.markers.filter(x=>x!==m)}
     if(a.id==='client')return;
@@ -645,9 +779,9 @@ function doAction(a){
 /* ================= sheets ================= */
 const scrim=document.getElementById('scrim'),sheet=document.getElementById('sheet');
 let SH=null; // current sheet {render, cost}
-function openSheet(obj){SH=obj;RT.paused=true;scrim.hidden=false;renderSheet()}
+function openSheet(obj){SH=obj;RT.paused=true;RT.idle=0;scrim.hidden=false;renderSheet()}
 function renderSheet(){sheet.innerHTML=SH.render();sheet.scrollTop=0}
-function closeSheet(){scrim.hidden=true;const cost=SH&&SH.cost||0;const after=SH&&SH.after;SH=null;RT.paused=false;if(cost)skip(cost);after&&after();renderHUD();if(RT.queue&&RT.queue.length)setTimeout(()=>openCons(RT.queue.shift()),300)}
+function closeSheet(){scrim.hidden=true;const cost=SH&&SH.cost||0;const after=SH&&SH.after;SH=null;RT.paused=false;if(cost)skip(cost);after&&after();renderHUD();setTimeout(nextCons,300)}
 function skip(min){let left=min;while(left>0){const d=Math.min(5,left);RT.time+=d;tickSim(d);left-=d}Object.values(RT.chars).forEach(c=>{if(c.state==='wait')sendBack(c.id)});if(RT.time>=18*60)endDay()}
 function avatarH(id,lg){const P=G.people[id];const ring=!P||P.quit?'var(--line)':P.stress>=70?'var(--bad)':P.stress>=40?'var(--mark)':'var(--good)';
   return `<span class="av${lg?' lg':''}" style="background:${id==='client'?'#555':PEOPLE[id].shirt};--ring:${ring}">${esc(pn(id)[0])}</span>`}
@@ -676,25 +810,25 @@ function openPerson(id){
   openSheet({cost:0,render:()=>{
     let body;
     if(RT.talked[id]&&!st.res)body=`<p class="small">${u('talkDone')}</p><button class="btn ghost" data-sh="close">${u('close')}</button>`;
-    else if(!st.res)body=`<div class="opts"><button class="opt main" data-talk="listen"><span>${u('listen')}</span><span class="cost">30 ${u('min')}</span></button></div>
+    else if(!st.res)body=`<div class="opts"><button class="opt main" data-talk="listen"><span>${u('listen')}</span><span class="cost">20 ${u('min')}</span></button></div>
       <p class="small">${u('offer')}</p><div class="opts">${Object.keys(MOT).map(k=>`<button class="opt" data-talk="${k}"><span>${tx(MOT[k].lever)}</span>${P.known&&P.mot===k?`<span class="chip good">✓</span>`:''}</button>`).join('')}
       ${P.stress>=70?`<button class="opt" data-talk="reduce"><span>${u('reduce')}</span></button>`:''}</div>
       <button class="btn ghost" data-sh="close">${u('later')}</button>`;
     else body=`${sayH(id,st.res.reply)}${fxH(st.res.fx)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`;
     return `${personHead(id)}${!st.res&&!RT.talked[id]?`${open?sayH(id,open):''}${sayH(id,MOT[P.mot].hints[P.h])}`:''}${body}`},
-    talk:c=>{st.res=talkRes(id,c);SH.cost=30;RT.talked[id]=1;renderSheet()},
+    talk:c=>{st.res=talkRes(id,c);SH.cost=20;RT.talked[id]=1;renderSheet()},
     after:()=>{const ch=RT.chars[id];if(ch&&ch.state!=='fight')sendBack(id)}});
 }
 function talkRes(id,c){
-  const P=G.people[id],m=MOT[P.mot];FX=[];let reply,ins;G.stats.talks++;RT.boost=RT.boost||{};RT.reduce=RT.reduce||{};
+  const P=G.people[id],m=MOT[P.mot];FX=[];let reply,ins;G.stats.talks++;RT.cnt.talks++;if(RT.suggest===id)RT.suggest=null;RT.boost=RT.boost||{};RT.reduce=RT.reduce||{};
   if(c==='listen'){G.stats.listen++;
     if(P.trust>=30){const was=P.known;P.known=true;reply=m.reveal;dS(id,-12);dT(id,6);
       ins=was?L('Klausytis verta net tada, kai jau žinai atsakymą. Žmogus jaučia, kad jis tau rūpi.','Listening is worth it even when you know the answer. People feel that you care.'):L('Paklausei ir išgirdai. Dabar žinai, kas šį žmogų motyvuoja.','You asked and listened. Now you know what drives this person.');
-      if(!was)logE('good',NL(id,': atradai motyvaciją klausydamas',': found their motivation by listening'))}
+      if(!was)RT.cnt.reveal++;if(!was)logE('good',NL(id,': atradai motyvaciją klausydamas',': found their motivation by listening'))}
     else{reply=L('Viskas gerai. Tikrai.','Everything’s fine. Really.');dS(id,-6);dT(id,8);ins=L('Pasitikėjimas dar per žemas, kad žmogus atsivertų. Bet pats klausimas jį kaupia.','Trust is still too low for them to open up. But asking builds it.')}
     if(P.trait&&P.trait!=='resolute'){dS(id,-15);if(P.trust>=50){P.trait=null;ins=NL(id,' atsigauna. Išklausymas padarė daugiau nei bet koks sprendimas.',' is recovering. Being heard did more than any fix.');logE('good',NL(id,' atsigavo po lūžio',' recovered from breaking'))}}}
   else if(c==='reduce'){dS(id,-25);RT.reduce[id]=1;dB(-2);reply=L('Ačiū. Tikrai to reikėjo.','Thank you. I really needed that.');ins=L('Mažesnis krūvis šiandien sumažins rezultatą, bet apsaugos nuo lūžio.','A lighter load today costs output, but protects them from breaking.')}
-  else if(c===P.mot){G.stats.right++;P.known=true;dS(id,-15);dT(id,10);RT.boost[id]=1;reply=m.yes;ins=L('Pataikei. Kai žinai, kas žmogų motyvuoja, net trumpas pokalbis veikia stipriai.','Spot on. When you know what drives someone, even a short talk goes a long way.')}
+  else if(c===P.mot){G.stats.right++;if(!P.known)RT.cnt.reveal++;P.known=true;dS(id,-15);dT(id,10);RT.boost[id]=1;reply=m.yes;ins=L('Pataikei. Kai žinai, kas žmogų motyvuoja, net trumpas pokalbis veikia stipriai.','Spot on. When you know what drives someone, even a short talk goes a long way.')}
   else{G.stats.wrong++;dT(id,-2);reply=L('Ačiū… bet ne apie tai galvojau.','Thanks… but that’s not what I had in mind.');ins=L('Nepataikei. Tas pats veiksmas skirtingiems žmonėms veikia skirtingai. Gal verta pirma paklausti?','Missed. The same action works differently on different people. Maybe ask first?');
     if(G.stats.wrong>=2&&G.stats.listen===0)setTimeout(()=>mentor('guess',L('Spėlioji, kas žmones motyvuoja. Pabandyk pirma paklausti ir klausytis.','You’re guessing what motivates people. Try asking and listening first.')),400)}
   const res={reply,fx:FX,ins};FX=null;return res;
@@ -740,7 +874,7 @@ function checkMeeting(){
 }
 function openMeeting(){
   const st={moves:[]},harm=G.culture.trust<50;
-  openSheet({cost:60,render:()=>{
+  openSheet({cost:45,render:()=>{
     const intro=harm?`<p class="quote">${u('harmonyLow')}</p>${act('marius')?sayH('marius',L('Viskas gerai, sutinku.','All good, I agree.')):''}${act('lina')?sayH('lina',L('(tyli)','(silent)')):''}`
       :`<p class="quote">${u('harmonyOk')}</p>${act('tomas')?sayH('tomas',L('Siūlau kitaip, ir štai kodėl…','I’d do it differently, and here’s why…')):''}${act('lina')?sayH('lina',L('Nesutinku. Žiūrėk į skaičius.','I disagree. Look at the numbers.')):''}`;
     const done=st.moves.map(m=>`<p class="eyebrow">${t(MEET[m.mv].n)}</p>${MEET[m.mv].r.filter(([id])=>act(id)).map(([id,l])=>sayH(id,l)).join('')}${fxH(m.fx)}${insightH(m.ins)}`).join('');
@@ -763,7 +897,7 @@ function logH(){return G.log.length?`<ul class="log">${G.log.slice().reverse().m
 
 sheet.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!SH)return;const d=b.dataset;
   if(d.sh==='close')closeSheet();else if(d.sh==='callMeet')callMeeting();
-  else if(d.talk)SH.talk(d.talk);else if(d.ev!==undefined)SH.ev(+d.ev);else if(d.desk)SH.desk(d.desk);else if(d.meet)SH.meet(d.meet)});
+  else if(d.talk)SH.talk(d.talk);else if(d.ev!==undefined)SH.ev(+d.ev);else if(d.desk)SH.desk(d.desk);else if(d.meet)SH.meet(d.meet);else if(d.mi!==undefined)SH.mi(+d.mi)});
 
 /* ================= day / week end ================= */
 const over=document.getElementById('over'),overIn=document.getElementById('overIn');
@@ -775,7 +909,8 @@ function endDay(){
   if(out<target)RT.dayIns.push(L('Planas neįvykdytas. Pervargę ir mažai pasitikintys žmonės dirba lėčiau, o tavo laikas ir kitų laukimas irgi kainuoja.','Target missed. Exhausted people with little trust work slower, and time spent waiting on you costs too.'));
   IDS.forEach(id=>{const P=G.people[id];if(act(id)&&P.stress>=70&&!RT.talked[id])RT.dayIns.push(NL(id,`: stresas ${Math.round(P.stress)}, o šiandien su juo nesikalbėjai.`,`: stress at ${Math.round(P.stress)}, and you didn’t talk to them today.`))});
   if(G.boss<=0)G.over='fired';
-  RT.sum={out,target};renderDay();
+  RT.goalsDone=RT.goals.filter(k=>GOALS[k].ok());G.boss=clamp(G.boss+RT.goalsDone.length*3,0,100);
+  RT.sum={out,target};renderDay();autosave();
 }
 function renderDay(){
   const {out,target}=RT.sum,last=G.over||G.day>=4;
@@ -783,6 +918,8 @@ function renderDay(){
     <div class="meters"><div class="meter wide"><span class="k">${t(metricName())} · ${u('today')}</span><span class="v">${out} <small>/ ${target} ${t(unitName())}</small></span>${bar(out/target*100,out<target?'var(--bad)':null)}</div>
     <div class="meter"><span class="k">${u('boss')}</span><span class="v">${G.boss}</span>${bar(G.boss)}</div>
     <div class="meter"><span class="k">${u('team')}</span><span class="v">${IDS.filter(act).length} <small>/ ${IDS.length}</small></span>${bar(IDS.filter(act).length/IDS.length*100)}</div></div>
+    <p class="eyebrow">${t(L('Dienos tikslai','Daily goals'))} · ${RT.goalsDone.length}/${RT.goals.length}${RT.goalsDone.length?` · ${u('boss')} +${RT.goalsDone.length*3}`:''}</p>
+    <ul class="goals">${RT.goals.map(k=>`<li class="${RT.goalsDone.includes(k)?'done':''}"><span class="box">${RT.goalsDone.includes(k)?'✓':''}</span><span>${t(GOALS[k].n)}</span></li>`).join('')}</ul>
     <div class="rows">${teamRows()}</div>
     ${RT.dayIns.length?`<p class="eyebrow">${u('happened')}</p><ul class="list">${RT.dayIns.slice(0,4).map(i=>`<li>${t(i)}</li>`).join('')}</ul>`:''}
     <button class="btn" data-ov="${last?'end':'next'}">${last?u('toEnd'):u('nextDay')}</button>`;
@@ -811,7 +948,7 @@ const realTask=()=>G.stats.listen<2
   ?L('Šią savaitę paklausk dviejų komandos narių: „Kas tau dabar svarbiausia darbe?“ Ir tik klausyk, nieko nesiūlyk.','This week, ask two people on your team: “What matters most to you at work right now?” Then just listen.')
   :L('Šią savaitę viename susirinkime pirmas įvardink savo klaidą ar tai, ko nežinai: „Čia aš suklydau“ arba „Nežinau. Kas galėtų padėti?“','This week, in one meeting, be the first to name a mistake or something you don’t know: “I got this wrong” or “I don’t know. Who can help?”');
 function showEnd(){
-  G.done=true;S.G=G;save();
+  G.done=true;S.G=G;S.RT=null;save();
   const e=ENDINGS[ending()],tot=Math.round(G.days.reduce((s,d)=>s+d.out,0)),pl=G.days.reduce((s,d)=>s+d.plan,0)||dayTarget()*5,quits=IDS.filter(id=>G.people[id].quit).length;
   const committed=S.commitment&&S.commitment.game===G.id;
   overIn.innerHTML=`<p class="eyebrow">${G.over?u('endFail'):u('endEy')}</p><h1>${t(e.t)}</h1><p class="lead">${t(e.d)}</p>
@@ -830,7 +967,7 @@ function showWelcome(){
   else if(S.checkin&&S.commitment)check=`<div class="meter"><p class="eyebrow">${u('checkEy')}</p><p>${u({yes:'ckYesR',part:'ckPartR',no:'ckNoR'}[S.checkin])}</p></div>`;
   const resume=S.G&&!S.G.done;
   overIn.innerHTML=`${check}<canvas class="hero-canvas" id="hero"></canvas><h1>${u('tagline')}</h1><p class="lead">${u('intro')}</p>
-    ${resume?`<button class="btn" data-ov="resume">${u('cont')} · ${t(UI.days[S.G.day])}</button>`:''}
+    ${resume?`<button class="btn" data-ov="resume">${u('cont')} · ${t(UI.days[S.G.day])} ${hhmm(S.RT?S.RT.time:540)}</button>`:''}
     <p class="eyebrow">${u('choose')}</p>
     <div class="opts"><button class="opt typebtn" data-ov="type" data-type="sales"><b>${u('sales')}</b><span>${u('salesD')}</span></button>
     <button class="opt typebtn" data-ov="type" data-type="project"><b>${u('project')}</b><span>${u('projectD')}</span></button></div>
@@ -846,7 +983,7 @@ over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)retur
   switch(d.ov){
     case 'type':newGame(d.type);RT=null;showHow();break;
     case 'go':over.hidden=true;startDay();renderAll();break;
-    case 'resume':G=JSON.parse(JSON.stringify(S.G));RT=null;over.hidden=true;startDay();renderAll();break;
+    case 'resume':G=JSON.parse(JSON.stringify(S.G));if(S.RT){RT=S.RT;RT.ended=!!RT.ended;over.hidden=true;renderAll();if(RT.ended){renderDay();over.hidden=false}else RT.paused=false}else{RT=null;over.hidden=true;startDay();renderAll()}break;
     case 'next':G.day++;over.hidden=true;RT.ended=false;startDay();renderAll();break;
     case 'end':showEnd();break;
     case 'commit':S.commitment={date:today(),game:G.id,task:realTask()};S.checkin=null;save();showEnd();break;
@@ -861,20 +998,21 @@ function renderHUD(){
   document.getElementById('hud').innerHTML=`<div class="clock"><span>${t(UI.days[G.day])}</span><b>${hhmm(RT.time)}</b></div>
     <div class="gauge"><span class="k"><span>${t(metricName())}</span><b>${Math.round(wk)}/${wt}</b></span>${bar(wk/wt*100)}</div>
     <div class="gauge"><span class="k"><span>${u('boss')}</span><b>${G.boss}</b></span>${bar(G.boss,G.boss<30?'var(--bad)':null)}</div>
-    <div class="hud-btns"><button class="ibtn" data-ui="speed" aria-pressed="${RT.speed===1}" title="${u('speed')}">${RT.speed?'×2':'×1'}</button></div>`;
+    <div class="hud-btns"><button class="ibtn" data-ui="speed" aria-pressed="${RT.speed>0}" title="${u('speed')}">×${[1,2,4][RT.speed]}</button></div>`;
   document.getElementById('mteam').textContent=u('team');document.getElementById('mlog').textContent=u('log');
   const side=document.getElementById('side');
-  side.innerHTML=`<div class="card"><p class="eyebrow">${u('teamH')}</p><div class="rows">${teamRows()}</div></div><div class="card"><p class="eyebrow">${u('log')}</p>${logH()}</div>`;
+  document.getElementById('goalsM').innerHTML=goalsH();
+  side.innerHTML=`<div class="card">${goalsH()}</div><div class="card"><p class="eyebrow">${u('teamH')}</p><div class="rows">${teamRows()}</div></div><div class="card"><p class="eyebrow">${u('log')}</p>${logH()}</div>`;
   const waiting=RT.markers.map(m=>m.kind==='phone'?'☎':pn(m.who)).join(', ');
   document.getElementById('hint').textContent=waiting?`${waiting}: ${u('waiting')}`:u('hintIdle');
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ui]');if(!b||!RT)return;
-  if(b.dataset.ui==='speed'){RT.speed=RT.speed?0:1;renderHUD()}
+  if(b.dataset.ui==='speed'){RT.speed=(RT.speed+1)%SPEEDS.length;renderHUD()}
   if(b.dataset.ui==='team')openTeam();if(b.dataset.ui==='log')openLog()});
 document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{S.lang=b.dataset.lang;save();setLang();
   if(!over.hidden){if(overIn.querySelector('#hero'))showWelcome();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
   if(SH)renderSheet();renderHUD()}));
-document.getElementById('brand').addEventListener('click',()=>{if(SH){scrim.hidden=true;SH=null}if(RT)RT.paused=true;if(G&&!G.done&&RT&&!RT.ended){S.G=S.G||G}showWelcome()});
+document.getElementById('brand').addEventListener('click',()=>{if(SH){scrim.hidden=true;SH=null;if(RT)RT.paused=false}autosave();if(RT)RT.paused=true;showWelcome()});
 function setLang(){document.documentElement.lang=S.lang;document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===S.lang))}
 function renderAll(){resize();renderHUD()}
 
@@ -938,6 +1076,14 @@ function person(c,look,o){
 function iconAbove(px,top,kind,t0){
   const y=top-T*0.28+Math.sin(t0/250)*T*0.03;
   if(kind==='!'){ctx.fillStyle='#F2C14E';ctx.beginPath();ctx.arc(px,y,T*0.2,0,7);ctx.fill();ctx.fillStyle='#1E2328';ctx.font=`700 ${Math.round(T*0.28)}px IBM Plex Sans, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('!',px,y+1);return}
+  if(kind==='star'){ctx.fillStyle='#F2C14E';ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rad=(i%2?0.09:0.21)*T;ctx.lineTo(px+Math.cos(a)*rad,y+Math.sin(a)*rad)}ctx.closePath();ctx.fill();return}
+  if(kind==='q'||kind==='clock'||kind==='bulb'||kind==='papers'){ctx.fillStyle='#FFFFFF';ctx.beginPath();ctx.arc(px,y,T*0.2,0,7);ctx.fill();ctx.strokeStyle='#F2C14E';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#1E2328';ctx.strokeStyle='#1E2328';ctx.lineWidth=1.6;
+    if(kind==='q'){ctx.font=`700 ${Math.round(T*0.26)}px IBM Plex Sans, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('?',px,y+1)}
+    if(kind==='clock'){ctx.beginPath();ctx.arc(px,y,T*0.11,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(px,y);ctx.lineTo(px,y-T*0.07);ctx.moveTo(px,y);ctx.lineTo(px+T*0.06,y);ctx.stroke()}
+    if(kind==='bulb'){ctx.fillStyle='#F2C14E';ctx.beginPath();ctx.arc(px,y-T*0.03,T*0.08,0,7);ctx.fill();ctx.fillStyle='#1E2328';ctx.fillRect(px-T*0.04,y+T*0.05,T*0.08,T*0.05)}
+    if(kind==='papers'){ctx.fillStyle='#E9EDF1';ctx.strokeStyle='#59626D';[[-0.07,0.03],[-0.03,-0.01],[0.01,-0.05]].forEach(([dx,dy])=>{ctx.fillRect(px+dx*T-T*0.05,y+dy*T-T*0.06,T*0.12,T*0.14);ctx.strokeRect(px+dx*T-T*0.05,y+dy*T-T*0.06,T*0.12,T*0.14)})}
+    return}
   if(kind==='cloud'||kind==='storm'){ctx.fillStyle=kind==='storm'?'#59626D':'#9AA4AE';[[-0.12,0,0.11],[0.02,-0.05,0.13],[0.15,0.01,0.1]].forEach(([dx,dy,r])=>{ctx.beginPath();ctx.arc(px+dx*T,y+dy*T,r*T,0,7);ctx.fill()});
     if(kind==='storm'){ctx.strokeStyle='#F2C14E';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(px,y+T*0.08);ctx.lineTo(px-T*0.05,y+T*0.18);ctx.lineTo(px+T*0.02,y+T*0.18);ctx.lineTo(px-T*0.03,y+T*0.28);ctx.stroke()}return}
   if(kind==='anger'){ctx.strokeStyle='#E0574A';ctx.lineWidth=2.2;ctx.beginPath();for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4;ctx.moveTo(px+Math.cos(a)*T*0.05,y+Math.sin(a)*T*0.05);ctx.lineTo(px+Math.cos(a)*T*0.14,y+Math.sin(a)*T*0.14)}ctx.stroke();return}
@@ -975,6 +1121,7 @@ function draw(){
         const res=person(c,LOOK[id],{sit:seated,back:seated||c.dir==='up',type:seated,headphones:P&&P.trait==='withdrawn'});tops.push({c,res,id})}})});
     const p=RT.player;L2.push({y:p.y+0.62,f:()=>{const res=person(p,LOOK.player,{ring:true,back:p.dir==='up'});tops.push({c:p,res,id:'player'})}});
   }
+  if(RT&&RT.suggest&&RT.chars[RT.suggest]){const sc=RT.chars[RT.suggest],k=0.5+0.5*Math.sin(now/200);ctx.strokeStyle=`rgba(210,176,110,${0.5+0.5*k})`;ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(sc.x*T+T/2,sc.y*T+T*0.8,T*(0.34+0.06*k),T*(0.13+0.02*k),0,0,7);ctx.stroke()}
   L2.sort((a,b)=>a.y-b.y).forEach(o=>o.f());
   // names, icons, bubbles
   if(RT){
@@ -982,7 +1129,7 @@ function draw(){
       ctx.fillStyle='rgba(20,26,32,.75)';ctx.fillText(pn(id),res.px,c.y*T+T*0.86)});
     tops.forEach(({c,res,id})=>{
       const P=G.people[id],mk=RT.markers.find(m=>m.who===id||m.also===id);
-      if(mk)iconAbove(res.px,res.top,'!',now);
+      if(mk)iconAbove(res.px,res.top,mk.icon||'!',now);
       else if(P&&!P.quit){if(P.trait==='hostile')iconAbove(res.px,res.top,'anger',now);else if(P.trait==='cynic')iconAbove(res.px,res.top,'dots',now);
         else if(P.stress>=85)iconAbove(res.px,res.top,'storm',now);else if(P.stress>=65)iconAbove(res.px,res.top,'cloud',now);else if(P.trust>=70&&P.stress<35&&Math.sin(now/900+c.phase)>0.6)iconAbove(res.px,res.top,'heart',now)}
       if(c.say&&c.sayT>0)speech(res.px,res.top,tx(c.say))});
@@ -1006,12 +1153,21 @@ function demoRT(){
     player:{x:6,y:9,path:[],dir:'down'}};
 }
 
+/* ================= saving ================= */
+function autosave(){
+  if(!G||!RT||SH||G.done)return;
+  S.G=G;S.RT=JSON.parse(JSON.stringify(RT,(k,v)=>k==='say'||k==='sayT'?undefined:v));save();
+}
+window.addEventListener('pagehide',autosave);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)autosave()});
+
 /* ================= loop ================= */
 let last=performance.now();
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;
   if(G&&RT&&over.hidden){step(dt);checkMeeting();if(RT.tap)RT.tap.t-=dt;
-    if(!frame.h||now-frame.h>400){frame.h=now;renderHUD()}}
+    if(!frame.h||now-frame.h>400){frame.h=now;renderHUD()}
+    if(!frame.s||now-frame.s>5000){frame.s=now;autosave()}}
   if(G&&RT)draw();
   requestAnimationFrame(frame);
 }
