@@ -156,6 +156,18 @@ button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 .style-card{display:flex;flex-direction:column;gap:6px}
 .style-card .sn{font:500 26px/1.1 var(--f-display)}
 .foot{font-size:12px;color:var(--muted);text-align:center;padding-top:6px}
+.side{display:none}
+@media (min-width:960px){
+  .app{max-width:1120px;gap:28px;padding-block:16px 56px}
+  .shell{display:grid;grid-template-columns:minmax(0,540px) minmax(0,1fr);gap:72px;align-items:start;padding-top:12px}
+  .side{display:flex;flex-direction:column;gap:22px;position:sticky;top:24px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:32px}
+  .side .pyr svg{max-width:440px}
+  .side .person{grid-template-columns:32px 1fr;padding-block:10px;gap:12px}
+  main .pyr{display:none}
+  h1{font-size:52px}
+  h2{font-size:36px}
+  .qtext{font-size:30px}
+}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -252,7 +264,10 @@ const UI = {
   ckNoR:{lt:'Nieko tokio. Užduotis lieka galioti, pabandyk iki penktadienio.',en:'That’s fine. The task still stands; try it before Friday.'},
   waitTomorrow:{lt:'Rytoj čia paklausime, ar pavyko atlikti užduotį.',en:'Tomorrow we’ll ask here whether you managed the task.'},
   demoCheck:{lt:'Peržiūrėti dabar (demonstracija)',en:'Preview it now (demo)'},
-  yourTask:{lt:'Tavo užduotis',en:'Your task'}
+  yourTask:{lt:'Tavo užduotis',en:'Your task'},
+  sideDemo:{lt:'Penkios sritys ir jų simptomai',en:'Five areas and their warning signs'},
+  sideMine:{lt:'Tavo komandos žemėlapis',en:'Your team map'},
+  sideLive:{lt:'Komanda realiu laiku',en:'Your team, live'}
 };
 
 const MOODS = {'-2':{lt:'Užsisklendęs',en:'Closed off'},'-1':{lt:'Atsargus',en:'Wary'},'0':{lt:'Neutralus',en:'Neutral'},'1':{lt:'Atviresnis',en:'More open'},'2':{lt:'Pasitiki',en:'Trusting'}};
@@ -640,6 +655,23 @@ V.end = () => {
   <button class="btn ghost" data-go="journey">${u('toJourney')}</button>`;
 };
 
+/* ---------- desktop side panel ---------- */
+const ZERO=Object.fromEntries(LAYERS.map(l=>[l,0]));
+function sideFrom(){return {result:ZERO,end:S.session?.start.raw,outcome:S.session?.prev}[S.screen]}
+function sidePanel(){
+  const sc=S.screen;
+  if(!S.raw||sc==='test'){
+    const demo={trust:38,conflict:52,commitment:61,accountability:44,results:70};
+    return `<p class="eyebrow">${u('sideDemo')}</p><div class="pyr">${pyramidSVG(demo)}</div>
+      <div class="legend">${LAYERS.map(l=>`<div class="lg"><span class="sw" style="background:var(--l-${l})"></span><span class="nm">${t(LAYER[l])}</span><span></span><span class="note">${t(LAYER[l].weak)}</span></div>`).join('')}</div>`;
+  }
+  const live=sc==='scene'||sc==='outcome';
+  const chart=`<div class="pyr" id="pyr-side">${pyramidSVG(S.raw,{weak:live?null:weakestLayer(S.raw),from:sideFrom(),ghost:sc==='end'?S.session.start.raw:null})}</div>`;
+  if(!live) return `<p class="eyebrow">${u('sideMine')}</p>${chart}`;
+  return `<p class="eyebrow">${u('sideLive')}</p>${chart}
+    <div class="people">${Object.keys(PEOPLE).map(id=>`<div class="person">${avatar(id,true)}<div><div class="who">${esc(pn(id))} <span class="role">· ${t(PEOPLE[id].role)}</span></div><span class="mood">${t(MOODS[S.moods[id]])}</span></div></div>`).join('')}</div>`;
+}
+
 /* ---------- render & events ---------- */
 const app=document.getElementById('app');
 function render(scrollTop=true){
@@ -651,10 +683,12 @@ function render(scrollTop=true){
       <button data-lang="lt" aria-pressed="${S.lang==='lt'}">LT</button><button data-lang="en" aria-pressed="${S.lang==='en'}">EN</button>
     </div>
   </header>
-  <main>${V[S.screen]()}</main>`;
+  <div class="shell"><main>${V[S.screen]()}</main><aside class="side">${sidePanel()}</aside></div>`;
   const pyr=app.querySelector('#pyr');
-  if(pyr&&S.screen==='result') animatePyramid(pyr,Object.fromEntries(LAYERS.map(l=>[l,0])));
+  if(pyr&&S.screen==='result') animatePyramid(pyr,ZERO);
   if(pyr&&S.screen==='end') animatePyramid(pyr,S.session.start.raw);
+  const side=app.querySelector('#pyr-side');
+  if(side) animatePyramid(side,sideFrom());
   if(scrollTop) window.scrollTo(0,0);
   save();
 }
@@ -675,7 +709,7 @@ app.addEventListener('click',e=>{
   }
   if(b.dataset.pick!==undefined){
     const ss=S.session, o=SCENES[ss.i].opts[+b.dataset.pick];
-    ss.pick=+b.dataset.pick; if(o.best) ss.best++;
+    ss.pick=+b.dataset.pick; ss.prev={...S.raw}; if(o.best) ss.best++;
     Object.entries(o.d).forEach(([l,v])=>S.raw[l]=clamp(S.raw[l]+v,5,95));
     Object.entries(o.m).forEach(([id,v])=>S.moods[id]=clamp(S.moods[id]+v,-2,2));
     go('outcome');return;
