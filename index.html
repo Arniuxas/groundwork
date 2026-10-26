@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="lt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Groundwork</title>
+<meta name="description" content="Groundwork – trumpos kasdienės situacijos vadovams. Pastatyk komandą nuo pamato.">
+<meta name="theme-color" content="#F4F5F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D1217" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Groundwork">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: one calm phone-width column with editorial type; a tonal five-band pyramid is the only graphic */
+:root{
+  --bg:#F4F5F6; --surface:#FFFFFF; --ink:#111A23; --muted:#5D6772; --line:#E0E4E8; --tint:#ECEFF2; --focus:#3C6FA8;
+  --accent:#1C3550; --accent-ink:#FFFFFF;
+  --l-trust:#1C3550; --l-conflict:#2D4D72; --l-commitment:#466A93; --l-accountability:#6C8BB0; --l-results:#9AB0CB;
+  --good:#2C7357; --bad:#A8443A; --mark:#8E6E2F;
+  --f-display:"Newsreader",Georgia,"Times New Roman",serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1217; --surface:#141B22; --ink:#E7EBEE; --muted:#97A2AD; --line:#26303A; --tint:#1B242D; --focus:#8DB2DE;
+  --accent:#C9D7E8; --accent-ink:#0D1217;
+  --l-trust:#A3C0E2; --l-conflict:#84A6CF; --l-commitment:#688CB6; --l-accountability:#52739A; --l-results:#415C7C;
+  --good:#6CC29C; --bad:#E08A80; --mark:#D2B06E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D1217; --surface:#141B22; --ink:#E7EBEE; --muted:#97A2AD; --line:#26303A; --tint:#1B242D; --focus:#8DB2DE;
+  --accent:#C9D7E8; --accent-ink:#0D1217;
+  --l-trust:#A3C0E2; --l-conflict:#84A6CF; --l-commitment:#688CB6; --l-accountability:#52739A; --l-results:#415C7C;
+  --good:#6CC29C; --bad:#E08A80; --mark:#D2B06E; color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.app{max-width:460px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:22px;
+  padding-left:max(18px, env(safe-area-inset-left,0px));padding-right:max(18px, env(safe-area-inset-right,0px));padding-block:10px 36px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font:600 21px/1 var(--f-display);letter-spacing:-.01em;background:none;border:0;color:inherit;cursor:pointer;padding:6px 0}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:8px;padding:2px;background:var(--surface)}
+.lang button{border:0;background:none;font:500 11.5px/1 var(--f-mono);letter-spacing:.08em;padding:7px 10px;border-radius:6px;color:var(--muted);cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--tint);color:var(--ink)}
+main{display:flex;flex-direction:column;gap:22px;flex:1;animation:rise .4s ease both}
+@keyframes rise{from{transform:translateY(6px);opacity:.6}to{transform:none;opacity:1}}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;font-weight:500;letter-spacing:-.015em;line-height:1.12}
+h1{font-size:38px}
+h2{font-size:29px}
+h3{font-size:19px}
+p{margin:0}
+.eyebrow{font:500 11px/1.3 var(--f-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:16.5px;color:var(--muted);line-height:1.55}
+.small{font-size:13.5px;color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:14px}
+.stack.tight{gap:8px}
+.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.btn{appearance:none;border:1px solid var(--accent);border-radius:10px;background:var(--accent);color:var(--accent-ink);font:600 15px/1.2 var(--f-body);letter-spacing:.01em;padding:15px 18px;cursor:pointer;width:100%;transition:opacity .15s}
+.btn:hover{opacity:.9}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--muted);opacity:1}
+.btn.danger{background:transparent;color:var(--bad);border-color:transparent;font-weight:500;font-size:14px;padding:10px}
+.link{background:none;border:0;padding:4px 0;color:var(--ink);font:500 14px var(--f-body);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--muted);align-self:flex-start}
+button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:10px}
+.features{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.features li{display:grid;grid-template-columns:92px 1fr;gap:12px;align-items:baseline;padding:13px 0;border-bottom:1px solid var(--line)}
+.features b{font:500 11px/1.4 var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+.progress{height:2px;background:var(--line);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--ink);transition:width .3s}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.count{font:500 12px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.back{background:none;border:0;color:var(--muted);font:500 14px var(--f-body);cursor:pointer;padding:6px 0}
+.qtext{font:500 25px/1.25 var(--f-display);letter-spacing:-.01em;text-wrap:balance}
+.opt{text-align:left;width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:15px 16px;font:400 15.5px/1.45 var(--f-body);color:var(--ink);cursor:pointer;transition:border-color .15s,background .15s}
+.opt:hover{border-color:var(--muted)}
+.opt[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.likert{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.likert button{height:54px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:500 16px var(--f-mono);cursor:pointer}
+.likert button:hover{border-color:var(--muted)}
+.likert button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.likert-labels{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;color:var(--muted)}
+
+.pyr svg{width:100%;height:auto;display:block;max-width:380px;margin:0 auto;overflow:visible}
+.pyr .ring{fill:none;stroke:var(--line);stroke-width:1}
+.pyr .spoke{stroke:var(--line);stroke-width:1}
+.pyr .area{fill:color-mix(in srgb,var(--accent) 14%,transparent);stroke:var(--accent);stroke-width:2;stroke-linejoin:round}
+.pyr .ghost{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4}
+.pyr .dot{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.pyr .dot.weak{fill:var(--mark)}
+.pyr .lbl{font:500 11.5px var(--f-body);fill:var(--muted)}
+.pyr .lbl .v{font:600 14px var(--f-mono);fill:var(--ink)}
+.pyr .lbl.weak .v,.pyr .lbl.weak{fill:var(--mark)}
+.legend{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.lg{display:grid;grid-template-columns:10px 1fr auto;gap:6px 12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
+.lg .sw{width:10px;height:10px;border-radius:2px}
+.lg .nm{font-weight:500;font-size:14.5px;min-width:0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lg .val{font:500 14px var(--f-mono);font-variant-numeric:tabular-nums}
+.lg .note{grid-column:2 / 4;font-size:12.5px;color:var(--muted)}
+.lg .bar{grid-column:2 / 4;height:3px;background:var(--tint);overflow:hidden}
+.lg .bar i{display:block;height:100%}
+.chip{display:inline-flex;align-items:center;gap:6px;font:500 10.5px/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;padding:5px 7px;border-radius:5px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;align-self:flex-start}
+.chip.warn{border-color:var(--mark);color:var(--mark)}
+.status{font:500 11px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.deltas{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.delta{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.delta b{font:600 14px var(--f-mono);color:var(--good)}
+.delta b.neg{color:var(--bad)}
+
+.team{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.mate{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;min-width:0}
+.mate span{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none;font:500 18px var(--f-display);background:var(--tint);color:var(--ink);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ring,var(--line));transition:box-shadow .4s}
+.av.sm{width:32px;height:32px;font-size:15px;box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--ring,var(--line))}
+.person{display:grid;grid-template-columns:42px 1fr;gap:14px;align-items:start;padding-block:14px;border-bottom:1px solid var(--line)}
+.people{border-top:1px solid var(--line)}
+.person .who{font-weight:600}
+.person .role{font-weight:400;font-size:13px;color:var(--muted)}
+.mood{font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+.scene{font:400 19px/1.5 var(--f-display)}
+.say{display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start}
+.bubble{background:var(--surface);border:1px solid var(--line);border-radius:2px 12px 12px 12px;padding:10px 14px;min-width:0;font-size:15px}
+.bubble .n{font:500 11px var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px}
+.picked{font:italic 400 19px/1.45 var(--f-display);color:var(--ink)}
+.insight{background:var(--tint);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.insight p{font:400 17.5px/1.5 var(--f-display)}
+.trap{border:1px solid var(--mark);border-radius:12px;padding:14px 16px;font-size:14.5px;display:flex;flex-direction:column;gap:6px}
+.trap .eyebrow{color:var(--mark)}
+.task{border:1px solid var(--ink);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px;background:var(--surface)}
+.task q{font:400 20px/1.4 var(--f-display);quotes:none}
+
+.chapters{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.ch{display:grid;grid-template-columns:40px 1fr auto;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}
+.ch .code{font:500 12.5px var(--f-mono);width:40px;height:40px;border-radius:8px;display:grid;place-items:center;border:1px solid var(--line);color:var(--ink)}
+.ch.open .code{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ch.locked .t,.ch.locked .code{color:var(--muted)}
+.ch .t{font-weight:600;line-height:1.3}
+.ch .s{font-size:13px;color:var(--muted)}
+.ch > div{min-width:0}
+.ch button{width:auto;padding:9px 14px;font-size:14px}
+.style-card{display:flex;flex-direction:column;gap:6px}
+.style-card .sn{font:500 26px/1.1 var(--f-display)}
+.foot{font-size:12px;color:var(--muted);text-align:center;padding-top:6px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+const LAYERS = ['trust','conflict','commitment','accountability','results'];
+const LAYER = {
+  trust:{short:{lt:'Pasitikėjimas',en:'Trust'},lt:'Pasitikėjimas',en:'Trust',
+    weak:{lt:'Žmonės slepia klaidas ir neprašo pagalbos. Kol šis sluoksnis silpnas, kiti negali tvirtai augti.',en:'People hide mistakes and don’t ask for help. While this layer is weak, the others can’t grow solidly.'}},
+  conflict:{short:{lt:'Konfliktas',en:'Conflict'},lt:'Konstruktyvus konfliktas',en:'Healthy conflict',
+    weak:{lt:'Susirinkimuose visi sutinka, o tikros diskusijos vyksta koridoriuose.',en:'Everyone agrees in meetings; the real discussions happen in the hallway.'}},
+  commitment:{short:{lt:'Įsipareigojimas',en:'Commitment'},lt:'Įsipareigojimas',en:'Commitment',
+    weak:{lt:'Sprendimai lieka „ore“: išėję iš susirinkimo žmonės juos supranta skirtingai.',en:'Decisions stay up in the air: people leave the meeting with different understandings.'}},
+  accountability:{short:{lt:'Atskaitomybė',en:'Accountability'},lt:'Atskaitomybė',en:'Accountability',
+    weak:{lt:'Susitarimų laikymąsi prižiūri tik vadovas. Kolegos vieni kitiems pastabų nesako.',en:'Only the manager checks that agreements are kept. Colleagues don’t hold each other to them.'}},
+  results:{short:{lt:'Rezultatai',en:'Results'},lt:'Dėmesys rezultatams',en:'Focus on results',
+    weak:{lt:'Kiekvienas gina savo sritį, net kai komanda kaip visuma pralaimi.',en:'Everyone defends their own area, even when the team as a whole loses.'}}
+};
+
+const UI = {
+  tagline:{lt:'Pastatyk komandą nuo pamato',en:'Build your team from the ground up'},
+  intro:{lt:'Trumpos kasdienės situacijos vadovams. Kiekvienas tavo sprendimas keičia komandą, ir tai matai iš karto.',en:'Short daily situations for managers. Every decision you make changes your team, and you see it right away.'},
+  fl1:{lt:'Testas',en:'Test'},fl2:{lt:'Sesijos',en:'Sessions'},fl3:{lt:'Praktika',en:'Practice'},
+  f1:{lt:'4 min testas parodo tavo komandos žemėlapį ir silpniausią vietą',en:'A 4-minute test maps your team and shows its weakest spot'},
+  f2:{lt:'5–7 min sesijos su virtualia komanda, kuri prisimena tavo sprendimus',en:'5–7 minute sessions with a virtual team that remembers your decisions'},
+  f3:{lt:'Po kiekvienos sesijos viena užduotis tavo tikrai komandai',en:'After each session, one task for your real team'},
+  startTest:{lt:'Pradėti testą',en:'Start the test'},
+  cont:{lt:'Tęsti',en:'Continue'},
+  basis:{lt:'Paremta Patricko Lencioni komandos disfunkcijų modeliu. Prototipas.',en:'Based on Patrick Lencioni’s model of team dysfunctions. Prototype.'},
+  back:{lt:'← Atgal',en:'← Back'},
+  secYou:{lt:'Apie tave',en:'About you'},
+  secTeam:{lt:'Tavo komanda',en:'Your team'},
+  secStyle:{lt:'Tavo reakcijos',en:'Your reactions'},
+  teamHint:{lt:'Kiek tai tinka tavo komandai?',en:'How true is this of your team?'},
+  lk1:{lt:'Visai netinka',en:'Not at all'},
+  lk5:{lt:'Visiškai tinka',en:'Completely'},
+  resultEy:{lt:'Tavo rezultatas',en:'Your result'},
+  resultH:{lt:'Tavo komandos žemėlapis',en:'Your team’s map'},
+  resultLead:{lt:'Penkios sritys remiasi viena kita: pasitikėjimas, konfliktas, įsipareigojimas, atskaitomybė, rezultatai. Kiekviena gali būti tik šiek tiek stipresnė už ankstesnę.',en:'The five areas build on each other: trust, conflict, commitment, accountability, results. Each can only be slightly stronger than the one before it.'},
+  weakest:{lt:'Silpniausia vieta',en:'Weakest spot'},
+  capped:{lt:'Ribojama žemesnio sluoksnio. Potencialas: ',en:'Held back by the layer below. Potential: '},
+  styleEy:{lt:'Tavo vadovavimo polinkis',en:'Your leadership tendency'},
+  whyTrust:{lt:'Pradedame nuo pasitikėjimo, nes jis laiko visą piramidę. Net jei tavo silpniausia vieta aukščiau, ją sustiprinsi greičiau, kai pamatas tvirtas.',en:'We start with trust because it holds up the whole pyramid. Even if your weakest spot is higher up, you’ll fix it faster on a solid base.'},
+  goV2:{lt:'Pradėti V2: Pasitikėjimas',en:'Start V2: Trust'},
+  toJourney:{lt:'Į mano kelią',en:'Go to my path'},
+  journeyEy:{lt:'Tavo kelias',en:'Your path'},
+  journeyH:{lt:'Komandos žemėlapis',en:'Team map'},
+  done:{lt:'Atlikta',en:'Done'},
+  play:{lt:'Žaisti',en:'Play'},
+  again:{lt:'Kartoti',en:'Replay'},
+  full:{lt:'Pilnoje versijoje',en:'In the full version'},
+  v1s:{lt:'Diagnostika: kur stringa tavo komanda',en:'Diagnosis: where your team gets stuck'},
+  v2s:{lt:'3 situacijos · ~6 min',en:'3 situations · ~6 min'},
+  retake:{lt:'Pakartoti testą',en:'Retake the test'},
+  reset:{lt:'Ištrinti progresą',en:'Delete progress'},
+  resetSure:{lt:'Tikrai ištrinti? Paspausk dar kartą',en:'Really delete? Tap again'},
+  meetEy:{lt:'V2 · Pasitikėjimas',en:'V2 · Trust'},
+  meetH:{lt:'Susipažink su savo komanda',en:'Meet your team'},
+  meetLead:{lt:'Tu ką tik perėmei šią komandą. Spalvotas žiedas aplink kiekvieną žmogų rodo, kiek jis tau atsiveria.',en:'You’ve just taken over this team. The coloured ring around each person shows how open they are with you.'},
+  lvlNovice:{lt:'Situacijos pritaikytos pradedančiam vadovui',en:'Situations tuned for a newer manager'},
+  lvlSenior:{lt:'Situacijos pritaikytos patyrusiam vadovui',en:'Situations tuned for an experienced manager'},
+  begin:{lt:'Pradėti sesiją',en:'Start the session'},
+  scene:{lt:'Situacija',en:'Situation'},
+  of:{lt:'iš',en:'of'},
+  youChose:{lt:'Tu pasirinkai',en:'You chose'},
+  whatHappened:{lt:'Kas vyksta',en:'What it means'},
+  stronger:{lt:'Stipresnis ėjimas būtų',en:'A stronger move would be'},
+  bestMove:{lt:'Stiprus ėjimas',en:'Strong move'},
+  trapEy:{lt:'Tavo įprastas spąstas',en:'Your usual trap'},
+  next:{lt:'Toliau',en:'Next'},
+  finish:{lt:'Baigti sesiją',en:'Finish the session'},
+  endEy:{lt:'Sesija baigta',en:'Session complete'},
+  endH:{lt:'Pamatas pajudėjo',en:'Your foundation moved'},
+  endLeadUp:{lt:'Pasitikėjimas pakilo ',en:'Trust rose by '},
+  endLeadDown:{lt:'Pasitikėjimas nukrito ',en:'Trust fell by '},
+  endLeadSame:{lt:'Pasitikėjimas nepasikeitė.',en:'Trust didn’t change.'},
+  pts:{lt:' taškų.',en:' points.'},
+  teamNow:{lt:'Komanda dabar',en:'Your team now'},
+  strongCount:{lt:'Stiprių ėjimų',en:'Strong moves'},
+  taskEy:{lt:'Užduotis tavo tikrai komandai',en:'Task for your real team'},
+  task:{lt:'Šią savaitę viename susirinkime pirmas įvardink savo klaidą arba tai, ko nežinai. Pvz.: „Čia aš suklydau“ arba „Nežinau. Kas galėtų padėti?“',en:'This week, in one meeting, be the first to name a mistake of yours or something you don’t know. For example: “I got this wrong” or “I don’t know. Who can help?”'},
+  commit:{lt:'Įsipareigoju',en:'I commit'},
+  committed:{lt:'Įsipareigota. Rytoj paklausime, kaip sekėsi.',en:'Committed. We’ll ask you tomorrow how it went.'},
+  checkEy:{lt:'Kaip sekėsi?',en:'How did it go?'},
+  checkQ:{lt:'Ar pavyko pirmam įvardinti savo klaidą ar nežinojimą?',en:'Did you manage to be the first to name a mistake or something you didn’t know?'},
+  ckYes:{lt:'Pavyko',en:'I did it'},
+  ckPart:{lt:'Iš dalies',en:'Partly'},
+  ckNo:{lt:'Dar ne',en:'Not yet'},
+  ckYesR:{lt:'Puiku. Tikras veiksmas pakėlė tavo pasitikėjimo sluoksnį +4.',en:'Great. A real-world action lifted your trust layer by 4.'},
+  ckPartR:{lt:'Gera pradžia. Pasitikėjimas +2. Pabandyk dar kartą šią savaitę.',en:'Good start. Trust +2. Try once more this week.'},
+  ckNoR:{lt:'Nieko tokio. Užduotis lieka galioti, pabandyk iki penktadienio.',en:'That’s fine. The task still stands; try it before Friday.'},
+  waitTomorrow:{lt:'Rytoj čia paklausime, ar pavyko atlikti užduotį.',en:'Tomorrow we’ll ask here whether you managed the task.'},
+  demoCheck:{lt:'Peržiūrėti dabar (demonstracija)',en:'Preview it now (demo)'},
+  yourTask:{lt:'Tavo užduotis',en:'Your task'}
+};
+
+const MOODS = {'-2':{lt:'Užsisklendęs',en:'Closed off'},'-1':{lt:'Atsargus',en:'Wary'},'0':{lt:'Neutralus',en:'Neutral'},'1':{lt:'Atviresnis',en:'More open'},'2':{lt:'Pasitiki',en:'Trusting'}};
+
+const PEOPLE = {
+  tomas:{lt:'Tomas',en:'Tom',role:{lt:'Patyręs ekspertas',en:'Senior expert'},line:{lt:'Geriausias specialistas komandoje. Ir pats tai žino.',en:'Best specialist on the team. And he knows it.'},mood:0},
+  lina:{lt:'Lina',en:'Lena',role:{lt:'Analitikė',en:'Analyst'},line:{lt:'Mato problemas anksčiau už visus. Retai apie jas kalba.',en:'Spots problems before anyone else. Rarely mentions them.'},mood:0},
+  darius:{lt:'Darius',en:'Dan',role:{lt:'Veteranas',en:'Veteran'},line:{lt:'Išgyveno tris reorganizacijas. Netiki „naujomis iniciatyvomis“.',en:'Survived three reorganisations. Doesn’t believe in “new initiatives”.'},mood:-1},
+  egle:{lt:'Eglė',en:'Emma',role:{lt:'Naujokė',en:'Newcomer'},line:{lt:'Labai stengiasi. Bijo suklysti.',en:'Tries very hard. Afraid of making mistakes.'},mood:0},
+  marius:{lt:'Marius',en:'Mark',role:{lt:'Visada sutinka',en:'Always agrees'},line:{lt:'Sutinka su visais. Ką galvoja iš tikrųjų, neaišku.',en:'Agrees with everyone. What he really thinks is anyone’s guess.'},mood:0}
+};
+
+const STYLES = {
+  avoider:{name:{lt:'Taikdarys',en:'Peacekeeper'},
+    desc:{lt:'Saugai ramybę komandoje. Tai stiprybė, bet tylą lengva supainioti su sutarimu.',en:'You protect the calm in the team. That’s a strength, but it’s easy to mistake silence for agreement.'},
+    trap:{lt:'Testas parodė polinkį vengti nemalonių momentų. Šis pasirinkimas būtent toks: trumpam ramiau, bet problema lieka.',en:'Your test showed a tendency to avoid uncomfortable moments. This choice is exactly that: calmer for now, but the problem stays.'}},
+  controller:{name:{lt:'Kapitonas',en:'Captain'},
+    desc:{lt:'Prisiimi atsakomybę ir veiki greitai. Rizika: komanda pripranta laukti tavo sprendimų.',en:'You take charge and move fast. The risk: the team gets used to waiting for your decisions.'},
+    trap:{lt:'Testas parodė polinkį viską kontroliuoti. Čia vėl laimėjo efektyvumas, bet žmonės liko be balso.',en:'Your test showed a tendency to take control. Efficiency won again here, but people were left without a voice.'}},
+  rescuer:{name:{lt:'Gelbėtojas',en:'Rescuer'},
+    desc:{lt:'Tau rūpi žmonės, ir dažnai darbą padarai už juos. Rizika: jie nustoja augti, o tu perdegi.',en:'You care about people and often do the work for them. The risk: they stop growing and you burn out.'},
+    trap:{lt:'Testas parodė polinkį gelbėti ir daryti už kitus. Taip komanda tampa priklausoma nuo tavęs.',en:'Your test showed a tendency to rescue and do things for others. That makes the team depend on you.'}},
+  coach:{name:{lt:'Treneris',en:'Coach'},
+    desc:{lt:'Linksti klausti ir įtraukti. Žaidimas patikrins, ar tai išlaikai, kai darosi karšta.',en:'You tend to ask questions and involve people. The game will test whether that holds when things heat up.'}}
+};
+
+const Q = [
+  {sec:'you',id:'years',text:{lt:'Kiek laiko vadovauji žmonėms?',en:'How long have you been managing people?'},
+    opts:[{v:0,lt:'Mažiau nei metus',en:'Less than a year'},{v:1,lt:'1–3 metus',en:'1–3 years'},{v:2,lt:'3–7 metus',en:'3–7 years'},{v:3,lt:'Daugiau nei 7 metus',en:'More than 7 years'}]},
+  {sec:'you',id:'size',text:{lt:'Kiek žmonių tavo komandoje?',en:'How many people are on your team?'},
+    opts:[{v:0,lt:'2–5',en:'2–5'},{v:1,lt:'6–10',en:'6–10'},{v:2,lt:'11–20',en:'11–20'},{v:3,lt:'Daugiau nei 20',en:'More than 20'}]},
+  {sec:'you',id:'mgrs',text:{lt:'Ar tau pavaldūs kiti vadovai?',en:'Do other managers report to you?'},
+    opts:[{v:0,lt:'Ne',en:'No'},{v:1,lt:'Taip',en:'Yes'}]},
+  {sec:'team',id:'t1',layer:'trust',text:{lt:'Komandos nariai atvirai pripažįsta savo klaidas.',en:'Team members openly admit their mistakes.'}},
+  {sec:'team',id:'t2',layer:'trust',text:{lt:'Žmonės prašo pagalbos nebijodami atrodyti nekompetentingi.',en:'People ask for help without worrying about looking incompetent.'}},
+  {sec:'team',id:'c1',layer:'conflict',text:{lt:'Susirinkimuose žmonės atvirai nesutinka su vieni kitų idėjomis.',en:'In meetings, people openly disagree with each other’s ideas.'}},
+  {sec:'team',id:'c2',layer:'conflict',rev:true,text:{lt:'Tikros diskusijos prasideda jau po susirinkimo, koridoriuje.',en:'The real discussion starts after the meeting, in the hallway.'}},
+  {sec:'team',id:'m1',layer:'commitment',text:{lt:'Po susirinkimo visi tiksliai žino, kas nuspręsta ir kas ką daro.',en:'After a meeting, everyone knows exactly what was decided and who does what.'}},
+  {sec:'team',id:'m2',layer:'commitment',rev:true,text:{lt:'Priimti sprendimai dažnai svarstomi iš naujo, nes kažkas iš tikrųjų nesutiko.',en:'Decisions often get reopened because someone never really agreed.'}},
+  {sec:'team',id:'a1',layer:'accountability',text:{lt:'Kolegos patys pasako vienas kitam, kai kas nors nesilaiko susitarimų.',en:'Colleagues speak up to each other when someone doesn’t keep an agreement.'}},
+  {sec:'team',id:'a2',layer:'accountability',rev:true,text:{lt:'Pastabas dėl prasto darbo komandoje sakau tik aš.',en:'I’m the only one on the team who raises poor performance.'}},
+  {sec:'team',id:'r1',layer:'results',text:{lt:'Bendras tikslas žmonėms svarbesnis už asmeninius nuopelnus.',en:'The shared goal matters more to people than personal credit.'}},
+  {sec:'team',id:'r2',layer:'results',rev:true,text:{lt:'Žmonės gina savo sritį, net kai dėl to nukenčia visa komanda.',en:'People defend their own area even when the whole team suffers for it.'}},
+  {sec:'style',id:'s1',text:{lt:'Dieną prieš terminą matai, kad kolegos darbas silpnas. Ką darai?',en:'A day before the deadline, you see a colleague’s work is weak. What do you do?'},
+    opts:[{s:'rescuer',lt:'Vakare pataisau pats',en:'I fix it myself in the evening'},
+      {s:'coach',lt:'Paklausiu, kas sutrukdė, ir kartu susitariame dėl plano',en:'I ask what got in the way and we agree on a plan together'},
+      {s:'controller',lt:'Tiksliai pasakau, ką perdaryti, ir tikrinu kas valandą',en:'I tell them exactly what to redo and check every hour'},
+      {s:'avoider',lt:'Šį kartą praleidžiu, terminas svarbiau',en:'I let it go this time, the deadline matters more'}]},
+  {sec:'style',id:'s2',text:{lt:'Du komandos nariai susirinkime aštriai ginčijasi. Ką darai?',en:'Two team members argue sharply in a meeting. What do you do?'},
+    opts:[{s:'avoider',lt:'Greitai pakeičiu temą',en:'I quickly change the subject'},
+      {s:'controller',lt:'Nusprendžiu pats ir užbaigiu ginčą',en:'I make the call myself and end the argument'},
+      {s:'coach',lt:'Paprašau abiejų įvardinti stipriausią kito argumentą',en:'I ask each of them to state the other’s strongest argument'},
+      {s:'rescuer',lt:'Vėliau su kiekvienu pakalbu atskirai ir viską išlyginu',en:'Later I talk to each one separately and smooth things over'}]},
+  {sec:'style',id:'s3',text:{lt:'Tavo klaida komandai kainavo savaitę darbo. Ką darai?',en:'Your mistake cost the team a week of work. What do you do?'},
+    opts:[{s:'controller',lt:'Įvedu papildomą patvirtinimą, kad tai nepasikartotų',en:'I add an extra approval step so it can’t happen again'},
+      {s:'rescuer',lt:'Tyliai viską sutvarkau pats, kad komanda nesijaudintų',en:'I quietly fix it myself so the team doesn’t worry'},
+      {s:'avoider',lt:'Susitelkiame į naują planą, kas buvo, tas pražuvo',en:'We focus on the new plan; what’s done is done'},
+      {s:'coach',lt:'Susirinkime papasakoju, kas nutiko ir ką keičiu',en:'I tell the team in a meeting what happened and what I’m changing'}]}
+];
+
+const SCENES = [
+  {title:{lt:'Pirmadienio susirinkimas',en:'Monday meeting'},
+   setup:{
+     novice:{lt:'Projektas vėluoja savaitę. Tu žinai priežastį: prieš dvi savaites klientas pakeitė reikalavimus, o tu pamiršai laiku perduoti tai komandai. Visi susirinko ir laukia, ką pasakysi.',
+             en:'The project is a week late. You know why: two weeks ago the client changed the requirements, and you forgot to pass it on to the team in time. Everyone is in the room, waiting for you to speak.'},
+     senior:{lt:'Projektas vėluoja savaitę. Priežastį tu žinai: vadovybei patvirtinai nerealų terminą, nes nenorėjai atrodyti lėtas, ir su komanda nepasitarei. Tavo vadovų komanda susirinko ir laukia, ką pasakysi.',
+             en:'The project is a week late. You know why: you committed to an unrealistic deadline with leadership because you didn’t want to look slow, and you didn’t check with the team. Your leadership team is in the room, waiting for you to speak.'}},
+   opts:[
+     {best:true,text:{lt:'„Tai mano klaida. Štai kas nutiko ir ką nuo šiandien darysiu kitaip.“',en:'“This one is on me. Here’s what happened and what I’ll do differently from today.”'},
+      d:{trust:12,conflict:3},m:{darius:1,lina:1,egle:1},
+      r:[['darius',{lt:'Hm. Pirmą kartą girdžiu vadovą taip sakant.',en:'Huh. First time I’ve heard a manager say that.'}],['egle',{lt:'Gera žinoti, kad čia galima suklysti.',en:'Good to know it’s OK to make mistakes here.'}]],
+      i:{lt:'Pasitikėjimas komandoje prasideda, kai vadovas pirmas parodo, kad klysti saugu. Tavo atvirumas leidžia ir kitiems nebeslėpti savo klaidų.',en:'Trust in a team starts when the leader shows first that it’s safe to be wrong. Your openness makes it easier for others to stop hiding their own mistakes.'}},
+     {trap:'avoider',text:{lt:'„Visi prie to prisidėjome. Svarbiausia dabar – sutvarkyti.“',en:'“We all played a part. What matters now is fixing it.”'},
+      d:{trust:-6,accountability:-2},m:{darius:-1,tomas:-1},
+      r:[['darius',{lt:'Kaip visada. Kaltų nėra.',en:'As usual. Nobody’s to blame.'}],['tomas',{lt:'Aš savo dalį atidaviau laiku…',en:'I delivered my part on time…'}]],
+      i:{lt:'Išskaidyta kaltė skamba diplomatiškai, bet komanda žino, kas iš tikrųjų nutiko. Jei vadovas savo klaidą „paskirsto“ visiems, žmonės išmoksta daryti tą patį.',en:'Spreading the blame sounds diplomatic, but the team knows what really happened. If the leader spreads their own mistake across everyone, people learn to do the same.'}},
+     {trap:'controller',text:{lt:'Iškart pristatai atkūrimo planą. Priežasties neminai, laikas brangus.',en:'You go straight to a recovery plan. You skip the cause, time is short.'},
+      d:{trust:-3,commitment:4},m:{lina:-1},
+      r:[['lina',{lt:'(tyliai) Bet kodėl taip nutiko?',en:'(quietly) But why did this happen?'}],['marius',{lt:'Puikus planas!',en:'Great plan!'}]],
+      i:{lt:'Planas reikalingas, bet nutylėta priežastis siunčia žinutę: klaidos čia slepiamos. Komanda dirbs pagal planą, tačiau kitą kartą savo klaidų irgi nerodys.',en:'The plan is needed, but leaving out the cause sends a message: mistakes get hidden here. The team will follow the plan, but next time they won’t show their own mistakes either.'}},
+     {text:{lt:'Pripažįsti klaidą, bet ilgai aiškini, koks buvo spaudimas iš viršaus.',en:'You admit the mistake, but spend a long time explaining the pressure from above.'},
+      d:{trust:3},m:{tomas:-1,egle:1},
+      r:[['tomas',{lt:'Taigi kalti vis tiek kiti.',en:'So it’s still someone else’s fault.'}],['egle',{lt:'Bent jau pasakė.',en:'At least they said it.'}]],
+      i:{lt:'Pripažinti yra gera pradžia. Bet kai po to seka ilgas pasiteisinimas, žmonės girdi pasiteisinimą, o ne pripažinimą. Trumpai: kas nutiko, mano dalis, ką keičiu.',en:'Admitting it is a good start. But when a long justification follows, people hear the excuse, not the admission. Keep it short: what happened, my part, what I’m changing.'}}
+   ]},
+  {title:{lt:'Tylus signalas',en:'A quiet signal'},
+   setup:{
+     novice:{lt:'Po susirinkimo pas tave užeina Lina. Ji mano, kad Tomo pasiūlytas sprendimas turi rimtą spragą. Susirinkime ji nieko nesakė. „Tik nesakyk jam, kad tai aš pastebėjau.“',
+             en:'After the meeting, Lena drops by. She thinks the solution Tom proposed has a serious flaw. She said nothing in the meeting. “Just don’t tell him I was the one who noticed.”'},
+     senior:{lt:'Po vadovų susirinkimo pas tave užeina Lina, vienos komandos vadovė. Ji mano, kad patyrusio kolegos Tomo pasiūlyta strategija turi rimtą spragą. Susirinkime ji tylėjo. „Tik nesakyk jam, kad tai aš pastebėjau.“',
+             en:'After the leadership meeting, Lena, one of your team leads, drops by. She thinks the strategy proposed by Tom, a senior colleague, has a serious flaw. She stayed silent in the meeting. “Just don’t tell him I was the one who noticed.”'}},
+   opts:[
+     {trap:'rescuer',text:{lt:'Kitame susirinkime spragą iškeli pats, kaip savo pastebėjimą.',en:'In the next meeting you raise the flaw yourself, as your own observation.'},
+      d:{trust:1,conflict:-2},m:{},
+      r:[['lina',{lt:'(lengviau atsikvepia, bet vėl tyli)',en:'(relieved, but silent again)'}]],
+      i:{lt:'Problema išspręsta, bet Lina išmoko, kad jos balsas skaičiuojasi tik per tave. Kitą kartą ji vėl ateis į tavo kabinetą, o ne kalbės visiems.',en:'The problem got solved, but Lena learned her voice only counts through you. Next time she’ll come to your office again instead of speaking up.'}},
+     {best:true,text:{lt:'Padėkoji ir paklausi, kas padėtų jai tai pasakyti susirinkime. Pasiūlai kitą kartą pačiam pakviesti ją pasisakyti.',en:'You thank her and ask what would help her say it in the meeting. You offer to invite her to speak next time.'},
+      d:{trust:8,conflict:5},m:{lina:2},
+      r:[['lina',{lt:'Jei paklausi manęs tiesiai, pasakysiu.',en:'If you ask me directly, I’ll say it.'}]],
+      i:{lt:'Tu neperimi jos balso, o padedi jai jį panaudoti. Taip saugumas virsta drąsa diskutuoti, o tai jau kitas piramidės sluoksnis.',en:'You don’t take over her voice, you help her use it. That’s how safety turns into the courage to debate, the next layer of the pyramid.'}},
+     {trap:'avoider',text:{lt:'Prieš susirinkimą prieini prie Tomo ir pasakai, kad „kai kurie“ turi abejonių.',en:'Before the meeting you tell Tom privately that “some people” have doubts.'},
+      d:{trust:-7},m:{tomas:-2,lina:-1},
+      r:[['tomas',{lt:'Kas tie „kai kurie“? Kodėl man nesako tiesiai?',en:'Who are “some people”? Why won’t they tell me directly?'}]],
+      i:{lt:'Anoniminės abejonės kuria įtarumą. Tomas ims ieškoti, kas tai pasakė, o komanda supras, kad apie žmones čia kalbama už jų nugarų.',en:'Anonymous doubts breed suspicion. Tom will start looking for who said it, and the team learns that people get talked about behind their backs.'}},
+     {trap:'controller',text:{lt:'Pasakai, kad jei ji nepasakys pati, tai nesiskaito.',en:'You tell her that if she won’t say it herself, it doesn’t count.'},
+      d:{trust:-4},m:{lina:-2},
+      r:[['lina',{lt:'Gerai. Supratau. (ir daugiau nebeateina)',en:'Fine. Got it. (and she doesn’t come back)'}]],
+      i:{lt:'Lūkestis teisingas, bet per ankstyvas. Kol žmogus nejaučia saugumo, spaudimas jį tik dar labiau nutildo. Pirmiausia saugumas, tada reikalavimai.',en:'The expectation is fair, but it comes too early. When someone doesn’t feel safe yet, pressure only makes them quieter. Safety first, then expectations.'}}
+   ]},
+  {title:{lt:'Planavimo diena',en:'Planning day'},
+   setup:{
+     novice:{lt:'Rytoj visą dieną planuosite kitą ketvirtį. Pradžiai turi 30 minučių. Darbotvarkė perpildyta, o Darius jau dabar burba apie „dar vieną komandos formavimą“.',
+             en:'Tomorrow you’ll spend the whole day planning next quarter. You have 30 minutes at the start. The agenda is packed, and Dan is already grumbling about “another team-building thing”.'},
+     senior:{lt:'Rytoj su vadovų komanda planuosite kitus metus. Pradžiai turi 30 minučių. Pusė komandos vieni kitus pažįsta tik iš susirinkimų, o Darius jau burba apie „dar vieną komandos formavimą“.',
+             en:'Tomorrow your leadership team will plan next year. You have 30 minutes at the start. Half the team only know each other from meetings, and Dan is already grumbling about “another team-building thing”.'}},
+   opts:[
+     {trap:'controller',text:{lt:'Praleidi. Laiko mažai, iškart prie darbotvarkės.',en:'Skip it. Time is short, straight to the agenda.'},
+      d:{trust:-3,results:2},m:{egle:-1},
+      r:[['marius',{lt:'Teisingai, darbų daug.',en:'Right, lots to do.'}],['egle',{lt:'(visą dieną beveik nekalba)',en:'(barely speaks all day)'}]],
+      i:{lt:'Darbotvarkė įvykdyta, bet tokios dienos vertė priklauso nuo to, ką žmonės drįsta pasakyti. Pusvalandis pradžioje dažnai sutaupo valandas tylių nesutarimų.',en:'The agenda got done, but a day like this is only as good as what people dare to say. Half an hour at the start often saves hours of silent disagreement.'}},
+     {text:{lt:'Smagi viktorina apie komandos narius: laimi tas, kas daugiausia atspės.',en:'A fun quiz about team members: whoever guesses the most wins.'},
+      d:{trust:3},m:{egle:1,marius:1},
+      r:[['marius',{lt:'Buvo smagu!',en:'That was fun!'}],['darius',{lt:'Malonu. Bet ką tai keičia?',en:'Nice. But what does it change?'}]],
+      i:{lt:'Linksmybės pakelia nuotaiką, bet pasitikėjimas auga, kai žmonės parodo kažką tikro apie save. Smagu ir gilu gali eiti kartu, tik gilumo neturi pritrūkti.',en:'Fun lifts the mood, but trust grows when people share something real about themselves. Fun and depth can go together, as long as the depth is there.'}},
+     {best:true,text:{lt:'Kiekvienas trumpai papasakoja apie save: iš kur kilęs, pirmas darbas, didžiausias iššūkis. Tu pradedi pirmas ir kalbi atvirai.',en:'Everyone shares a little about themselves: where they grew up, their first job, their biggest challenge. You go first and speak openly.'},
+      d:{trust:10,results:2},m:{darius:2,egle:1,tomas:1},
+      r:[['darius',{lt:'Nežinojau, kad tu irgi pradėjai nuo sandėlio.',en:'I didn’t know you started out in a warehouse too.'}],['egle',{lt:'Dabar suprantu, kodėl Tomas toks kruopštus.',en:'Now I get why Tom is so meticulous.'}]],
+      i:{lt:'Kai žmonės žino vieni kitų istorijas, jie elgesį aiškina geranoriškiau. Pratimas trumpas, bet keičia, kaip komanda supranta vieni kitų veiksmus.',en:'When people know each other’s stories, they read each other’s behaviour more generously. It’s a short exercise, but it changes how the team interprets each other.'}},
+     {trap:'avoider',text:{lt:'Paprašai visų įvardinti savo stipriąsias ir silpnąsias puses. Pats nedalyvauji, nes moderuoji.',en:'You ask everyone to name their strengths and weaknesses. You don’t take part yourself, since you’re facilitating.'},
+      d:{trust:1},m:{darius:-1,tomas:-1},
+      r:[['darius',{lt:'O tavo silpnosios pusės?',en:'And what about your weaknesses?'}]],
+      i:{lt:'Prašyti atvirumo iš kitų, o pačiam likti nuošalyje yra viena dažniausių vadovų klaidų. Komanda atvirumo mokosi iš tavęs, ne iš instrukcijų.',en:'Asking others to open up while staying out of it yourself is one of the most common leadership mistakes. The team learns openness from you, not from instructions.'}}
+   ]}
+];
+
+const KEY = 'groundwork.v1';
+let resetArmed = false;
+function fresh(){return {lang:'lt',screen:'welcome',qi:0,answers:{},raw:null,level:null,style:null,moods:null,session:null,v2done:false,best:0,commitment:null,checkin:null}}
+let S = fresh();
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(fresh(),JSON.parse(j))}catch(e){}}
+
+const t = o => (o && (o[S.lang] ?? o.lt)) || '';
+const u = k => t(UI[k]);
+const pn = id => PEOPLE[id][S.lang];
+const today = () => new Date().toISOString().slice(0,10);
+const clamp = (v,a,b) => Math.max(a,Math.min(b,v));
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function effective(raw){
+  const eff={},cap={};let prev=null;
+  LAYERS.forEach(l=>{let v=raw[l];if(prev!==null&&v>prev+15){v=prev+15;cap[l]=true}eff[l]=v;prev=v});
+  return {eff,cap};
+}
+function weakestLayer(raw){return LAYERS.reduce((a,b)=>raw[b]<raw[a]?b:a)}
+
+function computeProfile(){
+  const A=S.answers, raw={};
+  LAYERS.forEach(l=>{
+    const items=Q.filter(q=>q.layer===l);
+    const avg=items.reduce((s,q)=>s+(q.rev?6-A[q.id]:A[q.id]),0)/items.length;
+    raw[l]=Math.round(15+(avg-1)/4*70);
+  });
+  S.raw=raw;
+  S.level=(A.mgrs===1||A.years>=2)?'senior':'novice';
+  const tally={avoider:0,controller:0,rescuer:0,coach:0};
+  ['s1','s2','s3'].forEach(id=>{const q=Q.find(x=>x.id===id);tally[q.opts[A[id]].s]++});
+  S.style=['avoider','controller','rescuer','coach'].reduce((a,b)=>tally[b]>tally[a]?b:a);
+  S.moods=Object.fromEntries(Object.entries(PEOPLE).map(([k,p])=>[k,p.mood]));
+}
+
+/* ---------- radar chart ---------- */
+const RC={x:180,y:146,r:104};
+function radarPt(i,v){const a=-Math.PI/2+i*2*Math.PI/LAYERS.length, r=RC.r*v/100;return [RC.x+r*Math.cos(a),RC.y+r*Math.sin(a)]}
+function polyStr(vals){return LAYERS.map((l,i)=>radarPt(i,vals[l]).map(n=>n.toFixed(1)).join(',')).join(' ')}
+function pyramidSVG(raw, opts={}){
+  const {eff}=effective(raw);
+  const start=opts.from?effective(opts.from).eff:eff;
+  const weak=opts.weak;
+  let g='';
+  [25,50,75,100].forEach(v=>g+=`<circle class="ring" cx="${RC.x}" cy="${RC.y}" r="${RC.r*v/100}"/>`);
+  LAYERS.forEach((l,i)=>{const [x,y]=radarPt(i,100);g+=`<line class="spoke" x1="${RC.x}" y1="${RC.y}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}"/>`});
+  if(opts.ghost) g+=`<polygon class="ghost" points="${polyStr(effective(opts.ghost).eff)}"/>`;
+  g+=`<polygon class="area" points="${polyStr(start)}"/>`;
+  LAYERS.forEach((l,i)=>{const [x,y]=radarPt(i,start[l]);g+=`<circle class="dot${l===weak?' weak':''}" data-dot="${l}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${l===weak?5.5:4.5}"/>`});
+  LAYERS.forEach((l,i)=>{
+    const a=-Math.PI/2+i*2*Math.PI/LAYERS.length, c=Math.cos(a), s=Math.sin(a);
+    const [x,y]=radarPt(i,118);
+    const anchor=c>0.3?'start':c<-0.3?'end':'middle';
+    const dy=s<-0.9?-16:s>0.5?6:-4;
+    g+=`<text class="lbl${l===weak?' weak':''}" x="${x.toFixed(1)}" y="${(y+dy).toFixed(1)}" text-anchor="${anchor}"><tspan x="${x.toFixed(1)}">${esc(t(LAYER[l].short))}</tspan><tspan class="v" x="${x.toFixed(1)}" dy="16" data-num="${l}">${start[l]}</tspan></text>`;
+  });
+  return `<svg viewBox="0 0 360 296" role="img" aria-label="${esc(LAYERS.map(l=>t(LAYER[l])+' '+eff[l]).join(', '))}" data-to='${JSON.stringify(eff)}'>${g}</svg>`;
+}
+function animatePyramid(root, from){
+  if(!from) return;
+  const svg=root.querySelector('svg'), a=effective(from).eff, b=JSON.parse(svg.dataset.to);
+  const area=svg.querySelector('.area');
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const t0=performance.now(), dur=reduce?0:1000;
+  const step=now=>{
+    const k=dur?Math.min(1,(now-t0)/dur):1, e=1-Math.pow(1-k,3), cur={};
+    LAYERS.forEach(l=>cur[l]=a[l]+(b[l]-a[l])*e);
+    area.setAttribute('points',polyStr(cur));
+    LAYERS.forEach((l,i)=>{const [x,y]=radarPt(i,cur[l]);const d=svg.querySelector(`[data-dot="${l}"]`);d.setAttribute('cx',x);d.setAttribute('cy',y);svg.querySelector(`[data-num="${l}"]`).textContent=Math.round(cur[l])});
+    if(k<1) requestAnimationFrame(step);
+  };
+  setTimeout(()=>requestAnimationFrame(step),250);
+}
+function legendHTML(raw, weak){
+  const {eff,cap}=effective(raw);
+  return `<div class="legend">${LAYERS.map(l=>`
+    <div class="lg">
+      <span class="sw" style="background:var(--l-${l})"></span>
+      <span class="nm">${t(LAYER[l])} ${l===weak?`<span class="chip warn">${u('weakest')}</span>`:''}</span>
+      <span class="val">${eff[l]}</span>
+      <span class="bar"><i style="width:${eff[l]}%;background:var(--l-${l})"></i></span>
+      ${cap[l]?`<span class="note">${u('capped')}${raw[l]}</span>`:''}
+    </div>`).join('')}</div>`;
+}
+function brandMark(){
+  const pts=(r)=>[0,1,2,3,4].map(i=>{const a=-Math.PI/2+i*2*Math.PI/5;return `${(11+r*Math.cos(a)).toFixed(1)},${(11.5+r*Math.sin(a)).toFixed(1)}`}).join(' ');
+  const inner=[9,6,8,5,7].map((r,i)=>{const a=-Math.PI/2+i*2*Math.PI/5;return `${(11+r*Math.cos(a)).toFixed(1)},${(11.5+r*Math.sin(a)).toFixed(1)}`}).join(' ');
+  return `<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><polygon points="${pts(10)}" fill="none" style="stroke:var(--muted)" stroke-width="1"/><polygon points="${inner}" style="fill:var(--accent)"/></svg>`;
+}
+function ring(m){return m>=2?'var(--good)':m===1?'color-mix(in srgb,var(--good) 55%,var(--line))':m===0?'var(--line)':m===-1?'color-mix(in srgb,var(--bad) 55%,var(--line))':'var(--bad)'}
+function avatar(id,sm){const n=pn(id);return `<span class="av${sm?' sm':''}" style="--ring:${ring(S.moods[id])}" aria-hidden="true">${esc(n[0])}</span>`}
+function teamRow(){return `<div class="team">${Object.keys(PEOPLE).map(id=>`<div class="mate">${avatar(id)}<span>${esc(pn(id))}</span></div>`).join('')}</div>`}
+
+/* ---------- screens ---------- */
+const V = {};
+V.welcome = () => {
+  const has = !!S.raw;
+  const demo={trust:38,conflict:52,commitment:61,accountability:44,results:70};
+  return `
+  <div class="pyr">${pyramidSVG(demo)}</div>
+  <div class="stack">
+    <h1>${u('tagline')}</h1>
+    <p class="lead">${u('intro')}</p>
+  </div>
+  <ul class="features">
+    <li><b>${u('fl1')}</b><span>${u('f1')}</span></li>
+    <li><b>${u('fl2')}</b><span>${u('f2')}</span></li>
+    <li><b>${u('fl3')}</b><span>${u('f3')}</span></li>
+  </ul>
+  <div class="stack tight">
+    ${has?`<button class="btn" data-go="journey">${u('cont')}</button>`:''}
+    <button class="btn ${has?'ghost':''}" data-act="startTest">${u('startTest')}</button>
+  </div>
+  <p class="foot">${u('basis')}</p>`;
+};
+
+V.test = () => {
+  const q=Q[S.qi], total=Q.length, a=S.answers[q.id];
+  const sec={you:u('secYou'),team:u('secTeam'),style:u('secStyle')}[q.sec];
+  let body;
+  if(q.layer){
+    body=`<p class="small">${u('teamHint')}</p>
+    <div class="likert" role="group">${[1,2,3,4,5].map(v=>`<button data-ans="${v}" aria-pressed="${a===v}" aria-label="${v}">${v}</button>`).join('')}</div>
+    <div class="likert-labels"><span>${u('lk1')}</span><span>${u('lk5')}</span></div>`;
+  } else {
+    body=`<div class="stack tight">${q.opts.map((o,i)=>{const v=o.v??i;return `<button class="opt" data-ans="${v}" aria-pressed="${a===v}">${esc(t(o))}</button>`}).join('')}</div>`;
+  }
+  return `
+  <div class="stack tight">
+    <div class="qhead"><button class="back" data-act="qback">${u('back')}</button><span class="count">${S.qi+1} / ${total}</span></div>
+    <div class="progress"><i style="width:${(S.qi)/total*100}%"></i></div>
+  </div>
+  <p class="eyebrow">${sec}</p>
+  <p class="qtext">${esc(t(q.text))}</p>
+  ${body}`;
+};
+
+V.result = () => {
+  const weak=weakestLayer(S.raw), st=STYLES[S.style];
+  return `
+  <div class="stack tight"><p class="eyebrow">${u('resultEy')}</p><h2>${u('resultH')}</h2></div>
+  <div class="pyr" id="pyr">${pyramidSVG(S.raw,{weak,from:Object.fromEntries(LAYERS.map(l=>[l,0]))})}</div>
+  <p class="small">${u('resultLead')}</p>
+  ${legendHTML(S.raw,weak)}
+  <div class="card"><p class="eyebrow">${u('weakest')}: ${t(LAYER[weak])}</p><p>${t(LAYER[weak].weak)}</p></div>
+  <div class="card style-card"><p class="eyebrow">${u('styleEy')}</p><span class="sn">${t(st.name)}</span><p>${t(st.desc)}</p></div>
+  <p class="small">${u('whyTrust')}</p>
+  <div class="stack tight">
+    <button class="btn" data-go="meet">${u('goV2')}</button>
+    <button class="btn ghost" data-go="journey">${u('toJourney')}</button>
+  </div>`;
+};
+
+V.journey = () => {
+  const weak=weakestLayer(S.raw);
+  let check='';
+  if(S.commitment && !S.checkin){
+    if(S.commitment.date!==today() || S.commitment.demo){
+      check=`<div class="card"><p class="eyebrow">${u('checkEy')}</p><p><b>${u('checkQ')}</b></p>
+        <div class="stack tight">
+          <button class="opt" data-ck="yes">${u('ckYes')}</button>
+          <button class="opt" data-ck="part">${u('ckPart')}</button>
+          <button class="opt" data-ck="no">${u('ckNo')}</button>
+        </div></div>`;
+    } else {
+      check=`<div class="card"><p class="eyebrow">${u('yourTask')}</p><p>${u('task')}</p><p class="small">${u('waitTomorrow')}</p>
+        <button class="link" data-act="demoCheck">${u('demoCheck')}</button></div>`;
+    }
+  } else if(S.checkin){
+    check=`<div class="card"><p class="eyebrow">${u('checkEy')}</p><p>${u({yes:'ckYesR',part:'ckPartR',no:'ckNoR'}[S.checkin])}</p></div>`;
+  }
+  const ch=(code,c,title,sub,state)=>`<li class="ch ${state==='locked'?'locked':state==='play'?'open':''}">
+    <span class="code">${code}</span><div><div class="t">${title}</div><div class="s">${sub}</div></div>
+    ${state==='done'?`<span class="status">✓ ${u('done')}</span>`:state==='play'?`<button class="btn" data-go="meet">${u('play')}</button>`:state==='replay'?`<button class="btn ghost" data-go="meet">${u('again')}</button>`:''}</li>`;
+  return `
+  ${check}
+  <div class="stack tight"><p class="eyebrow">${u('journeyEy')}</p><h2>${u('journeyH')}</h2></div>
+  <div class="pyr">${pyramidSVG(S.raw,{weak})}</div>
+  ${legendHTML(S.raw,weak)}
+  <ul class="chapters">
+    ${ch('V1','results',S.lang==='lt'?'Penkios disfunkcijos':'Five dysfunctions',u('v1s'),'done')}
+    ${ch('V2','trust',t(LAYER.trust),u('v2s'),S.v2done?'replay':'play')}
+    ${ch('V3','conflict',t(LAYER.conflict),u('full'),'locked')}
+    ${ch('V4','commitment',t(LAYER.commitment),u('full'),'locked')}
+    ${ch('V5','accountability',t(LAYER.accountability),u('full'),'locked')}
+    ${ch('V6','results',t(LAYER.results),u('full'),'locked')}
+  </ul>
+  <div class="stack tight">
+    <button class="btn ghost" data-act="startTest">${u('retake')}</button>
+    <button class="btn danger" data-act="reset">${resetArmed?u('resetSure'):u('reset')}</button>
+  </div>`;
+};
+
+V.meet = () => `
+  <div class="stack tight"><p class="eyebrow">${u('meetEy')}</p><h2>${u('meetH')}</h2></div>
+  <p class="lead">${u('meetLead')}</p>
+  <div class="people">${Object.keys(PEOPLE).map(id=>`
+    <div class="person">${avatar(id)}<div><div class="who">${esc(pn(id))} <span class="role">· ${t(PEOPLE[id].role)}</span></div>
+    <p class="small">${t(PEOPLE[id].line)}</p><span class="mood">${t(MOODS[S.moods[id]])}</span></div></div>`).join('')}</div>
+  <span class="chip">${S.level==='senior'?u('lvlSenior'):u('lvlNovice')}</span>
+  <button class="btn" data-act="beginSession">${u('begin')}</button>`;
+
+V.scene = () => {
+  const ss=S.session, sc=SCENES[ss.i];
+  return `
+  <div class="stack tight">
+    <div class="qhead"><span class="eyebrow">${u('meetEy')}</span><span class="count">${u('scene')} ${ss.i+1} ${u('of')} ${SCENES.length}</span></div>
+    <div class="progress"><i style="width:${ss.i/SCENES.length*100}%"></i></div>
+  </div>
+  ${teamRow()}
+  <h2>${t(sc.title)}</h2>
+  <p class="scene">${esc(t(sc.setup[S.level]))}</p>
+  <div class="stack tight">${sc.opts.map((o,i)=>`<button class="opt" data-pick="${i}">${esc(t(o.text))}</button>`).join('')}</div>`;
+};
+
+V.outcome = () => {
+  const ss=S.session, sc=SCENES[ss.i], o=sc.opts[ss.pick];
+  const best=sc.opts.find(x=>x.best);
+  const deltas=Object.entries(o.d).map(([l,v])=>`<div class="delta"><span>${t(LAYER[l])}</span><b class="${v<0?'neg':''}">${v>0?'+':v<0?'−':''}${Math.abs(v)}</b></div>`).join('');
+  const trap=o.trap&&o.trap===S.style?`<div class="trap"><span class="eyebrow">${u('trapEy')}: ${t(STYLES[S.style].name)}</span><p>${t(STYLES[S.style].trap)}</p></div>`:'';
+  const last=ss.i===SCENES.length-1;
+  return `
+  <div class="stack tight">
+    <div class="qhead"><span class="eyebrow">${u('meetEy')}</span><span class="count">${u('scene')} ${ss.i+1} ${u('of')} ${SCENES.length}</span></div>
+    <div class="progress"><i style="width:${(ss.i+1)/SCENES.length*100}%"></i></div>
+  </div>
+  ${teamRow()}
+  <div class="stack tight"><p class="eyebrow">${u('youChose')}</p><p class="picked">${esc(t(o.text))}</p></div>
+  <div class="stack">${o.r.map(([id,line])=>`<div class="say">${avatar(id,true)}<div class="bubble"><span class="n">${esc(pn(id))}</span>${esc(t(line))}</div></div>`).join('')}</div>
+  <div class="deltas">${deltas}</div>
+  <div class="insight"><span class="eyebrow">${o.best?u('bestMove'):u('whatHappened')}</span><p>${t(o.i)}</p></div>
+  ${trap}
+  ${o.best?'':`<div class="card"><p class="eyebrow">${u('stronger')}</p><p>${esc(t(best.text))}</p></div>`}
+  <button class="btn" data-act="nextScene">${last?u('finish'):u('next')}</button>`;
+};
+
+V.end = () => {
+  const ss=S.session, dt=S.raw.trust-ss.start.raw.trust;
+  const lead=dt>0?u('endLeadUp')+dt+u('pts'):dt<0?u('endLeadDown')+(-dt)+u('pts'):u('endLeadSame');
+  const committed=S.commitment&&S.commitment.session===ss.id;
+  return `
+  <div class="stack tight"><p class="eyebrow">${u('endEy')}</p><h2>${u('endH')}</h2><p class="lead">${lead}</p></div>
+  <div class="pyr" id="pyr">${pyramidSVG(S.raw,{from:ss.start.raw,ghost:ss.start.raw})}</div>
+  <div class="row"><span class="chip">${u('strongCount')}: ${ss.best} / ${SCENES.length}</span></div>
+  <div class="stack tight"><p class="eyebrow">${u('teamNow')}</p>${teamRow()}</div>
+  <div class="task"><p class="eyebrow">${u('taskEy')}</p><q>${u('task')}</q>
+    ${committed?`<p class="small"><b>${u('committed')}</b></p>`:`<button class="btn" data-act="commit">${u('commit')}</button>`}
+  </div>
+  <button class="btn ghost" data-go="journey">${u('toJourney')}</button>`;
+};
+
+/* ---------- render & events ---------- */
+const app=document.getElementById('app');
+function render(scrollTop=true){
+  document.documentElement.lang=S.lang;
+  app.innerHTML=`
+  <header class="top">
+    <button class="brand" data-act="home">${brandMark()}<span>Groundwork</span></button>
+    <div class="lang" role="group" aria-label="Kalba / Language">
+      <button data-lang="lt" aria-pressed="${S.lang==='lt'}">LT</button><button data-lang="en" aria-pressed="${S.lang==='en'}">EN</button>
+    </div>
+  </header>
+  <main>${V[S.screen]()}</main>`;
+  const pyr=app.querySelector('#pyr');
+  if(pyr&&S.screen==='result') animatePyramid(pyr,Object.fromEntries(LAYERS.map(l=>[l,0])));
+  if(pyr&&S.screen==='end') animatePyramid(pyr,S.session.start.raw);
+  if(scrollTop) window.scrollTo(0,0);
+  save();
+}
+function go(s){S.screen=s;resetArmed=false;render()}
+
+app.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.lang){S.lang=b.dataset.lang;render(false);return}
+  if(b.dataset.go){go(b.dataset.go);return}
+  if(b.dataset.ans!==undefined){
+    const q=Q[S.qi];S.answers[q.id]=+b.dataset.ans;
+    b.parentElement.querySelectorAll('[aria-pressed]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+    setTimeout(()=>{
+      if(S.qi<Q.length-1){S.qi++;render()}
+      else{computeProfile();S.v2done=false;S.commitment=null;S.checkin=null;go('result')}
+    },180);
+    return;
+  }
+  if(b.dataset.pick!==undefined){
+    const ss=S.session, o=SCENES[ss.i].opts[+b.dataset.pick];
+    ss.pick=+b.dataset.pick; if(o.best) ss.best++;
+    Object.entries(o.d).forEach(([l,v])=>S.raw[l]=clamp(S.raw[l]+v,5,95));
+    Object.entries(o.m).forEach(([id,v])=>S.moods[id]=clamp(S.moods[id]+v,-2,2));
+    go('outcome');return;
+  }
+  if(b.dataset.ck){
+    S.checkin=b.dataset.ck;
+    const bonus={yes:4,part:2,no:0}[S.checkin];
+    S.raw.trust=clamp(S.raw.trust+bonus,5,95);
+    render(false);return;
+  }
+  switch(b.dataset.act){
+    case 'home': go(S.raw?'journey':'welcome');break;
+    case 'startTest': S.qi=0;S.answers={};go('test');break;
+    case 'qback': if(S.qi>0){S.qi--;render()}else go(S.raw?'journey':'welcome');break;
+    case 'beginSession':
+      S.session={id:Date.now(),i:0,pick:null,best:0,start:{raw:{...S.raw},moods:{...S.moods}}};go('scene');break;
+    case 'nextScene':
+      if(S.session.i<SCENES.length-1){S.session.i++;S.session.pick=null;go('scene')}
+      else{S.v2done=true;go('end')}
+      break;
+    case 'commit': S.commitment={date:today(),session:S.session.id};S.checkin=null;render(false);break;
+    case 'demoCheck': S.commitment.demo=true;render(false);break;
+    case 'reset':
+      if(resetArmed){const lang=S.lang;S=fresh();S.lang=lang;resetArmed=false;try{localStorage.removeItem(KEY)}catch(e){}render()}
+      else{resetArmed=true;render(false)}
+      break;
+  }
+});
+
+function boot(data){
+  if(data&&data.S) S=Object.assign(fresh(),data.S); else load();
+  if(!V[S.screen]||(S.screen!=='welcome'&&S.screen!=='test'&&!S.raw)) S.screen='welcome';
+  if((S.screen==='scene'||S.screen==='outcome'||S.screen==='end')&&!S.session) S.screen='journey';
+  render();
+}
+boot({});
+if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+
+</body>
+</html>
