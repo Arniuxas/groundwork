@@ -773,8 +773,8 @@ function rutaLeave(){const c=RT.chars.ruta;if(c){c.state='leaving';walkTo(c,...S
 function tbAuto(k){const E=TBE[k],good=Math.random()*100<G.tb.skill+10,o=good?E.o[0]:E.o[E.o.length-1];FX=null;o.fx();tA(2);
   logE('',L(`Rūta sprendė pati: ${E.t.lt} (${good?'gerai':'prastai'})`,`Ruth decided alone: ${E.t.en} (${good?'well':'poorly'})`));toast(`<b>${t(L('Rūta','Ruth'))}</b> ${good?t(L('išsprendė pati.','handled it herself.')):t(L('sprendė pati, bet prastai.','decided alone, poorly.'))}`)}
 const rutaHead=()=>`<div class="who-head"><span class="av lg" style="background:#5B4B8A">R</span><div><div class="n">${t(L('Rūta','Ruth'))}</div><div class="r">${t(L('Antros komandos vadovė','Team two lead'))} · ${t(L('autoritetas','authority'))} ${G.tb.auth} · ${t(L('įgūdis','skill'))} ${G.tb.skill}</div></div></div>`;
-function tbSheet(title,lead,opts,onPick,cost){const st={res:null};
-  openSheet({cost:0,render:()=>`<p class="eyebrow">${t(L('Antra komanda','Team two'))}</p>${rutaHead()}<h2>${t(title)}</h2>${lead?`<p class="lead">${t(lead)}</p>`:''}
+function tbSheet(title,lead,opts,onPick,cost,head){const st={res:null};
+  openSheet({cost:0,render:()=>`<p class="eyebrow">${t(L('Antra komanda','Team two'))}</p>${head?head():rutaHead()}<h2>${t(title)}</h2>${lead?`<p class="lead">${t(lead)}</p>`:''}
     ${st.res?`<p class="quote">${t(opts[st.res.k].n)}</p>${fxH(st.res.fx)}${gainH(st.c0)}${insightH(opts[st.res.k].i,st.res.nc?newCardLabel():null)}<button class="btn" data-sh="close">${u('close')}</button>`
       :`<div class="opts">${opts.map((o,k)=>`<button class="opt" data-tbo="${k}"><span>${t(o.n)}</span><span class="cost">${cost} ${u('min')}</span></button>`).join('')}</div>`}`,
     tbo:k=>{FX=[];st.c0=S.meta.cap;opts[k].fx();st.res={k,fx:FX,nc:onPick(k)};FX=null;SH.cost=cost;gain(opts[k].k==='good'?8:opts[k].k==='bad'?1:3,null);renderSheet()},
@@ -784,7 +784,42 @@ function openTBE(k){const E=TBE[k];tbSheet(E.t,E.x,E.o,j=>{hit();return unlockCa
 function openTBCoach(){RT.tbCoach=1;
   const o=COACH.map((c,k)=>({n:c.n,k:c.k,i:c.ins,fx:[()=>{tK(6);tA(2);tL(-5)},()=>{if(G.tb.trust>=45)tK(5);else{tL(8);tK(1)}},()=>{tK(1);tA(-2)},()=>{tA(8);tT(4)},()=>{tL(-12);tT(5)}][k]}));
   tbSheet(L('Skambutis Rūtai','A call with Ruth'),L('Kaip panaudosi šį pokalbį?','How will you use this call?'),o,k=>unlockCard('coach_'+k,COACH[k].n,COACH[k].ins,COACH[k].k),20)}
-function openTBVisit(){RT.tbVisit=1;tbSheet(L('Apsilankymas antroje komandoje','Visiting team two'),L('Rūtos komanda pakelia akis nuo ekranų. Ką darysi?','Ruth’s team looks up from their screens. What will you do?'),TBV,k=>unlockCard('tbv_'+k,TBV[k].n,TBV[k].i,TBV[k].k),45)}
+// team B members you can talk to directly; going around Ruth has a price
+const TBM=[
+  {n:L('Paulius','Paul'),c:L('„Rūta nieko neklauso. Sprendimus priima viena.“','“Ruth doesn’t listen. She decides everything alone.”')},
+  {n:L('Agnė','Anna'),c:L('„Turiu per daug darbų, o Rūta vis duoda naujų.“','“I have too much work, and Ruth keeps giving me more.”')},
+  {n:L('Jonas','John'),c:L('„Turiu idėją, kaip pagreitinti darbą, bet Rūta neturi laiko išklausyti.“','“I have an idea to speed things up, but Ruth has no time to listen.”')},
+  {n:L('Ieva','Eve'),c:L('„Nežinau, ar mano darbas kam nors svarbus.“','“I don’t know if my work matters to anyone.”')}];
+const TBA=[
+  {n:L('Išklausyti ir paklausti: „Ar apie tai kalbėjai su Rūta?“','Listen and ask: “Have you talked to Ruth about this?”'),k:'good',fx:()=>{tM(4);tS(-4);tA(1)},
+   i:L('Klausytis kitos komandos žmonių yra gerai, kol nesprendi už jų vadovę. Žmogus išgirstas, o kelias pas Rūtą lieka atviras.','Listening to people in another team is fine as long as you don’t decide for their lead. They feel heard and the path to Ruth stays open.')},
+  {n:L('Išspręsti problemą pačiam vietoje','Solve the problem yourself, on the spot'),k:'bad',fx:()=>{tS(-8);tA(-7);extra(4)},
+   i:L('Problema dingo, bet ir Rūtos autoritetas kartu su ja. Kitą kartą žmogus eis tiesiai pas tave.','The problem is gone, and so is some of Ruth’s authority. Next time they’ll come straight to you.')},
+  {n:L('Pažadėti, kad pasirūpinsi','Promise you’ll take care of it'),k:'bad',fx:()=>{tM(6);tA(-5);tT(-4)},
+   i:L('Pažadas per vadovės galvą: žmogui šiandien geriau, bet Rūta sužinos paskutinė ir jausis apeita.','A promise over the lead’s head: better for them today, but Ruth will be the last to know and will feel bypassed.')},
+  {n:L('Pasakyti, kad tai Rūtos sprendimas, ir pasiūlyti kartu su ja pasikalbėti','Say it’s Ruth’s call, and offer to talk to her together'),k:'',fx:()=>{tA(3);tM(-1);tK(2)},
+   i:L('Gerbi vadovės vaidmenį ir padedi pokalbiui įvykti. Žmogui gal kiek nusivylus, bet sprendimas liks ten, kur turi būti.','You respect the lead’s role and help the conversation happen. They may be a little disappointed, but the decision stays where it belongs.')}];
+function openTBMember(i){const M=TBM[i];RT.tbVisit=1;
+  tbSheet(L(`Pokalbis: ${M.n.lt}`,`A talk with ${M.n.en}`),M.c,TBA,k=>unlockCard('tbm_'+k,TBA[k].n,TBA[k].i,TBA[k].k),20,
+    ()=>`<div class="who-head"><span class="av lg" style="background:#6E6A8E">${esc(t(M.n)[0])}</span><div><div class="n">${t(M.n)}</div><div class="r">${t(L('Rūtos komanda','Ruth’s team'))}</div></div></div>`)}
+function openTBVisit(){openSheet({cost:0,render:()=>`<p class="eyebrow">${t(L('Antra komanda','Team two'))}</p><h2>${t(L('Apsilankymas antroje komandoje','Visiting team two'))}</h2>
+  <p class="lead">${t(L('Rūtos komanda pakelia akis nuo ekranų. Gali kalbėti su visais arba su vienu žmogumi. Atmink: tai Rūtos komanda.','Ruth’s team looks up from their screens. Talk to everyone, or to one person. Remember: this is Ruth’s team.'))}</p>
+  <p class="eyebrow">${t(L('Su visa komanda','With the whole team'))}</p><div class="opts">${TBV.map((o,k)=>`<button class="opt" data-tbg="${k}"><span>${t(o.n)}</span><span class="cost">45 ${u('min')}</span></button>`).join('')}</div>
+  <p class="eyebrow">${t(L('Su vienu žmogumi','With one person'))}</p><div class="opts">${TBM.map((m,i)=>`<button class="opt" data-tbm="${i}"><span><b>${t(m.n)}</b><br><span class="small">${t(m.c)}</span></span><span class="cost">20 ${u('min')}</span></button>`).join('')}</div>
+  <button class="btn ghost" data-sh="close">${u('later')}</button>`,
+  tbg:k=>{RT.tbVisit=1;tbSheet(L('Apsilankymas antroje komandoje','Visiting team two'),null,TBV,j=>unlockCard('tbv_'+j,TBV[j].n,TBV[j].i,TBV[j].k),45);SH.tbo(k)},
+  tbm:i=>openTBMember(i)})}
+const LMEET=[
+  {n:L('Leisti vadovams patiems susitarti, kaip dalintis žmonėmis ir darbais','Let the leads agree between themselves how to share people and work'),k:'good',fx:()=>{dL(3);tK(3);dA(2);tA(2)},
+   i:L('Vadovai, kurie sutaria tarpusavyje, nebeateina pas tave su kiekvienu ginču. Tu kuri vadovų komandą.','Leads who agree with each other stop bringing you every dispute. You are building a team of leads.')},
+  {n:L('Paskirstyti darbus pačiam','Divide the work yourself'),k:'',fx:()=>{extra(6);dA(-2);tA(-2)},
+   i:L('Greita ir aišku, bet vadovai tampa vykdytojais. Jie neišmoks derėtis be tavęs.','Quick and clear, but the leads become executors. They won’t learn to negotiate without you.')},
+  {n:L('Palyginti komandų rezultatus, kad konkuruotų','Compare the teams’ results to make them compete'),k:'bad',fx:()=>{tM(-6);allT(-2);dC('results',-4)},
+   i:L('Konkurencija tarp savų komandų skatina slėpti informaciją ir nepadėti vieniems kitiems.','Competition between your own teams makes people hide information and stop helping each other.')},
+  {n:L('Paprašyti abiejų pasidalinti, kas sekasi ir kas ne','Ask both to share what’s working and what isn’t'),k:'good',fx:()=>{dL(2);tK(2);dC('conflict',3);tT(3)},
+   i:L('Kai vadovai atvirai kalba apie nesėkmes, jie mokosi vienas iš kito, ne tik iš tavęs.','When leads talk openly about failures, they learn from each other, not just from you.')}];
+function openLeadsMeet(){RT.lmeet=1;tbSheet(L('Vadovų susitikimas','Leads’ meeting'),L('Abu vadovai prie tavo stalo. Kaip panaudosi šį laiką?','Both leads at your desk. How will you use this time?'),LMEET,k=>unlockCard('lm_'+k,LMEET[k].n,LMEET[k].i,LMEET[k].k),30,
+  ()=>`<div class="who-head"><span class="av lg" style="background:${PEOPLE[G.lead].shirt}">${esc(pn(G.lead)[0])}</span><div><div class="n">${esc(pn(G.lead))} + ${t(L('Rūta','Ruth'))}</div><div class="r">${t(L('Tavo vadovai','Your leads'))}</div></div></div>`)}
 const tbLine=()=>G&&G.tb?`<p class="small">${t(L('Antra komanda','Team two'))} · ${t(L('vadovė Rūta','lead Ruth'))}: ${t(L('autoritetas','authority'))} <b>${G.tb.auth}</b> · ${t(L('įgūdis','skill'))} <b>${G.tb.skill}</b> · ${t(L('nuotaika','morale'))} <b>${G.tb.morale}</b> · ${t(L('stresas','stress'))} <b style="color:${sColor(G.tb.stress)}">${Math.round(G.tb.stress)}</b> · ${t(L('žmonės','people'))} <b>${G.tb.size}/4</b></p>`:'';
 const hiredN=()=>IDS.filter(id=>G.people[id].hired!==false).length;
 const helper=a=>a!=='tomas'&&ok('tomas')?'tomas':IDS.find(i=>i!==a&&ok(i))||'tomas';
@@ -1030,6 +1065,8 @@ const CGROUPS=[
   {id:'lead',label:L('Paaukštinimas','Promotion'),title:L('Kas taps komandos vadovu','Who becomes team lead'),slots:IDS.map(id=>'lead_'+id)},
   {id:'coach',label:L('Koučingas','Coaching'),title:L('Pokalbis su komandos vadovu','A 1:1 with your team lead'),slots:COACH.map((_,k)=>'coach_'+k)},
   ...TBE.map((E,k)=>({id:'tb'+k,label:L('Antra komanda','Team two'),title:E.t,slots:E.o.map((_,j)=>'tb'+k+'_'+j)})),
+  {id:'tbm',label:L('Antra komanda','Team two'),title:L('Pokalbis su kitos komandos žmogumi','Talking to someone in another team'),slots:TBA.map((_,k)=>'tbm_'+k)},
+  {id:'lm',label:L('Vadovai','Leads'),title:L('Vadovų susitikimas','Leads’ meeting'),slots:LMEET.map((_,k)=>'lm_'+k)},
   {id:'tbv',label:L('Antra komanda','Team two'),title:L('Apsilankymas antroje komandoje','Visiting team two'),slots:TBV.map((_,k)=>'tbv_'+k)},
   {id:'hire',label:L('Įdarbinimas','Hiring'),title:L('Naujo žmogaus pirmoji diena','A new hire’s first day'),slots:ONB.map((_,k)=>'hire_'+k)},
   {id:'cons',label:L('Pasekmės','Consequences'),title:L('Kas nutinka po kelių dienų','What happens days later'),slots:Object.keys(CONS).map(k=>'cons_'+k)}];
@@ -1439,11 +1476,12 @@ function openDesk(){
       ${sk('delegate')&&!RT.deleg?`<button class="opt" data-desk="delegate"><span>${t(L('Deleguoti užduotį','Delegate a task'))}<br><span class="small">${t(L('Rezultatas be tavo laiko, žmogus auga','Output without your time, someone grows'))}</span></span><span class="cost">15 ${u('min')}</span></button>`:''}
       ${G.tb&&!RT.tbCoach?`<button class="opt" data-desk="tbcoach"><span>${t(L('Paskambinti Rūtai: koučingas','Call Ruth: coaching'))}<br><span class="small">${t(L('Antros komandos vadovė','Team two lead'))}</span></span><span class="cost">20 ${u('min')}</span></button>`:''}
       ${G.tb&&!RT.tbVisit?`<button class="opt" data-desk="tbvisit"><span>${t(L('Aplankyti antrą komandą','Visit team two'))}<br><span class="small">${t(L('Kitame aukšte','On another floor'))}</span></span><span class="cost">45 ${u('min')}</span></button>`:''}
+      ${G.tb&&G.lead&&!RT.lmeet?`<button class="opt" data-desk="lmeet"><span>${t(L('Vadovų susitikimas','Leads’ meeting'))}<br><span class="small">${esc(pn(G.lead))} + ${t(L('Rūta','Ruth'))}</span></span><span class="cost">30 ${u('min')}</span></button>`:''}
       <button class="opt" data-desk="book"><span>${t(L('Įžvalgų knyga','Book of insights'))}<br><span class="small">${t(L('Atrasta','Found'))} ${cardsN()}/${CARD_TOTAL}</span></span><span class="cost">0 ${u('min')}</span></button>
       <button class="opt" data-desk="self"><span>${u('selfwork')}<br><span class="small">${u('selfD')}</span></span><span class="cost">1,5 ${u('h')}</span></button></div>
       <button class="btn ghost" data-sh="close">${u('later')}</button>`,
     desk:k=>{if(k==='book'){SH.book=1;renderSheet();return}FX=[];let ins;
-      if(k==='tbcoach'){FX=null;openTBCoach();return}if(k==='tbvisit'){FX=null;openTBVisit();return}
+      if(k==='tbcoach'){FX=null;openTBCoach();return}if(k==='tbvisit'){FX=null;openTBVisit();return}if(k==='lmeet'){FX=null;openLeadsMeet();return}
       if(k==='delegate'){RT.deleg=1;SH.cost=15;const p=IDS.filter(ok).sort((a,b)=>G.people[a].stress-G.people[b].stress)[0];extra(10);dC('accountability',3);if(p){dS(p,5);dT(p,3)}st.res={fx:FX,ins:L('Delegavimas nėra darbo numetimas. Kai perduodi užduotį su pasitikėjimu, žmogus auga, o tu laimi laiko komandai.','Delegating isn’t dumping work. Hand over a task with trust, and the person grows while you win time for the team.')};FX=null;renderSheet();return}
       if(k==='report'){dB(sk('up')?12:8);G.stats.report++;SH.cost=sk('up')?30:45;ins=G.stats.report>=3?L('Vadovybė informuota, bet tu daugiau laiko praleidi ataskaitose nei su komanda.','Leadership is informed, but you spend more time on reports than with your team.'):L('Vadovybė mato, kas vyksta. Tai irgi tavo darbas.','Leadership can see what’s happening. That’s part of your job too.')}
       else{extra(14);dC('accountability',-3);G.stats.self++;SH.cost=90;ins=G.stats.self>=2?L('Darbą darai pats jau ne pirmą kartą. Komanda pratinasi laukti, kol vadovas išgelbės.','Not the first time you’ve done the work yourself. The team is learning to wait for you to rescue them.'):L('Rezultatas greitas. Bet kol dirbi pats, niekas nemato, kas vyksta komandoje.','Quick result. But while you work, nobody is watching what’s happening in the team.')}
@@ -1489,7 +1527,7 @@ function logH(){return G.log.length?`<ul class="log">${G.log.slice().reverse().m
 
 sheet.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!SH)return;const d=b.dataset;
   if(d.sh==='close')closeSheet();else if(d.sh==='callMeet')callMeeting();
-  else if(d.sh==='back'){SH.dos=null;SH.book=null;renderSheet()}else if(d.dos){SH.dos=d.dos;renderSheet()}else if(d.buy)buy(d.buy);else if(d.iq)SH.iq(d.iq);else if(d.lead)SH.lead(d.lead);else if(d.coach!==undefined)SH.coach(+d.coach);else if(d.tbo!==undefined)SH.tbo(+d.tbo);else if(d.onb!==undefined)SH.onb(+d.onb);
+  else if(d.sh==='back'){SH.dos=null;SH.book=null;renderSheet()}else if(d.dos){SH.dos=d.dos;renderSheet()}else if(d.buy)buy(d.buy);else if(d.iq)SH.iq(d.iq);else if(d.lead)SH.lead(d.lead);else if(d.coach!==undefined)SH.coach(+d.coach);else if(d.tbo!==undefined)SH.tbo(+d.tbo);else if(d.tbg!==undefined)SH.tbg(+d.tbg);else if(d.tbm!==undefined)SH.tbm(+d.tbm);else if(d.onb!==undefined)SH.onb(+d.onb);
   else if(d.talk)SH.talk(d.talk);else if(d.ev!==undefined)SH.ev(+d.ev);else if(d.desk)SH.desk(d.desk);else if(d.meet)SH.meet(d.meet);else if(d.mi!==undefined)SH.mi(+d.mi)});
 
 /* ================= day / week end ================= */
