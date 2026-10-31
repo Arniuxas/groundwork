@@ -714,12 +714,78 @@ const WEEKS=[
 // after week 5 the career keeps going: mixed dilemmas, each week a little harder
 function weekCfg(w){
   if(w<WEEKS.length)return WEEKS[w];
+  if(w>=WEEKS.length+2)return twoCfg(w);
   const k=w-WEEKS.length+1,layer='lead',evs=shuffle(Object.keys(EVDEF).map(Number).filter(n=>n<=16)).slice(0,3);
   return {n:L(`Vadovų vadovas · ${k} lygis`,`Leading leads · level ${k}`),layer,leadMode:true,team:ALL5,bump:10,plan:1.12+0.04*k,stress:Math.min(22,8+2*k),
     sched:[[0,14*60,evs[0]],[1,11*60,17],[2,11*60,evs[1]],[3,11*60,18],[4,11*60,19]],
     task:L('Šią savaitę, kai kas nors ateis su problema, vietoj atsakymo paklausk: „O kaip tu spręstum?“','This week, when someone brings you a problem, ask “How would you solve it?” instead of answering.'),
     intro:L(`Savaitė ${w+1}. Tu kyli: dabar komandai vadovausi per komandos vadovą. Pirmadienį išsirink, ką paaukštinti. Kasdienius įvykius sprendžia jis, o tavo darbas yra jį auginti: koučinti, palaikyti ir neapeiti. Kiekviena savaitė sunkesnė.`,`Week ${w+1}. You’re moving up: from now on you lead the team through a team lead. On Monday, choose whom to promote. They handle day-to-day events; your job is to grow them: coach, back them, and don’t go around them. Each week is harder.`)};
 }
+/* two teams (week 8+): team B sits on another floor; you only see its lead, Rūta */
+function twoCfg(w){const k=w-WEEKS.length-1,evs=shuffle(Object.keys(EVDEF).map(Number).filter(n=>n<=16)).slice(0,2);
+  return {n:L(`Dvi komandos · ${k} lygis`,`Two teams · level ${k}`),layer:'lead',leadMode:true,twoTeams:true,team:ALL5,bump:10,plan:1.15+0.04*k,stress:Math.min(22,10+2*k),
+    sched:[[0,14*60,evs[0]],[1,11*60,17],[2,11*60,evs[1]],[3,11*60,18],[4,11*60,19]],
+    task:L('Šią savaitę pasikalbėk su vieno savo vadovo komandos nariu, bet tik klausyk. Ką išgirdai, aptark su vadovu, o ne spręsk pats.','This week, talk to someone in one of your leads’ teams, but only listen. Discuss what you heard with the lead instead of fixing it yourself.'),
+    intro:L(`Savaitė ${w+1}. Dabar vadovauji dviem komandoms. Pirmoji čia, biure, su vadovu, kurį paaukštinsi pirmadienį. Antroji kitame aukšte: jai vadovauja Rūta, o tu tos komandos nematai. Rūta ateis su klausimais, gali jai paskambinti ar aplankyti jos komandą. Tavo laiko neužteks abiem, todėl teks pasitikėti vadovais.`,`Week ${w+1}. You now lead two teams. One is here in the office, with a lead you’ll promote on Monday. The other is on another floor, led by Ruth, and you can’t see it. Ruth will come with questions; you can call her or visit her team. Your time won’t stretch to both, so you’ll have to trust your leads.`)}}
+const TBE=[
+  {t:L('Du žmonės nesikalba','Two people aren’t talking'),x:L('Rūta: „Du mano žmonės po ginčo nesikalba jau savaitę. Ką daryti?“','Ruth: “Two of my people haven’t spoken for a week since an argument. What do I do?”'),o:[
+    {n:L('Paklausti, ką ji jau bandė, ir padėti suplanuoti pokalbį su abiem','Ask what she’s tried and help her plan a conversation with both'),k:'good',fx:()=>{tK(5);tS(-6)},i:L('Tu nesprendi už vadovę, bet padedi jai pasiruošti. Kitą kartą ji tai padarys pati.','You don’t solve it for the lead, you help her prepare. Next time she’ll do it alone.')},
+    {n:L('„Atsiųsk juos pas mane“','“Send them to me”'),k:'bad',fx:()=>{tA(-6);tM(2)},i:L('Konfliktas gal ir išsispręs, bet komanda išmoko, kad svarbūs dalykai sprendžiami ne pas Rūtą.','The conflict may get settled, but the team learned that important things aren’t decided by Ruth.')},
+    {n:L('„Tegul patys susitvarko“','“Let them sort it out themselves”'),k:'bad',fx:()=>{tS(8);tM(-4)},i:L('Užsitęsęs konfliktas kenkia visai komandai. Vadovei reikėjo pagalbos, o ne leidimo nieko nedaryti.','A drawn-out conflict hurts the whole team. The lead needed help, not permission to do nothing.')}]},
+  {t:L('Rūtai trūksta žmonių','Ruth is short of people'),x:L('Rūtos komanda nespėja su terminu. Ji prašo vienai dienai dviejų žmonių iš tavo pirmos komandos.','Ruth’s team is behind on a deadline. She asks to borrow two people from your first team for a day.'),o:[
+    {n:L('Kartu peržiūrėti prioritetus: ką galima atidėti','Review priorities together: what can wait'),k:'good',fx:()=>{tK(4);tS(-6)},i:L('Dažnai trūksta ne žmonių, o aiškių prioritetų. Padėjai vadovei tai pamatyti.','Often what’s missing isn’t people but clear priorities. You helped the lead see that.')},
+    {n:L('Paskolinti du žmones vienai dienai','Lend two people for a day'),k:'',fx:()=>{tS(-12);allS(8);extra(-10)},i:L('Antrai komandai lengviau, bet pirmoji pavargo ir atsiliko. Direktorius visada skirsto ribotus išteklius.','Easier for team two, but team one got tired and fell behind. A director always shares limited resources.')},
+    {n:L('„Spręsk pati“','“Figure it out yourself”'),k:'bad',fx:()=>{tS(10);tA(2);tT(-4)},i:L('Savarankiškumas svarbus, bet vadovė atėjo su tikra bėda ir liko viena.','Autonomy matters, but she came with a real problem and was left alone with it.')}]},
+  {t:L('Nauja tvarka ir pasipriešinimas','A new process meets resistance'),x:L('Rūta nori įvesti naują darbo tvarką, bet jos komanda priešinasi ir skundžiasi tau.','Ruth wants to introduce a new process, but her team resists and complains to you.'),o:[
+    {n:L('Viešai paremti Rūtą, bet paprašyti, kad ji išklausytų prieštaravimus','Back Ruth publicly, but ask her to hear out the objections'),k:'good',fx:()=>{tA(6);tM(3)},i:L('Palaikai vadovę ir kartu mokai ją klausytis. Autoritetas auga, o komanda jaučiasi išgirsta.','You back the lead and teach her to listen. Her authority grows and the team feels heard.')},
+    {n:L('Atšaukti naują tvarką','Cancel the new process'),k:'bad',fx:()=>{tA(-10);tM(4)},i:L('Komanda laimėjo prieš vadovę per tave. Kitą kartą skųsis dar greičiau.','The team beat its lead by going through you. Next time they’ll complain even sooner.')},
+    {n:L('Leisti jai daryti, kaip nori','Let her do it her way'),k:'',fx:()=>{tA(3);tM(-5)},i:L('Vadovė jaučiasi palaikoma, bet komandos nerimas liko neišgirstas.','The lead feels backed, but the team’s worries went unheard.')}]},
+  {t:L('Laiškas per Rūtos galvą','A message over Ruth’s head'),x:L('Paulius iš antros komandos parašė tau tiesiai: skundžiasi, kad Rūta nieko neklauso.','Paul from the second team wrote to you directly, complaining that Ruth never listens.'),o:[
+    {n:L('Padėkoti, paskatinti kalbėti su Rūta ir pasakyti Rūtai, kad toks signalas buvo','Thank him, encourage him to talk to Ruth, and let Ruth know there was a signal'),k:'good',fx:()=>{tA(2);tK(3);tM(2)},i:L('Signalas neprapuolė, o vadovė jį išgirdo nepažeminta. Taip veikia sveika vadovų grandinė.','The signal wasn’t lost, and the lead heard it without being humiliated. That’s a healthy chain of leadership.')},
+    {n:L('Pačiam išspręsti Pauliaus problemą','Solve Paul’s problem yourself'),k:'bad',fx:()=>{tA(-8);tM(3)},i:L('Paulius patenkintas, bet dabar visa komanda žino, kad Rūtą galima apeiti.','Paul is pleased, but now the whole team knows Ruth can be bypassed.')},
+    {n:L('Persiųsti laišką Rūtai be komentarų','Forward the email to Ruth without comment'),k:'bad',fx:()=>{tM(-8);tT(-3)},i:L('Paulius jausis išduotas, o Rūta nežinos, ką su tuo daryti. Pasitikėjimas krenta abiejose pusėse.','Paul will feel betrayed and Ruth won’t know what to do with it. Trust drops on both sides.')}]},
+  {t:L('Antra komanda viršijo planą','Team two beat the target'),x:L('Rūta džiaugiasi: komanda viršijo savaitės planą. Ji klausia, kaip geriausia apdovanoti.','Ruth is delighted: her team beat the weekly target. She asks how best to reward them.'),o:[
+    {n:L('Pasiūlyti, kad ji pati pagirtų komandą, o tu pagirsi ją','Suggest she praises the team herself, and you praise her'),k:'good',fx:()=>{tA(5);tM(6);tT(3)},i:L('Pagyrimas keliauja grandine: tu pagiri vadovę, ji pagiria komandą. Taip auga ir autoritetas, ir nuotaika.','Praise travels down the chain: you praise the lead, she praises the team. Authority and morale both grow.')},
+    {n:L('Nueiti ir pagirti komandą pačiam','Go and praise the team yourself'),k:'',fx:()=>{tM(6);tA(-3)},i:L('Komandai malonu, bet dėmesys atiteko tau, o ne jų vadovei.','The team enjoyed it, but the credit went to you instead of their lead.')},
+    {n:L('„Tai jų darbas“','“That’s their job”'),k:'bad',fx:()=>{tM(-6);tT(-3)},i:L('Nepastebėtas laimėjimas kitą kartą bus mažesnis.','A win that goes unnoticed will be smaller next time.')}]},
+  {t:L('Rūta dirba savaitgaliais','Ruth works weekends'),x:L('Sužinai, kad Rūta jau trečią savaitgalį dirba. Ji sako: „Kitaip nespėju.“','You learn Ruth has worked three weekends in a row. She says: “Otherwise I can’t keep up.”'),o:[
+    {n:L('Kartu peržiūrėti, ką ji galėtų deleguoti savo žmonėms','Review together what she could delegate to her people'),k:'good',fx:()=>{tK(5);tL(-15)},i:L('Pervargęs vadovas augina pervargusią komandą. Deleguoti išmoksta tas, kuriam kas nors padeda pradėti.','An exhausted lead raises an exhausted team. People learn to delegate when someone helps them start.')},
+    {n:L('Pagirti už atsidavimą','Praise her dedication'),k:'bad',fx:()=>{tL(10)},i:L('Pagyrei elgesį, kuris ją sudegins.','You praised the behaviour that will burn her out.')},
+    {n:L('Duoti jai laisvą dieną','Give her a day off'),k:'',fx:()=>{tL(-20);tS(6)},i:L('Poilsis padės, bet priežastis liko: ji vis dar viską neša pati.','Rest helps, but the cause remains: she still carries everything herself.')}]}
+];
+const TBV=[
+  {n:L('Tik klausytis ir klausti, kas trukdo dirbti','Only listen and ask what gets in the way'),k:'good',fx:()=>{tM(6);tS(-8)},i:L('Apsilankymas pas kito vadovo komandą be sprendimų už jį: žmonės jaučiasi matomi, o vadovės autoritetas nenukenčia.','Visiting a lead’s team without making their decisions: people feel seen and the lead’s authority stays intact.')},
+  {n:L('Išspręsti jų problemas vietoje','Fix their problems on the spot'),k:'bad',fx:()=>{extra(10);tA(-8);tM(2)},i:L('Rezultatas greitas, bet nuo šiol komanda lauks tavęs, ne Rūtos.','A quick result, but from now on the team will wait for you, not for Ruth.')},
+  {n:L('Pristatyti savaitės tikslus ir paprašyti klausimų','Present the week’s goals and invite questions'),k:'',fx:()=>{tM(2);tS(2);tA(2)},i:L('Tikslai aiškesni, bet vienas pristatymas nepakeičia kasdienio vadovo darbo.','The goals are clearer, but one presentation doesn’t replace the lead’s daily work.')}];
+const tbv=(key,f,v)=>{const T=G.tb,o=T[f];T[f]=clamp(o+v,0,100);rec(null,key,T[f]-o)};
+const tS=v=>tbv('tbS','stress',v),tM=v=>tbv('tbM','morale',v),tA=v=>tbv('tbA','auth',v),tK=v=>tbv('tbK','skill',v),tL=v=>tbv('tbL','lstress',v),tT=v=>tbv('tbT','trust',v);
+function tbTick(per){const T=G.tb;
+  const m=(T.stress<40?1:T.stress<70?0.9:0.75)*(0.85+0.3*T.morale/100)*(0.9+0.25*T.skill/100)*(has('screen')?1.06:1),r=T.size*20*m/6.7*per;G.out+=r;G.dayOut+=r;
+  T.stress=clamp(T.stress+1.5*per*(1.3-T.skill/100)*(has('plants')?0.9:1),0,100);T.lstress=clamp(T.lstress+1.0*per,0,100);
+  if(T.stress>=100){T.size--;T.quits++;T.stress=70;T.morale=clamp(T.morale-10,0,100);logE('bad',L('Iš antros komandos išėjo žmogus','Someone quit the second team'));RT.dayIns.push(L('Antros komandos stresas pasiekė ribą, ir žmogus išėjo. Rūtai reikėjo daugiau pagalbos.','Team two’s stress hit the limit and someone quit. Ruth needed more support.'));toast(`<b>${t(L('Antra komanda','Team two'))}</b>: ${t(L('vienas žmogus išėjo.','one person quit.'))}`);
+    if(IDS.filter(x=>G.people[x].quit).length+T.quits>=3&&!G.over){G.over='collapse';setTimeout(endWeekNow,1800)}}
+  if(T.lstress>=100){T.lstress=70;T.auth=clamp(T.auth-15,0,100);T.skill=clamp(T.skill-5,0,100);logE('bad',L('Rūta perdegė','Ruth burned out'));toast(`<b>${t(L('Rūta','Ruth'))}</b> ${t(L('perdegė: kelias dienas vadovauja prasčiau.','burned out and leads worse for a few days.'))}`)}}
+function spawnRuta(){const T=G.tb;let pool=TBE.map((_,i)=>i).filter(i=>!T.ev.includes(i));if(!pool.length)pool=TBE.map((_,i)=>i);const k=rnd(pool);T.ev.push(k);
+  RT.chars.ruta={id:'ruta',x:SPOT.exit[0],y:SPOT.exit[1],path:[],state:'tb',timer:999,say:null,sayT:0,phase:0};walkTo(RT.chars.ruta,4,6);RT.tbN=(RT.tbN||0)+1;
+  addMarker({kind:'npc',who:'ruta',tb:k,until:RT.time+60,miss:'tb'});toast(`<b>${t(L('Rūta','Ruth'))}</b> (${t(L('antra komanda','team two'))}) ${t(L('atėjo su klausimu.','has come with a question.'))}`);
+  mentor('ruta',L('Rūta vadovauja komandai, kurios tu nematai. Jei neturėsi laiko, ji spręs pati: gerai arba blogai, priklausomai nuo jos įgūdžio.','Ruth leads a team you can’t see. If you have no time, she’ll decide alone, well or badly depending on her skill.'))}
+function rutaLeave(){const c=RT.chars.ruta;if(c){c.state='leaving';walkTo(c,...SPOT.exit)}}
+function tbAuto(k){const E=TBE[k],good=Math.random()*100<G.tb.skill+10,o=good?E.o[0]:E.o[E.o.length-1];FX=null;o.fx();tA(2);
+  logE('',L(`Rūta sprendė pati: ${E.t.lt} (${good?'gerai':'prastai'})`,`Ruth decided alone: ${E.t.en} (${good?'well':'poorly'})`));toast(`<b>${t(L('Rūta','Ruth'))}</b> ${good?t(L('išsprendė pati.','handled it herself.')):t(L('sprendė pati, bet prastai.','decided alone, poorly.'))}`)}
+const rutaHead=()=>`<div class="who-head"><span class="av lg" style="background:#5B4B8A">R</span><div><div class="n">${t(L('Rūta','Ruth'))}</div><div class="r">${t(L('Antros komandos vadovė','Team two lead'))} · ${t(L('autoritetas','authority'))} ${G.tb.auth} · ${t(L('įgūdis','skill'))} ${G.tb.skill}</div></div></div>`;
+function tbSheet(title,lead,opts,onPick,cost){const st={res:null};
+  openSheet({cost:0,render:()=>`<p class="eyebrow">${t(L('Antra komanda','Team two'))}</p>${rutaHead()}<h2>${t(title)}</h2>${lead?`<p class="lead">${t(lead)}</p>`:''}
+    ${st.res?`<p class="quote">${t(opts[st.res.k].n)}</p>${fxH(st.res.fx)}${gainH(st.c0)}${insightH(opts[st.res.k].i,st.res.nc?newCardLabel():null)}<button class="btn" data-sh="close">${u('close')}</button>`
+      :`<div class="opts">${opts.map((o,k)=>`<button class="opt" data-tbo="${k}"><span>${t(o.n)}</span><span class="cost">${cost} ${u('min')}</span></button>`).join('')}</div>`}`,
+    tbo:k=>{FX=[];st.c0=S.meta.cap;opts[k].fx();st.res={k,fx:FX,nc:onPick(k)};FX=null;SH.cost=cost;gain(opts[k].k==='good'?8:opts[k].k==='bad'?1:3,null);renderSheet()},
+    after:()=>{if(RT.chars.ruta)rutaLeave()}});
+}
+function openTBE(k){const E=TBE[k];tbSheet(E.t,E.x,E.o,j=>{hit();return unlockCard('tb'+k+'_'+j,E.o[j].n,E.o[j].i,E.o[j].k)},20)}
+function openTBCoach(){RT.tbCoach=1;
+  const o=COACH.map((c,k)=>({n:c.n,k:c.k,i:c.ins,fx:[()=>{tK(6);tA(2);tL(-5)},()=>{if(G.tb.trust>=45)tK(5);else{tL(8);tK(1)}},()=>{tK(1);tA(-2)},()=>{tA(8);tT(4)},()=>{tL(-12);tT(5)}][k]}));
+  tbSheet(L('Skambutis Rūtai','A call with Ruth'),L('Kaip panaudosi šį pokalbį?','How will you use this call?'),o,k=>unlockCard('coach_'+k,COACH[k].n,COACH[k].ins,COACH[k].k),20)}
+function openTBVisit(){RT.tbVisit=1;tbSheet(L('Apsilankymas antroje komandoje','Visiting team two'),L('Rūtos komanda pakelia akis nuo ekranų. Ką darysi?','Ruth’s team looks up from their screens. What will you do?'),TBV,k=>unlockCard('tbv_'+k,TBV[k].n,TBV[k].i,TBV[k].k),45)}
+const tbLine=()=>G&&G.tb?`<p class="small">${t(L('Antra komanda','Team two'))} · ${t(L('vadovė Rūta','lead Ruth'))}: ${t(L('autoritetas','authority'))} <b>${G.tb.auth}</b> · ${t(L('įgūdis','skill'))} <b>${G.tb.skill}</b> · ${t(L('nuotaika','morale'))} <b>${G.tb.morale}</b> · ${t(L('stresas','stress'))} <b style="color:${sColor(G.tb.stress)}">${Math.round(G.tb.stress)}</b> · ${t(L('žmonės','people'))} <b>${G.tb.size}/4</b></p>`:'';
 const hiredN=()=>IDS.filter(id=>G.people[id].hired!==false).length;
 const helper=a=>a!=='tomas'&&ok('tomas')?'tomas':IDS.find(i=>i!==a&&ok(i))||'tomas';
 const starKey=(ty,w)=>`${ty}_${w}`;
@@ -852,14 +918,14 @@ function leadHandle(m){
   if(c&&tg&&c.state==='work'){const a=[[1,0],[-1,0],[0,1]].map(([dx,dy])=>[Math.round(tg.x)+dx,Math.round(tg.y)+dy]).find(([x,y])=>walkable(x,y));if(a&&walkTo(c,...a)){c.state='walk';c.next='help';c.dur=15}}
   sendBack(m.who);
 }
-const leadLine=()=>G&&G.lead?`<p class="small">${t(L('Komandos vadovas','Team lead'))}: <b>${esc(pn(G.lead))}</b> · ${t(L('autoritetas','authority'))} <b>${G.auth}</b> · ${t(L('įgūdis','skill'))} <b>${G.lskill}</b></p>`:'';
+const leadLine=()=>(G&&G.tb?tbLine():'')+(G&&G.lead?`<p class="small">${t(L('Komandos vadovas','Team lead'))}: <b>${esc(pn(G.lead))}</b> · ${t(L('autoritetas','authority'))} <b>${G.auth}</b> · ${t(L('įgūdis','skill'))} <b>${G.lskill}</b></p>`:'');
 
 function renderCareer(ty){if(ty)renderCareer.ty=ty;ty=renderCareer.ty;
   let last=0;while(starsAt(ty,last)>=2)last++;const n=Math.max(WEEKS.length,last+1);
   overIn.innerHTML=`<span data-careerv hidden></span><p class="eyebrow">${u(ty)} · ${esc(rank())}</p><h1>${t(L('Tavo karjera','Your career'))}</h1>
     <p class="lead">${t(L('Kiekviena savaitė moko vieno komandos lygmens. Kad atsirakintų kita, savaitę reikia baigti bent dviem žvaigždutėmis. Po penktos savaitės iššūkiai tęsiasi ir sunkėja.','Each week teaches one level of teamwork. To unlock the next, finish the week with at least two stars. After week five the challenges continue and get harder.'))}</p>
     <div class="opts">${Array.from({length:n},(_,w)=>{const c=weekCfg(w),open=unlocked(ty,w),sa=starsAt(ty,w);
-      return `<button class="opt typebtn" data-ov="week" data-w="${w}"${open?'':' disabled style="opacity:.5;cursor:default"'}><b>${t(L('Savaitė','Week'))} ${w+1} · ${w<WEEKS.length?t(c.n):t(LAYER[c.layer])} ${starsH(sa)}</b><span>${open?(w<WEEKS.length?`${(c.team.length+(c.hire?1:0))} ${t(L('žmonės','people'))}${c.hire?` · ${t(L('įdarbinimas','hiring'))}`:''}`:t(L('Nesibaigiantis iššūkis','Endless challenge'))):t(L('Užrakinta: reikia ★★ ankstesnėje savaitėje','Locked: needs ★★ on the previous week'))}</span></button>`}).join('')}</div>
+      return `<button class="opt typebtn" data-ov="week" data-w="${w}"${open?'':' disabled style="opacity:.5;cursor:default"'}><b>${t(L('Savaitė','Week'))} ${w+1} · ${t(c.n)} ${starsH(sa)}</b><span>${open?(w<WEEKS.length?`${(c.team.length+(c.hire?1:0))} ${t(L('žmonės','people'))}${c.hire?` · ${t(L('įdarbinimas','hiring'))}`:''}`:t(L('Nesibaigiantis iššūkis','Endless challenge'))):t(L('Užrakinta: reikia ★★ ankstesnėje savaitėje','Locked: needs ★★ on the previous week'))}</span></button>`}).join('')}</div>
     <button class="btn ghost" data-ov="welcome">${t(L('Grįžti','Back'))}</button>`;
   over.hidden=false;over.scrollTop=0;
 }
@@ -963,6 +1029,8 @@ const CGROUPS=[
   ...Object.keys(MICRO).map(m=>({id:'mi_'+m,label:L('Situacija','Situation'),title:MICRO[m].title,slots:MICRO[m].opts.map((_,k)=>'mi_'+m+'_'+k)})),
   {id:'lead',label:L('Paaukštinimas','Promotion'),title:L('Kas taps komandos vadovu','Who becomes team lead'),slots:IDS.map(id=>'lead_'+id)},
   {id:'coach',label:L('Koučingas','Coaching'),title:L('Pokalbis su komandos vadovu','A 1:1 with your team lead'),slots:COACH.map((_,k)=>'coach_'+k)},
+  ...TBE.map((E,k)=>({id:'tb'+k,label:L('Antra komanda','Team two'),title:E.t,slots:E.o.map((_,j)=>'tb'+k+'_'+j)})),
+  {id:'tbv',label:L('Antra komanda','Team two'),title:L('Apsilankymas antroje komandoje','Visiting team two'),slots:TBV.map((_,k)=>'tbv_'+k)},
   {id:'hire',label:L('Įdarbinimas','Hiring'),title:L('Naujo žmogaus pirmoji diena','A new hire’s first day'),slots:ONB.map((_,k)=>'hire_'+k)},
   {id:'cons',label:L('Pasekmės','Consequences'),title:L('Kas nutinka po kelių dienų','What happens days later'),slots:Object.keys(CONS).map(k=>'cons_'+k)}];
 const CARD_TOTAL=CGROUPS.reduce((s,g)=>s+g.slots.length,0);
@@ -984,10 +1052,10 @@ function cardsH(){
 function renderCards(){overIn.innerHTML=`<span data-cardsv hidden></span><p class="eyebrow">${t(L('Tavo progresas','Your progress'))}</p><h1>${t(L('Įžvalgų knyga','Book of insights'))}</h1><p class="eyebrow">${cardsN()}/${CARD_TOTAL}</p>${cardsH()}<button class="btn ghost" data-ov="toHub">${t(L('Grįžti','Back'))}</button>`;over.hidden=false;over.scrollTop=0}
 
 /* weekly stars: best result per team type is kept, each new star pays out */
-const STAR_N=()=>{const ly=(G&&G.layer)||'trust';return [L('Planas įvykdytas ir išeina ne daugiau kaip vienas žmogus','Target met and at most one person leaves'),ly==='lead'?L('Niekas neišeina, o vadovo autoritetas ir įgūdis bent 60','Nobody leaves and the lead’s authority and skill are both at least 60'):L(`Niekas neišeina, o komandos ${LAYER[ly].lt.toLowerCase()} bent 60`,`Nobody leaves and team ${LAYER[ly].en.toLowerCase()} is at least 60`),L('Ne daugiau kaip 2 blogi sprendimai ar praleisti įvykiai per savaitę','No more than 2 bad decisions or missed events all week')]};
+const STAR_N=()=>{const ly=(G&&G.layer)||'trust';return [L('Planas įvykdytas ir išeina ne daugiau kaip vienas žmogus','Target met and at most one person leaves'),ly==='lead'?(G&&G.tb?L('Niekas neišeina, o abiejų vadovų autoritetas ir įgūdis bent 60','Nobody leaves and both leads’ authority and skill are at least 60'):L('Niekas neišeina, o vadovo autoritetas ir įgūdis bent 60','Nobody leaves and the lead’s authority and skill are both at least 60')):L(`Niekas neišeina, o komandos ${LAYER[ly].lt.toLowerCase()} bent 60`,`Nobody leaves and team ${LAYER[ly].en.toLowerCase()} is at least 60`),L('Ne daugiau kaip 2 blogi sprendimai ar praleisti įvykiai per savaitę','No more than 2 bad decisions or missed events all week')]};
 const badN=()=>G.log.filter(x=>x.k==='bad').length;
-function starsOf(){if(G.over)return [false,false,false];const q=IDS.filter(id=>G.people[id].quit).length,tot=G.days.reduce((s,d)=>s+d.out,0),pl=G.days.reduce((s,d)=>s+d.plan,0);
-  return [q<=1&&pl>0&&tot>=pl,q===0&&(G.layer==='lead'?G.auth>=60&&G.lskill>=60:G.culture[G.layer||'trust']>=60),badN()<=2]}
+function starsOf(){if(G.over)return [false,false,false];const q=IDS.filter(id=>G.people[id].quit).length+(G.tb?G.tb.quits:0),tot=G.days.reduce((s,d)=>s+d.out,0),pl=G.days.reduce((s,d)=>s+d.plan,0);
+  return [q<=1&&pl>0&&tot>=pl,q===0&&(G.layer==='lead'?G.auth>=60&&G.lskill>=60&&(!G.tb||G.tb.auth>=60&&G.tb.skill>=60):G.culture[G.layer||'trust']>=60),badN()<=2]}
 const starsH=n=>`<span class="stars">${[0,1,2].map(i=>i<n?'★':'<span class="off">★</span>').join('')}</span>`;
 
 const hubBtn=from=>`<button class="btn ghost" data-ov="hub" data-from="${from}">${t(L('Biuras ir bylos','Office and files'))} · ◆ ${S.meta.cap}</button>`;
@@ -1035,7 +1103,7 @@ function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSO
 const t=o=>(o&&(o[S.lang]??o.lt))||'';
 const tx=o=>{if(!o)return '';if(o.sales||o.project)o=o[G?G.type:'sales'];return t(o)};
 const u=k=>t(UI[k]);
-const pn=id=>id==='client'?(S.lang==='lt'?'Klientas':'Client'):t(PEOPLE[id].n);
+const pn=id=>id==='client'?(S.lang==='lt'?'Klientas':'Client'):id==='ruta'?(S.lang==='lt'?'Rūta':'Ruth'):t(PEOPLE[id].n);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const rnd=a=>a[Math.floor(Math.random()*a.length)];
@@ -1064,14 +1132,14 @@ function plan(p){G.planMult*=1+p/100;rec(null,'plan',p)}
 function extra(v){G.out+=v;G.dayOut+=v;rec(null,'out',v)}
 function due(id,d){if(d>G.day&&d<=4&&!G.due.some(x=>x.id===id))G.due.push({id,d,from:G.day})}
 function logE(k,txt){G.log.push({d:G.day,time:Math.round(RT?RT.time:540),k,txt})}
-const dayTarget=()=>Math.round(0.885*IDS.filter(id=>G.people[id].hired!==false).reduce((s,id)=>s+PEOPLE[id].base,0)*G.planMult);
+const dayTarget=()=>Math.round(0.885*(IDS.filter(id=>G.people[id].hired!==false).reduce((s,id)=>s+PEOPLE[id].base,0)+(G.tb?80:0))*G.planMult);
 function metricName(){return G.type==='sales'?L('Pardavimai','Sales'):L('Atlikti darbai','Work delivered')}
 function unitName(){return G.type==='sales'?L('tūkst. €','k€'):L('taškų','pts')}
 
 function newGame(type,w=0){
   const mots=shuffle(Object.keys(MOT)),people={},cfg=weekCfg(w);
   IDS.forEach((id,i)=>people[id]={stress:Math.min(90,PEOPLE[id].stress+(cfg.stress||0)),trust:PEOPLE[id].trust+(dosFull(id)?10:0)+(cfg.bump||0),mot:mots[i],known:false,trait:null,quit:false,hired:cfg.team.includes(id),h:Math.floor(Math.random()*2)});
-  G={type,week:w,layer:cfg.layer,leadMode:!!cfg.leadMode,lead:null,auth:50,lskill:30,hire:cfg.hire||null,sched:cfg.sched||null,day:0,people,culture:Object.assign({...LAYER_START},cfg.set||{}),boss:60+(S.bonus?8:0),planMult:1,out:0,dayOut:0,days:[],
+  G={tb:cfg.twoTeams?{size:4,quits:0,stress:35+(cfg.stress||0),morale:55,auth:50,skill:40,trust:45,lstress:30,ev:[]}:null,type,week:w,layer:cfg.layer,leadMode:!!cfg.leadMode,lead:null,auth:50,lskill:30,hire:cfg.hire||null,sched:cfg.sched||null,day:0,people,culture:Object.assign({...LAYER_START},cfg.set||{}),boss:60+(S.bonus?8:0),planMult:1,out:0,dayOut:0,days:[],
      flags:{},due:[],log:[],stats:{listen:0,right:0,wrong:0,self:0,report:0,meet:0,talks:0,missed:0},over:null,done:false,id:Date.now(),c0:null,sick:null};
   if(cfg.plan)G.planMult=cfg.plan;S.bonus=0;syncTrust();G.c0={...G.culture};
 }
@@ -1128,6 +1196,7 @@ const MISS={
   visit:m=>{const id=m.who;dS(id,6);dT(id,-6);G.stats.missed++;logE('bad',NL(id,' ieškojo tavęs, bet nesulaukė',' looked for you but you never came'));toast(`<b>${esc(pn(id))}</b> ${t(L('nesulaukė tavęs ir grįžo prie stalo.','gave up waiting and went back.'))}`);sendBack(id)},
   evx:m=>{dB(-6);G.stats.missed++;const E=EVENTS[m.ev];logE('bad',L(`Neatsakei: ${E.title.lt}`,`No response: ${E.title.en}`));toast(t(L('Niekas neatsakė. Vadovybė ir komanda tai pastebėjo.','Nobody answered. Leadership and the team noticed.')));if(m.who)sendBack(m.who)},
   hire:m=>{const id=m.who;FX=null;hireNow(id);dT(id,-8);dS(id,12);G.stats.missed++;logE('bad',NL(id,' pusę dienos laukė pokalbio',' waited half a day for the interview'));toast(`<b>${esc(pn(id))}</b> ${t(L('pradėjo dirbti be jokio įvedimo.','started work with no onboarding.'))}`)},
+  tb:m=>{tbAuto(m.tb);rutaLeave()},
   micro:m=>{FX=null;const lg=MICRO[m.micro].miss(m.who);logE('bad',lg);toast(t(lg))}
 };
 function addMarker(m){m.id=Math.random().toString(36).slice(2);RT.markers.push(m);if(m.kind==='phone')toast(`<b>☎</b> ${t(L('Skambina telefonas tavo kabinete.','The phone is ringing in your office.'))}`);
@@ -1151,6 +1220,7 @@ function tickSim(dm){
     if(P.trait==='resolute')s/=2;
     P.stress=clamp(P.stress+s,0,100);
     if(P.stress>=100)breakPoint(id)});
+  if(G.tb)tbTick(per);
   // contagion
   IDS.filter(id=>act(id)&&G.people[id].trait&&G.people[id].trait!=='resolute').forEach(b=>{const cb=RT.chars[b];if(!cb)return;
     IDS.forEach(o=>{if(o===b||!act(o))return;const co=RT.chars[o];if(co&&Math.hypot(co.x-cb.x,co.y-cb.y)<2.2)G.people[o].stress=clamp(G.people[o].stress+0.8*per,0,100)})});
@@ -1172,7 +1242,7 @@ function updateNPC(c,dm,dt){
   if(c.path.length){moveAlong(c,dt,2.6);if(!c.path.length)arrived(c);return}
   if(c.state==='walk'){arrived(c);return}
   if(c.state==='leaving'){delete RT.chars[id];return}
-  if(['wait','meeting','visit','client','fight','held','cand'].includes(c.state)){
+  if(['wait','meeting','visit','client','fight','held','cand','tb'].includes(c.state)){
     if(c.state==='fight'&&Math.random()<dt*0.5)say(id,rnd([L('Tu nesupranti!','You don’t get it!'),L('Čia mano sritis!','This is my area!'),L('Nesutinku!','I disagree!')]),2);
     if(c.state==='wait'){c.timer-=dm;if(c.timer<=0)sendBack(id)}
     return}
@@ -1215,6 +1285,7 @@ function step(dtReal){
   if(G.leadMode&&!G.lead&&!SH&&over.hidden){openLeadPick();return}
   RT.markers.filter(m=>m.leadAt&&RT.time>=m.leadAt).forEach(m=>{if(G.lead&&ok(G.lead))leadHandle(m);else m.leadAt=null});
   RT.markers=RT.markers.filter(m=>{if(RT.time>m.until){RT.cnt.miss++;RT.combo=0;MISS[m.miss]&&MISS[m.miss](m);return false}return true});
+  if(G.tb&&G.lead){RT.tbT=(RT.tbT??50)-dm;if(RT.tbT<=0){RT.tbT=80+Math.random()*40;if(!RT.chars.ruta&&(RT.tbN||0)<3&&RT.time<16*60+30)spawnRuta()}}
   RT.microT-=dm;if(RT.microT<=0){RT.microT=25+Math.random()*20;if(RT.markers.length<2&&RT.time<17*60+15)spawnMicro()}
   if(!RT.player.path.length&&!RT.player.pending&&!RT.meeting)RT.idle+=dm;else RT.idle=0;
   if(RT.idle>=30&&!RT.markers.length){RT.idle=-25;idleHint()}
@@ -1261,7 +1332,7 @@ function adjacent(tx,ty){
 function approach(a){
   const p=RT.player;let dest;
   if(a.kind==='npc'){const c=RT.chars[a.id];if(!c)return;
-    if(c.id!=='client'&&!['visit','fight','meeting','cand'].includes(c.state)){if(c.path.length){c.path=[c.path[0]]}c.prev=c.state==='wait'?c.prev:c.state;c.state='wait';c.timer=40}
+    if(c.id!=='client'&&!['visit','fight','meeting','cand','tb'].includes(c.state)){if(c.path.length){c.path=[c.path[0]]}c.prev=c.state==='wait'?c.prev:c.state;c.state='wait';c.timer=40}
     const tx=Math.round(c.path.length?c.path[0][0]:c.x),ty=Math.round(c.path.length?c.path[0][1]:c.y);
     if(Math.hypot(p.x-tx,p.y-ty)<=1.05){doAction(a);return}
     dest=adjacent(tx,ty)}
@@ -1273,12 +1344,14 @@ function approach(a){
 function doAction(a){
   if(a.kind==='npc'){
     const m=RT.markers.find(m=>m.who===a.id||m.also===a.id);
+    if(m&&m.tb!==undefined){RT.markers=RT.markers.filter(x=>x!==m);openTBE(m.tb);return}
     if(m&&m.hire){RT.markers=RT.markers.filter(x=>x!==m);openInterview(a.id);return}
     if(m&&m.micro){RT.markers=RT.markers.filter(x=>x!==m);if(m.leadAt&&G.lead&&ok(G.lead)){dA(-4);dT(G.lead,-3);toast(`${t(L('Apėjai','You went around'))} <b>${esc(pn(G.lead))}</b>. ${t(L('Autoritetas −4.','Authority −4.'))}`);
       mentor('bypass',L('Kai sprendi už komandos vadovą, komanda mokosi eiti pas tave, o ne pas jį. Geriau koučink jį.','When you solve things for the team lead, the team learns to come to you instead of them. Coach them instead.'))}openMicro(m);return}
     if(m&&typeof m.ev==='number'){RT.markers=RT.markers.filter(x=>x!==m);openEvent(m.ev,a.id);return}
     if(m&&m.ev==='visit'){RT.markers=RT.markers.filter(x=>x!==m);hit();gain(2,a.id)}
     if(a.id==='client')return;
+    if(a.id==='ruta')return;
     if(G.lead&&a.id===G.lead){openCoach(a.id);return}
     openPerson(a.id);return}
   if(a.kind==='desk'){const m=RT.markers.find(m=>m.kind==='phone');if(m){RT.markers=RT.markers.filter(x=>x!==m);openEvent(m.ev);return}openDesk();return}
@@ -1302,9 +1375,9 @@ function traitName(id){const P=G.people[id];return P.trait?t(TRAITS[P.trait].n[P
 function fxH(list){
   if(!list||!list.length)return '';
   const merged=[];list.forEach(f=>{const e=merged.find(x=>x.who===f.who&&x.key===f.key);if(e)e.v+=f.v;else merged.push({...f})});
-  const lab=f=>{const k=f.key,n=k==='stress'?L('stresas','stress'):k==='trust'?L('pasitikėjimas tavimi','trust in you'):k==='boss'?UI.boss:k==='plan'?L('planas','target'):k==='out'?metricName():k==='auth'?L('Vadovo autoritetas','Lead’s authority'):k==='lskill'?L('Vadovo įgūdis','Lead’s skill'):LAYER[k];
+  const lab=f=>{const k=f.key,n=k==='stress'?L('stresas','stress'):k==='trust'?L('pasitikėjimas tavimi','trust in you'):k==='boss'?UI.boss:k==='plan'?L('planas','target'):k==='out'?metricName():k==='tbS'?L('Antros komandos stresas','Team two stress'):k==='tbM'?L('Antros komandos nuotaika','Team two morale'):k==='tbA'?L('Rūtos autoritetas','Ruth’s authority'):k==='tbK'?L('Rūtos įgūdis','Ruth’s skill'):k==='tbL'?L('Rūtos stresas','Ruth’s stress'):k==='tbT'?L('Rūtos pasitikėjimas tavimi','Ruth’s trust in you'):k==='auth'?L('Vadovo autoritetas','Lead’s authority'):k==='lskill'?L('Vadovo įgūdis','Lead’s skill'):LAYER[k];
     return (f.who==='all'?u('allTeam')+' · ':f.who?pn(f.who)+' · ':'')+t(n)};
-  return `<div class="deltas">${merged.filter(f=>Math.round(f.v)).map(f=>{const bad=(f.key==='stress'||f.key==='plan')?f.v>0:f.v<0;
+  return `<div class="deltas">${merged.filter(f=>Math.round(f.v)).map(f=>{const bad=['stress','plan','tbS','tbL'].includes(f.key)?f.v>0:f.v<0;
     return `<div class="delta"><span>${esc(lab(f))}</span><b class="${bad?'neg':''}">${f.v>0?'+':'−'}${Math.abs(Math.round(f.v))}${f.key==='plan'?' %':''}</b></div>`}).join('')}</div>`;
 }
 function personHead(id){const P=G.people[id];
@@ -1364,10 +1437,13 @@ function openDesk(){
     :`<h2>${u('deskH')}</h2><div class="opts">
       <button class="opt" data-desk="report"><span>${u('report')}<br><span class="small">${t(L('Vadovybės pasitikėjimas','Leadership confidence'))} +${sk('up')?12:8}</span></span><span class="cost">${sk('up')?30:45} ${u('min')}</span></button>
       ${sk('delegate')&&!RT.deleg?`<button class="opt" data-desk="delegate"><span>${t(L('Deleguoti užduotį','Delegate a task'))}<br><span class="small">${t(L('Rezultatas be tavo laiko, žmogus auga','Output without your time, someone grows'))}</span></span><span class="cost">15 ${u('min')}</span></button>`:''}
+      ${G.tb&&!RT.tbCoach?`<button class="opt" data-desk="tbcoach"><span>${t(L('Paskambinti Rūtai: koučingas','Call Ruth: coaching'))}<br><span class="small">${t(L('Antros komandos vadovė','Team two lead'))}</span></span><span class="cost">20 ${u('min')}</span></button>`:''}
+      ${G.tb&&!RT.tbVisit?`<button class="opt" data-desk="tbvisit"><span>${t(L('Aplankyti antrą komandą','Visit team two'))}<br><span class="small">${t(L('Kitame aukšte','On another floor'))}</span></span><span class="cost">45 ${u('min')}</span></button>`:''}
       <button class="opt" data-desk="book"><span>${t(L('Įžvalgų knyga','Book of insights'))}<br><span class="small">${t(L('Atrasta','Found'))} ${cardsN()}/${CARD_TOTAL}</span></span><span class="cost">0 ${u('min')}</span></button>
       <button class="opt" data-desk="self"><span>${u('selfwork')}<br><span class="small">${u('selfD')}</span></span><span class="cost">1,5 ${u('h')}</span></button></div>
       <button class="btn ghost" data-sh="close">${u('later')}</button>`,
     desk:k=>{if(k==='book'){SH.book=1;renderSheet();return}FX=[];let ins;
+      if(k==='tbcoach'){FX=null;openTBCoach();return}if(k==='tbvisit'){FX=null;openTBVisit();return}
       if(k==='delegate'){RT.deleg=1;SH.cost=15;const p=IDS.filter(ok).sort((a,b)=>G.people[a].stress-G.people[b].stress)[0];extra(10);dC('accountability',3);if(p){dS(p,5);dT(p,3)}st.res={fx:FX,ins:L('Delegavimas nėra darbo numetimas. Kai perduodi užduotį su pasitikėjimu, žmogus auga, o tu laimi laiko komandai.','Delegating isn’t dumping work. Hand over a task with trust, and the person grows while you win time for the team.')};FX=null;renderSheet();return}
       if(k==='report'){dB(sk('up')?12:8);G.stats.report++;SH.cost=sk('up')?30:45;ins=G.stats.report>=3?L('Vadovybė informuota, bet tu daugiau laiko praleidi ataskaitose nei su komanda.','Leadership is informed, but you spend more time on reports than with your team.'):L('Vadovybė mato, kas vyksta. Tai irgi tavo darbas.','Leadership can see what’s happening. That’s part of your job too.')}
       else{extra(14);dC('accountability',-3);G.stats.self++;SH.cost=90;ins=G.stats.self>=2?L('Darbą darai pats jau ne pirmą kartą. Komanda pratinasi laukti, kol vadovas išgelbės.','Not the first time you’ve done the work yourself. The team is learning to wait for you to rescue them.'):L('Rezultatas greitas. Bet kol dirbi pats, niekas nemato, kas vyksta komandoje.','Quick result. But while you work, nobody is watching what’s happening in the team.')}
@@ -1413,7 +1489,7 @@ function logH(){return G.log.length?`<ul class="log">${G.log.slice().reverse().m
 
 sheet.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!SH)return;const d=b.dataset;
   if(d.sh==='close')closeSheet();else if(d.sh==='callMeet')callMeeting();
-  else if(d.sh==='back'){SH.dos=null;SH.book=null;renderSheet()}else if(d.dos){SH.dos=d.dos;renderSheet()}else if(d.buy)buy(d.buy);else if(d.iq)SH.iq(d.iq);else if(d.lead)SH.lead(d.lead);else if(d.coach!==undefined)SH.coach(+d.coach);else if(d.onb!==undefined)SH.onb(+d.onb);
+  else if(d.sh==='back'){SH.dos=null;SH.book=null;renderSheet()}else if(d.dos){SH.dos=d.dos;renderSheet()}else if(d.buy)buy(d.buy);else if(d.iq)SH.iq(d.iq);else if(d.lead)SH.lead(d.lead);else if(d.coach!==undefined)SH.coach(+d.coach);else if(d.tbo!==undefined)SH.tbo(+d.tbo);else if(d.onb!==undefined)SH.onb(+d.onb);
   else if(d.talk)SH.talk(d.talk);else if(d.ev!==undefined)SH.ev(+d.ev);else if(d.desk)SH.desk(d.desk);else if(d.meet)SH.meet(d.meet);else if(d.mi!==undefined)SH.mi(+d.mi)});
 
 /* ================= day / week end ================= */
@@ -1422,7 +1498,7 @@ function endDay(){
   if(!RT||RT.ended)return;RT.ended=true;RT.paused=true;
   const out=Math.round(G.dayOut),target=dayTarget();G.days.push({out,plan:target});
   FX=[];dB(out>=target?2:-Math.min(10,Math.round((target-out)/4)));const bfx=FX;FX=null;
-  IDS.forEach(id=>{if(act(id))G.people[id].stress=clamp(G.people[id].stress-3,0,100)});
+  IDS.forEach(id=>{if(act(id))G.people[id].stress=clamp(G.people[id].stress-3,0,100)});if(G.tb){G.tb.stress=clamp(G.tb.stress-3,0,100);G.tb.lstress=clamp(G.tb.lstress-5,0,100)}
   if(out<target)RT.dayIns.push(L('Planas neįvykdytas. Pervargę ir mažai pasitikintys žmonės dirba lėčiau, o tavo laikas ir kitų laukimas irgi kainuoja.','Target missed. Exhausted people with little trust work slower, and time spent waiting on you costs too.'));
   IDS.forEach(id=>{const P=G.people[id];if(act(id)&&P.stress>=70&&!RT.talked[id])RT.dayIns.push(NL(id,`: stresas ${Math.round(P.stress)}, o šiandien su juo nesikalbėjai.`,`: stress at ${Math.round(P.stress)}, and you didn’t talk to them today.`))});
   if(G.boss<=0)G.over='fired';
@@ -1504,7 +1580,7 @@ function showWelcome(){
 }
 function showHow(){
   const cfg=weekCfg(G.week||0);
-  overIn.innerHTML=`<p class="eyebrow">${u(G.type)} · ${t(L('Savaitė','Week'))} ${(G.week||0)+1}</p><h1>${G.week<WEEKS.length?t(cfg.n):t(LAYER[cfg.layer])}</h1><p class="lead">${t(cfg.intro)}</p><p class="eyebrow">${u('howH')}</p><ol class="list">${UI.how.map(h=>`<li>${t(h)}</li>`).join('')}</ol>
+  overIn.innerHTML=`<p class="eyebrow">${u(G.type)} · ${t(L('Savaitė','Week'))} ${(G.week||0)+1}</p><h1>${t(cfg.n)}</h1><p class="lead">${t(cfg.intro)}</p><p class="eyebrow">${u('howH')}</p><ol class="list">${UI.how.map(h=>`<li>${t(h)}</li>`).join('')}</ol>
   <p class="eyebrow">${t(L('Savaitės žvaigždutės','Week stars'))} · ${t(L('tavo rekordas','your best'))} ${starsH(starsAt(G.type,G.week||0))}</p>
   <ul class="goals">${STAR_N().map(n=>`<li><span class="box">★</span><span>${t(n)}</span></li>`).join('')}</ul><button class="btn" data-ov="go">${u('go')}</button>`;
   over.hidden=false;
@@ -1652,7 +1728,7 @@ function speech(px,top,text){
   ctx.fillStyle='#1E2328';ctx.textAlign='left';ctx.textBaseline='middle';ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();ctx.fillText(text,x+T*0.2,y+h/2+1);ctx.restore();
 }
 const LOOK=Object.fromEntries(IDS.map(id=>[id,PEOPLE[id]]));
-LOOK.player={shirt:'#1C3550',skin:'#E5B48F',hair:'#2B2018',tie:'#D2B06E'};LOOK.client={shirt:'#4B5058',skin:'#D9A57E',hair:'#55493F',tie:'#A33'};
+LOOK.ruta={shirt:'#5B4B8A',skin:'#EBC2A2',hair:'#2B1D16',long:true};LOOK.player={shirt:'#1C3550',skin:'#E5B48F',hair:'#2B2018',tie:'#D2B06E'};LOOK.client={shirt:'#4B5058',skin:'#D9A57E',hair:'#55493F',tie:'#A33'};
 function draw(){
   const now=performance.now();
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle='#141A20';ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.translate(0,OY);
