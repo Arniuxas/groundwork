@@ -155,6 +155,27 @@ canvas{display:block;cursor:pointer}
 .task q{font:400 19px/1.4 var(--f-display);quotes:none}
 .link{background:none;border:0;padding:4px 0;color:var(--ink);font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--muted);align-self:flex-start}
 
+/* progression: capital, upgrades, dossiers */
+.ibtn.cap{color:var(--mark);border-color:rgba(210,176,110,.5)}
+.ibtn:disabled{opacity:.45;cursor:default}
+.cap{color:var(--mark)}
+.upgs{display:flex;flex-direction:column;gap:8px}
+.upg{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px 14px;background:var(--raised);border:1px solid var(--line);border-radius:12px}
+.upg b{display:block;font-weight:600;font-size:14.5px}
+.upg.own{background:transparent}
+.upg .ibtn{padding:9px 12px;color:var(--mark);border-color:var(--mark)}
+.dots{display:inline-flex;gap:3px;vertical-align:middle}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--mark)}
+.facts{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.fact{display:grid;grid-template-columns:24px 1fr;gap:8px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.fact .n{font:500 11px var(--f-mono);color:var(--muted);padding-top:3px}
+.fact.lock{color:var(--muted)}
+.fact.key span:last-child{font:italic 400 16.5px/1.45 var(--f-display)}
+.dosrow{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;width:100%;cursor:pointer}
+.dosrow b{font-weight:600;font-size:14px}
+@media (max-width:480px){.hud-btns{flex-direction:column}}
+
 @media (min-width:960px){
   .stage{grid-template-columns:minmax(0,1fr) 300px}
   .side{display:flex;flex-direction:column;gap:12px;position:sticky;top:10px}
@@ -218,7 +239,7 @@ const UI={
   allTeam:L('Visa komanda','Whole team'),
   meetH:L('Komandos susirinkimas','Team meeting'),meetAsk:L('Sušaukti visus į susitikimų kambarį? Užtruks 45 min.','Call everyone to the meeting room? It takes 45 min.'),
   meetCall:L('Sušaukti','Call the meeting'),meetDone:L('Šiandien susirinkimas jau buvo.','You already held a meeting today.'),
-  meetPick:L('Pasirink du ėjimus. Liko: ','Choose two moves. Left: '),
+  meetPick:L('Pasirink ėjimus. Liko: ','Choose your moves. Left: '),
   harmonyLow:L('Visi linksi. Niekas neprieštarauja. Per tylu.','Everyone nods. Nobody disagrees. It’s too quiet.'),
   harmonyOk:L('Diskusija gyva: žmonės ginčijasi dėl idėjų.','The discussion is alive: people argue about ideas.'),
   deskH:L('Tavo stalas','Your desk'),
@@ -455,7 +476,7 @@ function spawnMicro(){
     const M=MICRO[k],a=M.pick();
     if(!a||!RT.chars[a]||RT.markers.some(m=>m.who===a||m.also===a)||['meeting','visit','fight','leaving','wait'].includes(RT.chars[a].state))continue;
     RT.usedMicro[k]=(RT.usedMicro[k]||0)+1;if(M.once)G.flags['m_'+k]=1;
-    addMarker({kind:'npc',who:a,micro:k,icon:M.icon,until:RT.time+55,miss:'micro'});
+    addMarker({kind:'npc',who:a,micro:k,icon:M.icon,until:RT.time+(has('door')?75:55),miss:'micro'});
     toast(`<b>${esc(pn(a))}</b> · ${t(M.title)}`);return;
   }
 }
@@ -463,9 +484,9 @@ const optN=(o,a)=>typeof o.n==='function'?o.n(a):o.n;
 function openMicro(m){
   const M=MICRO[m.micro],a=m.who,st={res:null};
   openSheet({cost:0,render:()=>`${personHead(a)}<h2>${t(M.title)}</h2><p class="lead">${t(M.text(a))}</p>
-    ${st.res?`<p class="quote">${t(optN(M.opts[st.res.i],a))}</p>${fxH(st.res.fx)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`
+    ${st.res?`<p class="quote">${t(optN(M.opts[st.res.i],a))}</p>${fxH(st.res.fx)}${gainH(st.c0,a,st.n0)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`
       :`<div class="opts">${M.opts.map((o,k)=>`<button class="opt" data-mi="${k}"><span>${t(optN(o,a))}</span><span class="cost">${o.cost||20} ${u('min')}</span></button>`).join('')}</div>`}`,
-    mi:k=>{FX=[];const ins=M.opts[k].fx(a);st.res={i:k,fx:FX,ins};FX=null;SH.cost=M.opts[k].cost||20;renderSheet()},
+    mi:k=>{FX=[];st.c0=S.meta.cap;st.n0=dosN(a);const ins=M.opts[k].fx(a);const sc=FX.filter(f=>f.who===a||f.who==='all').reduce((s,f)=>s+(f.key==='trust'?f.v:f.key==='stress'?-f.v:0),0);st.res={i:k,fx:FX,ins};FX=null;hit();gain(sc>0?4:1,a);if(sc>0)know(a,1);SH.cost=M.opts[k].cost||20;renderSheet()},
     after:()=>sendBack(a)});
 }
 
@@ -496,6 +517,95 @@ function idleHint(){
   toast(`<b>${t(L('Patarimas','Tip'))}:</b> ${t(L('Ramu. Gali atsiskaityti vadovybei prie savo stalo arba paspartinti laiką ×2.','All quiet. Report to leadership at your desk, or speed up time ×2.'))}`,true);
 }
 
+/* ================= progression: capital, office upgrades, dossiers (kept across games in S.meta) ================= */
+const UP={
+  coffee:{n:L('Espreso aparatas','Espresso machine'),d:L('Pertraukos virtuvėje mažina stresą greičiau.','Kitchen breaks lower stress faster.'),cost:100},
+  door:{n:L('Lentelė „Durys atviros“','“Open door” sign'),d:L('Žmonės tavęs laukia 20 min. ilgiau, kol įvykis pradingsta.','People wait for you 20 min longer before an event expires.'),cost:130},
+  plants:{n:L('Augalai biure','Office plants'),d:L('Visų stresas auga 10 % lėčiau.','Everyone’s stress grows 10% slower.'),cost:180},
+  board:{n:L('Lenta pasitarimų kambaryje','Meeting room whiteboard'),d:L('Susirinkime gali padaryti 3 ėjimus vietoj 2.','You get 3 moves in a meeting instead of 2.'),cost:230},
+  lounge:{n:L('Poilsio kampas prie lango','Window lounge'),d:L('Pavargę žmonės prie lango atsigauna, o ne tik žiūri į tolį.','Tired people recover at the window instead of just staring out.'),cost:290},
+  screen:{n:L('Komandos rezultatų ekranas','Team results screen'),d:L('Visi mato bendrą tikslą: rezultatas +6 %.','Everyone sees the shared goal: output +6%.'),cost:360}
+};
+const has=k=>!!(S.meta&&S.meta.up[k]);
+const PLANTS=[[12,7],[1,13]];
+const FACTS={
+  tomas:[L('Įmonėje dirba septynerius metus. Pradėjo kaip stažuotojas.','Has been here seven years. Started as an intern.'),
+    L('Augina dvi dukras ir kiekvieną šeštadienį veža jas į krepšinį.','Has two daughters and drives them to basketball every Saturday.'),
+    L('Kai jaučia spaudimą, kalba garsiau ir greičiau. Tai ne pyktis, o nerimas.','Under pressure he talks louder and faster. It isn’t anger, it’s anxiety.'),
+    L('Prieš dvejus metus negavo vadovo pareigų. Vis dar skauda.','Two years ago he was passed over for a manager role. It still stings.'),
+    L('Labiausiai vertina, kai jo nuomonės paklausi prieš sprendimą, o ne po jo.','He values being asked for his view before a decision, not after.'),
+    L('Raktas: pripažink Tomo patirtį ir paprašyk jo padėti kitiems. Taip jis jaučiasi vertinamas, o ne pakeičiamas.','Key: acknowledge Tom’s experience and ask him to help others. He feels valued instead of replaceable.')],
+  lina:[L('Baigė matematiką. Skaičiuoklės jai kaip gimtoji kalba.','Studied maths. Spreadsheets are her native language.'),
+    L('Laisvalaikiu bėgioja maratonus.','Runs marathons in her free time.'),
+    L('Susirinkimuose tyli, bet raštu parašo tai, ko kiti nedrįsta pasakyti.','Quiet in meetings, but in writing she says what others don’t dare to.'),
+    L('Ankstesniame darbe jos įspėjimų niekas neklausė, ir projektas žlugo.','At her last job nobody listened to her warnings, and the project failed.'),
+    L('Jai svarbu, kad abejonės būtų aptariamos be kaltinimų.','It matters to her that doubts are discussed without blame.'),
+    L('Raktas: paklausk Linos nuomonės prie visų, o ne po susirinkimo koridoriuje.','Key: ask Lena’s view in front of everyone, not in the corridor after the meeting.')],
+  darius:[L('Įmonėje ilgiausiai iš visų: penkiolika metų.','The longest-serving of everyone: fifteen years.'),
+    L('Sodyboje augina bites.','Keeps bees at his country house.'),
+    L('Matė jau keturis vadovus. Naujiems iš pradžių netiki.','He has seen four managers come and go. He doesn’t trust new ones at first.'),
+    L('Prieš kelerius metus perdegė. Apie tai kalba nenoriai.','Burned out a few years ago. He doesn’t like talking about it.'),
+    L('Žino, kodėl buvo priimti visi seni sprendimai ir kur jie palaidoti.','He knows why every old decision was made and where it’s buried.'),
+    L('Raktas: Darius tiki darbais, ne žodžiais. Laikykis pažadų, ir jis bus tavo pusėje.','Key: Dan believes actions, not words. Keep your promises and he’ll be on your side.')],
+  egle:[L('Dirba tik keturis mėnesius. Tai jos pirmas rimtas darbas.','Only four months in. It’s her first real job.'),
+    L('Piešia komiksus ir kartais slapta nupiešia komandą.','Draws comics and sometimes secretly sketches the team.'),
+    L('Bijo suklysti, todėl kartais slepia klaidas, kol jos išauga.','She’s afraid of mistakes, so she sometimes hides them until they grow.'),
+    L('Universitete buvo geriausia kurse. Čia jaučiasi lėtesnė už kitus.','She was top of her class at university. Here she feels slower than everyone.'),
+    L('Greičiausiai mokosi, kai kas nors parodo kartu, o ne paaiškina žodžiais.','She learns fastest when someone shows her, not when they explain.'),
+    L('Raktas: kai Eglė suklysta, pirma papasakok apie savo klaidą. Tada ji kalbės atvirai.','Key: when Emma makes a mistake, tell her about one of yours first. Then she’ll talk openly.')],
+  marius:[L('Atėjo iš konkurentų prieš metus.','Joined from a competitor a year ago.'),
+    L('Komandos linksmuolis: organizuoja penktadienio stalo futbolą.','The team’s joker: runs the Friday table football.'),
+    L('Visada sako „sutinku“, net kai nesutinka.','Always says “agreed”, even when he doesn’t.'),
+    L('Vengia konfliktų, nes vaikystėje jų namuose buvo per daug.','Avoids conflict because there was too much of it at home growing up.'),
+    L('Gerai jaučia klientų nuotaikas ir dažnai pirmas pastebi problemas.','Reads clients well and is often the first to spot trouble.'),
+    L('Raktas: paklausk Mariaus „Ką darytum kitaip?“, ir išgirsi tikrą nuomonę.','Key: ask Mark “What would you do differently?” and you’ll hear what he really thinks.')]
+};
+const DOS_AT=[2,5,9,14,20,27];
+const dosPts=id=>(S.meta.dos[id]||0);
+const dosN=id=>DOS_AT.filter(v=>dosPts(id)>=v).length;
+const dosFull=id=>dosN(id)>=6;
+const mult=()=>RT&&RT.combo>=5?2:RT&&RT.combo>=3?1.5:1;
+const fmtMult=m=>S.lang==='lt'?String(m).replace('.',','):String(m);
+function gain(v,who,flat){
+  if(!RT)return 0;const n=Math.round(v*(flat?1:mult()));if(!n)return 0;
+  S.meta.cap+=n;RT.capDay=(RT.capDay||0)+n;
+  const c=who&&RT.chars[who],p=c||RT.player;(RT.floats=RT.floats||[]).push({x:p.x,y:p.y,txt:`+${n}`,t:1.8});return n;
+}
+function hit(){RT.combo=(RT.combo||0)+1;if(RT.combo===3||RT.combo===5)toast(`<b>${t(L('Serija','Streak'))} ×${fmtMult(mult())}</b> · ${t(L(`${RT.combo} įvykiai iš eilės be praleidimų. Kapitalas auga greičiau.`,`${RT.combo} events in a row, none missed. Capital grows faster.`))}`)}
+function know(id,v){
+  if(!PEOPLE[id]||!RT||!v)return;const b=dosN(id);S.meta.dos[id]=dosPts(id)+v;const a=dosN(id);
+  for(let i=b;i<a;i++){(RT.facts=RT.facts||[]).push({id,i});gain(3,id,true);if(!SH)toast(`<b>${t(L('Byla','File'))} · ${esc(pn(id))} ${i+1}/6</b> ${t(FACTS[id][i])}`,true)}
+}
+function buy(k){const U=UP[k];if(!U||has(k)||S.meta.cap<U.cost)return;S.meta.cap-=U.cost;S.meta.up[k]=1;save();
+  if(RT&&G&&!G.done)toast(`<b>${t(L('Įrengta','Installed'))}:</b> ${t(U.n)}`);
+  if(SH)renderSheet();else if(overIn.querySelector('[data-hub]'))renderHub();renderHUD()}
+const capLine=()=>`<span class="cap">◆ ${S.meta.cap}</span>`;
+function shopH(){return `<div class="upgs">${Object.keys(UP).map(k=>{const U=UP[k],own=has(k);
+  return `<div class="upg${own?' own':''}"><div><b>${t(U.n)}</b><span class="small">${t(U.d)}</span></div>${own?`<span class="chip good">${t(L('Įrengta','Installed'))}</span>`:`<button class="ibtn" data-buy="${k}"${S.meta.cap<U.cost?' disabled':''}>◆ ${U.cost}</button>`}</div>`}).join('')}</div>`}
+const dotsH=id=>`<span class="dots">${DOS_AT.map((_,i)=>`<i class="${i<dosN(id)?'on':''}"></i>`).join('')}</span>`;
+function dossierH(id){const n=dosN(id),next=DOS_AT[n];
+  return `<div class="who-head"><span class="av lg" style="background:${PEOPLE[id].shirt}">${esc(pn(id)[0])}</span><div><div class="n">${esc(pn(id))} · ${t(L('byla','file'))} ${n}/6</div><div class="r">${tx(PEOPLE[id].role)}</div></div></div>
+    <div class="facts">${FACTS[id].map((f,i)=>i<n?`<div class="fact${i===5?' key':''}"><span class="n">${i+1}</span><span>${t(f)}</span></div>`
+      :`<div class="fact lock"><span class="n">${i+1}</span><span>${i===n?t(L(`Užrakinta. Reikia dar ${next-dosPts(id)} pažinimo tšk.`,`Locked. ${next-dosPts(id)} more insight pts needed.`)):'· · ·'}</span></div>`).join('')}</div>
+    <p class="small">${n>=6?t(L(`Byla pilna: kiekviename naujame žaidime ${PEOPLE[id].n.lt} tavimi pasitiki labiau (+10).`,`File complete: in every new game ${PEOPLE[id].n.en} starts with more trust in you (+10).`))
+      :t(L('Bylą pildai kalbėdamasis, klausydamasis ir laiku reaguodamas į šio žmogaus įvykius. Byla išlieka ir kitame žaidime.','You fill the file by talking, listening and reacting in time to this person’s events. The file carries over to your next game.'))}</p>`}
+function gainH(c0,id,n0){const c=S.meta.cap-c0,nf=id?dosN(id)-n0:0;
+  return `${c>0?`<div class="deltas"><div class="delta"><span>${t(L('Vadovo kapitalas','Leadership capital'))}</span><b class="cap">+${c} ◆</b></div></div>`:''}${nf>0?`<div class="insight"><span class="eyebrow">${t(L('Byla papildyta','File updated'))} · ${esc(pn(id))} ${dosN(id)}/6</span>${FACTS[id].slice(n0,n0+nf).map(f=>`<p>${t(f)}</p>`).join('')}</div>`:''}`}
+function openShop(){openSheet({cost:0,render:()=>`<h2>${t(L('Biuro patobulinimai','Office upgrades'))}</h2><p>${t(L('Turi','You have'))} ${capLine()}. ${t(L('Patobulinimai lieka ir kituose žaidimuose.','Upgrades stay for your future games.'))}</p>${shopH()}<button class="btn ghost" data-sh="close">${u('close')}</button>`})}
+function renderHub(from){
+  if(from)renderHub.from=from;const tot=IDS.reduce((s,id)=>s+dosN(id),0);
+  overIn.innerHTML=`<span data-hub hidden></span><p class="eyebrow">${t(L('Tavo progresas','Your progress'))}</p><h1>${t(L('Biuras ir bylos','Office and files'))}</h1>
+    <div class="meters"><div class="meter wide"><span class="k">${t(L('Vadovo kapitalas','Leadership capital'))}</span><span class="v cap">◆ ${S.meta.cap}</span>
+    <span class="small">${t(L('Uždirbi už gerus sprendimus, laiku išspręstus įvykius (serija didina daugiklį), įvykdytus tikslus ir planą.','Earned for good decisions, events handled in time (streaks raise the multiplier), goals and hitting the target.'))}</span></div></div>
+    <p class="eyebrow">${t(L('Biuro patobulinimai','Office upgrades'))} · ${Object.keys(UP).filter(has).length}/${Object.keys(UP).length}</p>${shopH()}
+    <p class="eyebrow">${t(L('Žmonių bylos','People files'))} · ${tot}/${IDS.length*6}</p>
+    <div class="rows">${IDS.map(id=>`<button class="dosrow" data-ov="dos" data-id="${id}"><span class="av" style="background:${PEOPLE[id].shirt}">${esc(pn(id)[0])}</span><span><b>${esc(pn(id))}</b><br><span class="small">${tx(PEOPLE[id].role)}</span></span><span>${dotsH(id)}</span></button>`).join('')}</div>
+    <button class="btn" data-ov="hubBack">${t(L('Grįžti','Back'))}</button>`;
+  over.hidden=false;over.scrollTop=0;
+}
+function renderDos(id){overIn.innerHTML=`<span data-dosv="${id}" hidden></span><p class="eyebrow">${t(L('Žmonių bylos','People files'))}</p>${dossierH(id)}<button class="btn ghost" data-ov="toHub">${t(L('Visos bylos','All files'))}</button>`;over.hidden=false;over.scrollTop=0}
+const hubBtn=from=>`<button class="btn ghost" data-ov="hub" data-from="${from}">${t(L('Biuras ir bylos','Office and files'))} · ◆ ${S.meta.cap}</button>`;
+
 const ENDINGS={
   fired:{t:L('Tave atleido','You were let go'),d:L('Vadovybė prarado kantrybę. Rezultatai ir santykiai su vadovybe yra tavo darbo dalis.','Leadership ran out of patience. Results and your relationship with leadership are part of the job.')},
   collapse:{t:L('Komanda subyrėjo','The team fell apart'),d:L('Trys žmonės išėjo. Stresas, kurio laiku nepastebėjai, virto išėjimais.','Three people left. Stress you didn’t catch in time turned into resignations.')},
@@ -524,17 +634,17 @@ const MAP=[
 "######DD######"];
 const COLS=14,ROWS=15;
 const WALK=new Set(['.','o','m','k','s','D']);
-const walkable=(c,r)=>r>=0&&r<ROWS&&c>=0&&c<COLS&&WALK.has(MAP[r][c]);
+const walkable=(c,r)=>r>=0&&r<ROWS&&c>=0&&c<COLS&&WALK.has(MAP[r][c])&&!(has('plants')&&PLANTS.some(p=>p[0]===c&&p[1]===r));
 const SPOT={desk:[2,2],meetP:[10,4],meet:[[9,2],[9,3],[12,2],[12,3],[10,1],[11,1]],kitchen:[[11,11],[11,12],[12,12],[11,13],[12,13]],window:[[6,1],[7,1]],door:[2,6],client:[7,9],exit:[7,14],start:[3,3]};
 const region=(c,r)=>(c>=1&&c<=4&&r>=1&&r<=4)?'office':(c>=9&&c<=12&&r>=1&&r<=4)?'meet':(c>=11&&c<=12&&r>=10&&r<=13)?'kitchen':'open';
 
 /* ================= state ================= */
 const KEY='groundwork.v3';
-let S={lang:'lt',G:null,commitment:null,checkin:null,bonus:0};
+let S={lang:'lt',G:null,commitment:null,checkin:null,bonus:0,meta:null};
 let G=null; // sim state (saved at day start)
 let RT=null; // runtime (positions etc)
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j))}catch(e){}}
+function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j))}catch(e){}S.meta=Object.assign({cap:0,up:{},dos:{}},S.meta||{})}
 
 const t=o=>(o&&(o[S.lang]??o.lt))||'';
 const tx=o=>{if(!o)return '';if(o.sales||o.project)o=o[G?G.type:'sales'];return t(o)};
@@ -571,7 +681,7 @@ function unitName(){return G.type==='sales'?L('tūkst. €','k€'):L('taškų',
 
 function newGame(type){
   const mots=shuffle(Object.keys(MOT)),people={};
-  IDS.forEach((id,i)=>people[id]={stress:PEOPLE[id].stress,trust:PEOPLE[id].trust,mot:mots[i],known:false,trait:null,quit:false,h:Math.floor(Math.random()*2)});
+  IDS.forEach((id,i)=>people[id]={stress:PEOPLE[id].stress,trust:PEOPLE[id].trust+(dosFull(id)?10:0),mot:mots[i],known:false,trait:null,quit:false,h:Math.floor(Math.random()*2)});
   G={type,day:0,people,culture:{trust:40,conflict:45,commitment:50,accountability:40,results:55},boss:60+(S.bonus?8:0),planMult:1,out:0,dayOut:0,days:[],
      flags:{},due:[],log:[],stats:{listen:0,right:0,wrong:0,self:0,report:0,meet:0,talks:0,missed:0},over:null,done:false,id:Date.now(),c0:null,sick:null};
   S.bonus=0;syncTrust();G.c0={...G.culture};
@@ -637,13 +747,14 @@ function leaveClient(){const c=RT.chars.client;if(!c)return;c.state='leaving';wa
 function sendBack(id){const c=RT.chars[id];if(!c||!act(id))return;c.state='walk';c.next='work';walkTo(c,...PEOPLE[id].seat)}
 
 /* ---- update ---- */
-function rate(id){const P=G.people[id];let m=P.stress<40?1:P.stress<70?0.9:0.75;if(P.trait==='resolute')m*=1.15;else if(P.trait)m*=0.55;m*=0.85+0.3*P.trust/100;if(RT.boost&&RT.boost[id])m*=1.15;if(RT.reduce&&RT.reduce[id])m*=0.6;return PEOPLE[id].base*m/6.7}
+function rate(id){const P=G.people[id];let m=P.stress<40?1:P.stress<70?0.9:0.75;if(P.trait==='resolute')m*=1.15;else if(P.trait)m*=0.55;m*=0.85+0.3*P.trust/100;if(RT.boost&&RT.boost[id])m*=1.15;if(RT.reduce&&RT.reduce[id])m*=0.6;if(has('screen'))m*=1.06;return PEOPLE[id].base*m/6.7}
 function tickSim(dm){
   const per=dm/60;
   IDS.forEach(id=>{const P=G.people[id],c=RT.chars[id];if(P.quit||!c)return;
     if((c.state==='work'||c.state==='wait')&&!c.path.length){const r=rate(id)*per;G.out+=r;G.dayOut+=r}
-    let s=1.1*per*(G.flags.overload&&G.day<=3?1.4:1);
-    if(c.state==='break')s-=1.6*per;
+    let s=1.1*per*(G.flags.overload&&G.day<=3?1.4:1)*(has('plants')?0.9:1);
+    if(c.state==='break')s-=(has('coffee')?2.6:1.6)*per;
+    if(c.state==='window'&&has('lounge'))s-=2.4*per;
     if(P.trait==='resolute')s/=2;
     P.stress=clamp(P.stress+s,0,100);
     if(P.stress>=100)breakPoint(id)});
@@ -708,7 +819,7 @@ function step(dtReal){
   tickSim(dm);
   // markers
   SCHED.forEach((e,i)=>{if(e.d===G.day&&!RT.fired[i]&&RT.time>=e.t){RT.fired[i]=1;e.run()}});
-  RT.markers=RT.markers.filter(m=>{if(RT.time>m.until){RT.cnt.miss++;MISS[m.miss]&&MISS[m.miss](m);return false}return true});
+  RT.markers=RT.markers.filter(m=>{if(RT.time>m.until){RT.cnt.miss++;RT.combo=0;MISS[m.miss]&&MISS[m.miss](m);return false}return true});
   RT.microT-=dm;if(RT.microT<=0){RT.microT=25+Math.random()*20;if(RT.markers.length<2&&RT.time<17*60+15)spawnMicro()}
   if(!RT.player.path.length&&!RT.player.pending&&!RT.meeting)RT.idle+=dm;else RT.idle=0;
   if(RT.idle>=30&&!RT.markers.length){RT.idle=-25;idleHint()}
@@ -716,7 +827,7 @@ function step(dtReal){
   RT.visitCheck-=dm;if(RT.visitCheck<=0){RT.visitCheck=30;
     const id=IDS.find(id=>act(id)&&RT.chars[id]&&RT.chars[id].state==='work'&&G.people[id].stress>=82&&!RT.talked[id]&&!RT.markers.some(m=>m.who===id)&&!(RT.visited||{})[id]);
     if(id&&RT.time<17*60){RT.visited=RT.visited||{};RT.visited[id]=1;const c=RT.chars[id];c.state='visit';walkTo(c,SPOT.door[0]+1,SPOT.door[1]);
-      addMarker({kind:'npc',who:id,ev:'visit',until:RT.time+60,miss:'visit'});
+      addMarker({kind:'npc',who:id,ev:'visit',until:RT.time+(has('door')?80:60),miss:'visit'});
       toast(`<b>${esc(pn(id))}</b> ${t(L('ateina pasikalbėti.','is coming to talk to you.'))}`);
       mentor('visit',L('Kai žmogus pats ateina pas vadovą, tai signalas. Jei jo neišklausysi, kitą kartą jis nebeateis.','When someone comes to you on their own, it’s a signal. Ignore it, and next time they won’t come.'))}}
   const near=IDS.find(id=>act(id)&&G.people[id].stress>=85&&!G.people[id].trait);
@@ -769,7 +880,7 @@ function doAction(a){
     const m=RT.markers.find(m=>m.who===a.id||m.also===a.id);
     if(m&&m.micro){RT.markers=RT.markers.filter(x=>x!==m);openMicro(m);return}
     if(m&&typeof m.ev==='number'){RT.markers=RT.markers.filter(x=>x!==m);openEvent(m.ev,a.id);return}
-    if(m&&m.ev==='visit'){RT.markers=RT.markers.filter(x=>x!==m)}
+    if(m&&m.ev==='visit'){RT.markers=RT.markers.filter(x=>x!==m);hit();gain(2,a.id)}
     if(a.id==='client')return;
     openPerson(a.id);return}
   if(a.kind==='desk'){const m=RT.markers.find(m=>m.kind==='phone');if(m){RT.markers=RT.markers.filter(x=>x!==m);openEvent(m.ev);return}openDesk();return}
@@ -780,7 +891,7 @@ function doAction(a){
 const scrim=document.getElementById('scrim'),sheet=document.getElementById('sheet');
 let SH=null; // current sheet {render, cost}
 function openSheet(obj){SH=obj;RT.paused=true;RT.idle=0;scrim.hidden=false;renderSheet()}
-function renderSheet(){sheet.innerHTML=SH.render();sheet.scrollTop=0}
+function renderSheet(){sheet.innerHTML=SH.dos?`${dossierH(SH.dos)}<button class="btn ghost" data-sh="back">${t(L('Atgal','Back'))}</button>`:SH.render();sheet.scrollTop=0}
 function closeSheet(){scrim.hidden=true;const cost=SH&&SH.cost||0;const after=SH&&SH.after;SH=null;RT.paused=false;if(cost)skip(cost);after&&after();renderHUD();setTimeout(nextCons,300)}
 function skip(min){let left=min;while(left>0){const d=Math.min(5,left);RT.time+=d;tickSim(d);left-=d}Object.values(RT.chars).forEach(c=>{if(c.state==='wait')sendBack(c.id)});if(RT.time>=18*60)endDay()}
 function avatarH(id,lg){const P=G.people[id];const ring=!P||P.quit?'var(--line)':P.stress>=70?'var(--bad)':P.stress>=40?'var(--mark)':'var(--good)';
@@ -802,7 +913,7 @@ function personHead(id){const P=G.people[id];
   return `<div class="who-head">${avatarH(id,true)}<div><div class="n">${esc(pn(id))} ${P.trait?`<span class="chip ${P.trait==='resolute'?'good':'bad'}">${traitName(id)}</span>`:''}</div><div class="r">${tx(PEOPLE[id].role)}</div></div></div>
   <div class="bars"><div class="mini"><span class="k"><span>${u('stress')}</span><span>${Math.round(P.stress)}</span></span>${bar(P.stress,sColor(P.stress))}</div>
   <div class="mini"><span class="k"><span>${u('trust')}</span><span>${P.trust}</span></span>${bar(P.trust)}</div></div>
-  <p class="small">${u('motive')}: <b>${P.known?t(MOT[P.mot].n):'?'}</b></p>`}
+  <p class="small">${u('motive')}: <b>${P.known?t(MOT[P.mot].n):'?'}</b> · <button class="link" data-dos="${id}" style="padding:0;font-size:13px">${t(L('Byla','File'))} ${dosN(id)}/6</button> ${dotsH(id)}</p>`}
 
 function openPerson(id){
   const P=G.people[id],st={res:null};
@@ -814,13 +925,13 @@ function openPerson(id){
       <p class="small">${u('offer')}</p><div class="opts">${Object.keys(MOT).map(k=>`<button class="opt" data-talk="${k}"><span>${tx(MOT[k].lever)}</span>${P.known&&P.mot===k?`<span class="chip good">✓</span>`:''}</button>`).join('')}
       ${P.stress>=70?`<button class="opt" data-talk="reduce"><span>${u('reduce')}</span></button>`:''}</div>
       <button class="btn ghost" data-sh="close">${u('later')}</button>`;
-    else body=`${sayH(id,st.res.reply)}${fxH(st.res.fx)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`;
+    else body=`${sayH(id,st.res.reply)}${fxH(st.res.fx)}${gainH(st.c0,id,st.n0)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`;
     return `${personHead(id)}${!st.res&&!RT.talked[id]?`${open?sayH(id,open):''}${sayH(id,MOT[P.mot].hints[P.h])}`:''}${body}`},
-    talk:c=>{st.res=talkRes(id,c);SH.cost=20;RT.talked[id]=1;renderSheet()},
+    talk:c=>{st.c0=S.meta.cap;st.n0=dosN(id);st.res=talkRes(id,c);SH.cost=20;RT.talked[id]=1;renderSheet()},
     after:()=>{const ch=RT.chars[id];if(ch&&ch.state!=='fight')sendBack(id)}});
 }
 function talkRes(id,c){
-  const P=G.people[id],m=MOT[P.mot];FX=[];let reply,ins;G.stats.talks++;RT.cnt.talks++;if(RT.suggest===id)RT.suggest=null;RT.boost=RT.boost||{};RT.reduce=RT.reduce||{};
+  const P=G.people[id],m=MOT[P.mot],knew=P.known;FX=[];let reply,ins;G.stats.talks++;RT.cnt.talks++;if(RT.suggest===id)RT.suggest=null;RT.boost=RT.boost||{};RT.reduce=RT.reduce||{};
   if(c==='listen'){G.stats.listen++;
     if(P.trust>=30){const was=P.known;P.known=true;reply=m.reveal;dS(id,-12);dT(id,6);
       ins=was?L('Klausytis verta net tada, kai jau žinai atsakymą. Žmogus jaučia, kad jis tau rūpi.','Listening is worth it even when you know the answer. People feel that you care.'):L('Paklausei ir išgirdai. Dabar žinai, kas šį žmogų motyvuoja.','You asked and listened. Now you know what drives this person.');
@@ -831,14 +942,15 @@ function talkRes(id,c){
   else if(c===P.mot){G.stats.right++;if(!P.known)RT.cnt.reveal++;P.known=true;dS(id,-15);dT(id,10);RT.boost[id]=1;reply=m.yes;ins=L('Pataikei. Kai žinai, kas žmogų motyvuoja, net trumpas pokalbis veikia stipriai.','Spot on. When you know what drives someone, even a short talk goes a long way.')}
   else{G.stats.wrong++;dT(id,-2);reply=L('Ačiū… bet ne apie tai galvojau.','Thanks… but that’s not what I had in mind.');ins=L('Nepataikei. Tas pats veiksmas skirtingiems žmonėms veikia skirtingai. Gal verta pirma paklausti?','Missed. The same action works differently on different people. Maybe ask first?');
     if(G.stats.wrong>=2&&G.stats.listen===0)setTimeout(()=>mentor('guess',L('Spėlioji, kas žmones motyvuoja. Pabandyk pirma paklausti ir klausytis.','You’re guessing what motivates people. Try asking and listening first.')),400)}
-  const res={reply,fx:FX,ins};FX=null;return res;
+  const res={reply,fx:FX,ins};FX=null;
+  know(id,1+(c==='listen'&&P.trust>=30?1:0)+(c===P.mot?1:0));gain(c==='listen'?(!knew&&P.known?4:1):c===P.mot?4:c==='reduce'?1:0,id);return res;
 }
 function openEvent(i,who){
   const E=EVENTS[i],st={res:null};const pre=E.pre?E.pre(G):null;
   openSheet({cost:20,render:()=>`<p class="eyebrow">${who?esc(pn(who)):'☎'}</p><h2>${tx(E.title)}</h2><p class="lead">${tx(E.text)}</p>${pre?`<p class="small">${t(pre)}</p>`:''}
-    ${st.res?`<p class="quote">${tx(E.opts[st.res.i].n)}</p>${fxH(st.res.fx)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`
+    ${st.res?`<p class="quote">${tx(E.opts[st.res.i].n)}</p>${fxH(st.res.fx)}${gainH(st.c0)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`
       :`<div class="opts">${E.opts.map((o,k)=>`<button class="opt" data-ev="${k}"><span>${tx(o.n)}</span></button>`).join('')}</div>`}`,
-    ev:k=>{FX=[];const r=E.opts[k].fx(G);st.res={i:k,fx:FX,ins:r.i};FX=null;logE(r.k||'',r.log);renderSheet()},
+    ev:k=>{FX=[];st.c0=S.meta.cap;const r=E.opts[k].fx(G);st.res={i:k,fx:FX,ins:r.i};FX=null;logE(r.k||'',r.log);hit();gain(r.k==='good'?12:r.k==='bad'?2:5,who&&who!=='client'?who:null);renderSheet()},
     after:()=>{if(i===1)leaveClient();if(i===2)sendBack('lina');if(i===3)(G.fight||[]).forEach(sendBack)}});
 }
 function openCons(q){
@@ -878,10 +990,10 @@ function openMeeting(){
     const intro=harm?`<p class="quote">${u('harmonyLow')}</p>${act('marius')?sayH('marius',L('Viskas gerai, sutinku.','All good, I agree.')):''}${act('lina')?sayH('lina',L('(tyli)','(silent)')):''}`
       :`<p class="quote">${u('harmonyOk')}</p>${act('tomas')?sayH('tomas',L('Siūlau kitaip, ir štai kodėl…','I’d do it differently, and here’s why…')):''}${act('lina')?sayH('lina',L('Nesutinku. Žiūrėk į skaičius.','I disagree. Look at the numbers.')):''}`;
     const done=st.moves.map(m=>`<p class="eyebrow">${t(MEET[m.mv].n)}</p>${MEET[m.mv].r.filter(([id])=>act(id)).map(([id,l])=>sayH(id,l)).join('')}${fxH(m.fx)}${insightH(m.ins)}`).join('');
-    const left=2-st.moves.length;
+    const MV=has('board')?3:2,left=MV-st.moves.length;
     return `<h2>${u('meetH')}</h2>${intro}${done}${left?`<p class="small">${u('meetPick')}${left}</p><div class="opts">${Object.keys(MEET).filter(k=>!st.moves.some(m=>m.mv===k)).map(k=>`<button class="opt" data-meet="${k}"><span>${t(MEET[k].n)}</span></button>`).join('')}</div>`:`<button class="btn" data-sh="close">${u('close')}</button>`}`},
     meet:k=>{FX=[];const ins=MEET[k].fx(G);st.moves.push({mv:k,fx:FX,ins});FX=null;
-      if(st.moves.length===2){if(G.flags.fa){due('fa',G.day+2);logE('bad',L('Susirinkime priėmei tylų sutikimą','Accepted silent agreement in a meeting'))}G.flags.fa=undefined}
+      if(st.moves.length===(has('board')?3:2)){gain(6,null,true);if(G.flags.fa){due('fa',G.day+2);logE('bad',L('Susirinkime priėmei tylų sutikimą','Accepted silent agreement in a meeting'))}G.flags.fa=undefined}
       renderSheet()},
     after:()=>IDS.forEach(sendBack)});
 }
@@ -892,11 +1004,12 @@ function openLog(){
   openSheet({cost:0,render:()=>`<h2>${u('log')}</h2>${logH()}<button class="btn ghost" data-sh="close">${u('close')}</button>`});
 }
 function teamRows(){return IDS.map(id=>{const P=G.people[id];return `<div class="prow">${avatarH(id)}<div><div class="who">${esc(pn(id))}${P.trait?` <span class="chip ${P.trait==='resolute'?'good':'bad'}">${traitName(id)}</span>`:''}</div>
-  <span class="small">${P.quit?u('gone'):`${u('trust')} ${P.trust} · ${P.known?t(MOT[P.mot].n):u('motive')+' ?'}`}</span></div>${P.quit?'':`<span class="st" style="color:${sColor(P.stress)}">${Math.round(P.stress)}</span>`}</div>`}).join('')}
+  <span class="small">${P.quit?u('gone'):`${u('trust')} ${P.trust} · ${P.known?t(MOT[P.mot].n):u('motive')+' ?'} · ${dotsH(id)}`}</span></div>${P.quit?'':`<span class="st" style="color:${sColor(P.stress)}">${Math.round(P.stress)}</span>`}</div>`}).join('')}
 function logH(){return G.log.length?`<ul class="log">${G.log.slice().reverse().map(x=>`<li class="${x.k}"><span class="w">${t(UI.days[x.d]).slice(0,3)} ${hhmm(x.time)}</span><span>${tx(x.txt)}</span></li>`).join('')}</ul>`:`<p class="small">—</p>`}
 
 sheet.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!SH)return;const d=b.dataset;
   if(d.sh==='close')closeSheet();else if(d.sh==='callMeet')callMeeting();
+  else if(d.sh==='back'){SH.dos=null;renderSheet()}else if(d.dos){SH.dos=d.dos;renderSheet()}else if(d.buy)buy(d.buy);
   else if(d.talk)SH.talk(d.talk);else if(d.ev!==undefined)SH.ev(+d.ev);else if(d.desk)SH.desk(d.desk);else if(d.meet)SH.meet(d.meet);else if(d.mi!==undefined)SH.mi(+d.mi)});
 
 /* ================= day / week end ================= */
@@ -910,6 +1023,7 @@ function endDay(){
   IDS.forEach(id=>{const P=G.people[id];if(act(id)&&P.stress>=70&&!RT.talked[id])RT.dayIns.push(NL(id,`: stresas ${Math.round(P.stress)}, o šiandien su juo nesikalbėjai.`,`: stress at ${Math.round(P.stress)}, and you didn’t talk to them today.`))});
   if(G.boss<=0)G.over='fired';
   RT.goalsDone=RT.goals.filter(k=>GOALS[k].ok());G.boss=clamp(G.boss+RT.goalsDone.length*3,0,100);
+  gain(RT.goalsDone.length*4+(out>=target?8:0),null,true);
   RT.sum={out,target};renderDay();autosave();
 }
 function renderDay(){
@@ -918,11 +1032,13 @@ function renderDay(){
     <div class="meters"><div class="meter wide"><span class="k">${t(metricName())} · ${u('today')}</span><span class="v">${out} <small>/ ${target} ${t(unitName())}</small></span>${bar(out/target*100,out<target?'var(--bad)':null)}</div>
     <div class="meter"><span class="k">${u('boss')}</span><span class="v">${G.boss}</span>${bar(G.boss)}</div>
     <div class="meter"><span class="k">${u('team')}</span><span class="v">${IDS.filter(act).length} <small>/ ${IDS.length}</small></span>${bar(IDS.filter(act).length/IDS.length*100)}</div></div>
+    <div class="meter wide"><span class="k">${t(L('Vadovo kapitalas','Leadership capital'))} · ${u('today')}</span><span class="v cap">+${RT.capDay||0} ◆ <small>/ ${t(L('iš viso','total'))} ${S.meta.cap}</small></span></div>
+    ${(RT.facts||[]).length?`<p class="eyebrow">${t(L('Bylos papildytos','Files updated'))}</p><ul class="list">${RT.facts.map(f=>`<li><b>${esc(pn(f.id))} ${f.i+1}/6.</b> ${t(FACTS[f.id][f.i])}</li>`).join('')}</ul>`:''}
     <p class="eyebrow">${t(L('Dienos tikslai','Daily goals'))} · ${RT.goalsDone.length}/${RT.goals.length}${RT.goalsDone.length?` · ${u('boss')} +${RT.goalsDone.length*3}`:''}</p>
     <ul class="goals">${RT.goals.map(k=>`<li class="${RT.goalsDone.includes(k)?'done':''}"><span class="box">${RT.goalsDone.includes(k)?'✓':''}</span><span>${t(GOALS[k].n)}</span></li>`).join('')}</ul>
     <div class="rows">${teamRows()}</div>
     ${RT.dayIns.length?`<p class="eyebrow">${u('happened')}</p><ul class="list">${RT.dayIns.slice(0,4).map(i=>`<li>${t(i)}</li>`).join('')}</ul>`:''}
-    <button class="btn" data-ov="${last?'end':'next'}">${last?u('toEnd'):u('nextDay')}</button>`;
+    <button class="btn" data-ov="${last?'end':'next'}">${last?u('toEnd'):u('nextDay')}</button>${hubBtn('day')}`;
   over.hidden=false;over.scrollTop=0;
 }
 function endWeekNow(){if(RT&&!RT.ended){RT.ended=true;RT.paused=true}scrim.hidden=true;SH=null;showEnd()}
@@ -948,17 +1064,19 @@ const realTask=()=>G.stats.listen<2
   ?L('Šią savaitę paklausk dviejų komandos narių: „Kas tau dabar svarbiausia darbe?“ Ir tik klausyk, nieko nesiūlyk.','This week, ask two people on your team: “What matters most to you at work right now?” Then just listen.')
   :L('Šią savaitę viename susirinkime pirmas įvardink savo klaidą ar tai, ko nežinai: „Čia aš suklydau“ arba „Nežinau. Kas galėtų padėti?“','This week, in one meeting, be the first to name a mistake or something you don’t know: “I got this wrong” or “I don’t know. Who can help?”');
 function showEnd(){
+  const ek=ending();if(!G.capDone){G.capDone=1;G.capBonus={great:60,burn:30,kind:30,mid:15}[ek]||5;S.meta.cap+=G.capBonus}
   G.done=true;S.G=G;S.RT=null;save();
-  const e=ENDINGS[ending()],tot=Math.round(G.days.reduce((s,d)=>s+d.out,0)),pl=G.days.reduce((s,d)=>s+d.plan,0)||dayTarget()*5,quits=IDS.filter(id=>G.people[id].quit).length;
+  const e=ENDINGS[ek],tot=Math.round(G.days.reduce((s,d)=>s+d.out,0)),pl=G.days.reduce((s,d)=>s+d.plan,0)||dayTarget()*5,quits=IDS.filter(id=>G.people[id].quit).length;
   const committed=S.commitment&&S.commitment.game===G.id;
   overIn.innerHTML=`<p class="eyebrow">${G.over?u('endFail'):u('endEy')}</p><h1>${t(e.t)}</h1><p class="lead">${t(e.d)}</p>
     <div class="meters"><div class="meter wide"><span class="k">${t(metricName())}</span><span class="v">${tot} <small>/ ${pl} ${t(unitName())}</small></span>${bar(tot/pl*100)}</div>
     <div class="meter"><span class="k">${u('boss')}</span><span class="v">${G.boss}</span>${bar(G.boss)}</div>
-    <div class="meter"><span class="k">${u('left')}</span><span class="v">${quits} <small>/ ${IDS.length}</small></span>${bar(quits/IDS.length*100,'var(--bad)')}</div></div>
+    <div class="meter"><span class="k">${u('left')}</span><span class="v">${quits} <small>/ ${IDS.length}</small></span>${bar(quits/IDS.length*100,'var(--bad)')}</div>
+    <div class="meter wide"><span class="k">${t(L('Vadovo kapitalas','Leadership capital'))}</span><span class="v cap">◆ ${S.meta.cap} <small>${t(L('savaitės premija','week bonus'))} +${G.capBonus}</small></span><span class="small">${t(L('Išleisk biuro patobulinimams: jie lieka kitiems žaidimams.','Spend it on office upgrades: they stay for your next games.'))}</span></div></div>
     <p class="eyebrow">${u('turning')}</p><ul class="timeline">${G.log.map(x=>`<li class="${x.k}"><span class="w">${t(UI.days[x.d]).slice(0,3)} ${hhmm(x.time)}</span><span>${tx(x.txt)}</span></li>`).join('')||'<li><span></span><span>—</span></li>'}</ul>
     <p class="eyebrow">${u('profile')}</p><ul class="list">${profileLines().map(i=>`<li>${t(i)}</li>`).join('')}</ul>
-    <div class="task"><p class="eyebrow">${u('taskEy')}</p><q>${t(realTask())}</q>${committed?`<p class="small"><b>${u('committed')}</b></p>`:`<button class="btn" data-ov="commit">${u('commit')}</button>`}</div>
-    <button class="btn ghost" data-ov="replay">${u('replay')}</button><p class="small">${u('replayNote')}</p><button class="link" data-ov="welcome">${u('newTeam')}</button>`;
+    <div class="task"><p class="eyebrow">${u('taskEy')}</p><q>${t(realTask())}</q>${committed?`<p class="small"><b>${u('committed')}</b></p>`:`<button class="btn" data-ov="commit">${u('commit')} · +20 ◆</button>`}</div>
+    ${hubBtn('end')}<button class="btn ghost" data-ov="replay">${u('replay')}</button><p class="small">${u('replayNote')}</p><button class="link" data-ov="welcome">${u('newTeam')}</button>`;
   over.hidden=false;over.scrollTop=0;
 }
 function showWelcome(){
@@ -971,7 +1089,7 @@ function showWelcome(){
     <p class="eyebrow">${u('choose')}</p>
     <div class="opts"><button class="opt typebtn" data-ov="type" data-type="sales"><b>${u('sales')}</b><span>${u('salesD')}</span></button>
     <button class="opt typebtn" data-ov="type" data-type="project"><b>${u('project')}</b><span>${u('projectD')}</span></button></div>
-    <p class="small">${u('basis')}</p>`;
+    ${S.meta.cap||Object.keys(S.meta.up).length||Object.keys(S.meta.dos).length?hubBtn('welcome'):''}<p class="small">${u('basis')}</p>`;
   over.hidden=false;over.scrollTop=0;drawHero();
 }
 function showHow(){
@@ -979,14 +1097,19 @@ function showHow(){
   over.hidden=false;
 }
 over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
-  if(d.ck){S.checkin=d.ck;if(d.ck==='yes')S.bonus=1;save();showWelcome();return}
+  if(d.ck){S.checkin=d.ck;if(d.ck==='yes')S.bonus=1;S.meta.cap+={yes:40,part:20,no:0}[d.ck];save();showWelcome();return}
+  if(d.buy){buy(d.buy);return}
   switch(d.ov){
     case 'type':newGame(d.type);RT=null;showHow();break;
     case 'go':over.hidden=true;startDay();renderAll();break;
     case 'resume':G=JSON.parse(JSON.stringify(S.G));if(S.RT){RT=S.RT;RT.ended=!!RT.ended;over.hidden=true;renderAll();if(RT.ended){renderDay();over.hidden=false}else RT.paused=false}else{RT=null;over.hidden=true;startDay();renderAll()}break;
     case 'next':G.day++;over.hidden=true;RT.ended=false;startDay();renderAll();break;
     case 'end':showEnd();break;
-    case 'commit':S.commitment={date:today(),game:G.id,task:realTask()};S.checkin=null;save();showEnd();break;
+    case 'commit':S.commitment={date:today(),game:G.id,task:realTask()};S.checkin=null;S.meta.cap+=20;save();showEnd();break;
+    case 'hub':renderHub(d.from);break;
+    case 'dos':renderDos(d.id);break;
+    case 'toHub':renderHub();break;
+    case 'hubBack':{const f=renderHub.from;if(f==='day')renderDay();else if(f==='end')showEnd();else showWelcome();break}
     case 'replay':{const ty=G.type;newGame(ty);RT=null;over.hidden=true;startDay();renderAll();break}
     case 'welcome':showWelcome();break;
   }});
@@ -998,7 +1121,7 @@ function renderHUD(){
   document.getElementById('hud').innerHTML=`<div class="clock"><span>${t(UI.days[G.day])}</span><b>${hhmm(RT.time)}</b></div>
     <div class="gauge"><span class="k"><span>${t(metricName())}</span><b>${Math.round(wk)}/${wt}</b></span>${bar(wk/wt*100)}</div>
     <div class="gauge"><span class="k"><span>${u('boss')}</span><b>${G.boss}</b></span>${bar(G.boss,G.boss<30?'var(--bad)':null)}</div>
-    <div class="hud-btns"><button class="ibtn" data-ui="speed" aria-pressed="${RT.speed>0}" title="${u('speed')}">×${[1,2,4][RT.speed]}</button></div>`;
+    <div class="hud-btns"><button class="ibtn cap" data-ui="shop" title="${t(L('Vadovo kapitalas','Leadership capital'))}">◆ ${S.meta.cap}${mult()>1?` ×${fmtMult(mult())}`:''}</button><button class="ibtn" data-ui="speed" aria-pressed="${RT.speed>0}" title="${u('speed')}">×${[1,2,4][RT.speed]}</button></div>`;
   document.getElementById('mteam').textContent=u('team');document.getElementById('mlog').textContent=u('log');
   const side=document.getElementById('side');
   document.getElementById('goalsM').innerHTML=goalsH();
@@ -1008,9 +1131,10 @@ function renderHUD(){
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ui]');if(!b||!RT)return;
   if(b.dataset.ui==='speed'){RT.speed=(RT.speed+1)%SPEEDS.length;renderHUD()}
+  if(b.dataset.ui==='shop'&&!SH&&!RT.paused)openShop();
   if(b.dataset.ui==='team')openTeam();if(b.dataset.ui==='log')openLog()});
 document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{S.lang=b.dataset.lang;save();setLang();
-  if(!over.hidden){if(overIn.querySelector('#hero'))showWelcome();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
+  if(!over.hidden){const dv=overIn.querySelector('[data-dosv]');if(overIn.querySelector('[data-hub]'))renderHub();else if(dv)renderDos(dv.dataset.dosv);else if(overIn.querySelector('#hero'))showWelcome();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
   if(SH)renderSheet();renderHUD()}));
 document.getElementById('brand').addEventListener('click',()=>{if(SH){scrim.hidden=true;SH=null;if(RT)RT.paused=false}autosave();if(RT)RT.paused=true;showWelcome()});
 function setLang(){document.documentElement.lang=S.lang;document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===S.lang))}
@@ -1052,6 +1176,18 @@ function plant(c,r){const x=c*T+T/2,y=r*T;ctx.fillStyle=COL.plantPot;rr(x-T*0.2,
   ctx.fillStyle=COL.leaf;[[0,0.25,0.28],[-0.18,0.38,0.2],[0.18,0.38,0.2],[0,0.05,0.2]].forEach(([dx,dy,rad])=>{ctx.beginPath();ctx.arc(x+dx*T,y+dy*T,rad*T,0,7);ctx.fill()});
   ctx.fillStyle=COL.leaf2;ctx.beginPath();ctx.arc(x-T*0.06,y+T*0.18,T*0.1,0,7);ctx.fill()}
 function chair(c,r,up){const x=c*T+T/2,y=r*T;ctx.fillStyle=COL.chair;rr(x-T*0.24,y+T*0.28,T*0.48,T*0.42,T*0.1);ctx.fill();if(!up){ctx.fillStyle='#4A5563';rr(x-T*0.24,y+T*0.16,T*0.48,T*0.16,T*0.06);ctx.fill()}}
+/* office upgrades */
+function espresso(c,r){const x=c*T,y=r*T;ctx.fillStyle='#C4CBD2';rr(x+T*0.16,y-T*0.22,T*0.68,T*0.7,T*0.08);ctx.fill();ctx.fillStyle='#8B949D';ctx.fillRect(x+T*0.16,y+T*0.04,T*0.68,T*0.06);
+  ctx.fillStyle='#2E353D';ctx.fillRect(x+T*0.34,y+T*0.1,T*0.32,T*0.1);ctx.fillStyle='#F4F1EC';ctx.fillRect(x+T*0.41,y+T*0.24,T*0.18,T*0.16);ctx.fillStyle='#6CC29C';ctx.beginPath();ctx.arc(x+T*0.7,y-T*0.1,T*0.035,0,7);ctx.fill();
+  const k=performance.now()/500;ctx.strokeStyle='rgba(255,255,255,.75)';ctx.lineWidth=1.5;ctx.beginPath();for(let i=0;i<=8;i++){const yy=y+T*0.22-i*T*0.05,xx=x+T*0.5+Math.sin(k+i*0.8)*T*0.04;i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy)}ctx.stroke()}
+function whiteboard(){const x=10*T,y=0;ctx.fillStyle='#8B949D';rr(x+T*0.02,y+T*0.4,T*1.96,T*0.56,T*0.04);ctx.fill();ctx.fillStyle='#F4F6F8';ctx.fillRect(x+T*0.07,y+T*0.45,T*1.86,T*0.46);
+  ctx.lineWidth=2;ctx.strokeStyle='#3A6EA5';ctx.strokeRect(x+T*0.18,y+T*0.53,T*0.36,T*0.22);ctx.strokeStyle='#D48A3A';ctx.strokeRect(x+T*0.8,y+T*0.53,T*0.36,T*0.22);
+  ctx.strokeStyle='#59626D';ctx.beginPath();ctx.moveTo(x+T*0.54,y+T*0.64);ctx.lineTo(x+T*0.8,y+T*0.64);ctx.moveTo(x+T*1.35,y+T*0.58);ctx.lineTo(x+T*1.8,y+T*0.58);ctx.moveTo(x+T*1.35,y+T*0.68);ctx.lineTo(x+T*1.7,y+T*0.68);ctx.moveTo(x+T*1.35,y+T*0.78);ctx.lineTo(x+T*1.75,y+T*0.78);ctx.stroke()}
+function doorSign(){const x=3*T,y=5*T;ctx.fillStyle='#4E9A6E';rr(x+T*0.12,y+T*0.52,T*0.76,T*0.3,T*0.05);ctx.fill();ctx.fillStyle='#F4F6F8';ctx.font=`600 ${Math.max(7,Math.round(T*0.15))}px IBM Plex Mono, monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(S.lang==='lt'?'ATVIRA':'OPEN',x+T*0.5,y+T*0.675)}
+function resultsScreen(){const x=8.6*T,y=5*T,w=T*1.8;ctx.fillStyle='#7C8691';rr(x,y+T*0.4,w,T*0.56,T*0.05);ctx.fill();ctx.fillStyle='#1B2833';ctx.fillRect(x+T*0.06,y+T*0.45,w-T*0.12,T*0.46);
+  const ds=(G&&G.days)||[],n=5,bw=(w-T*0.3)/n;for(let i=0;i<n;i++){const d=ds[i],h=d?clamp(d.out/d.plan,0.1,1.2)*T*0.32:T*0.04;ctx.fillStyle=d?(d.out>=d.plan?'#6CC29C':'#E08A80'):'#3A4552';ctx.fillRect(x+T*0.15+i*bw,y+T*0.86-h,bw*0.6,h)}}
+function lounge(){ctx.fillStyle='#5E7184';rr(6*T+T*0.08,1*T+T*0.3,T*1.84,T*1.5,T*0.12);ctx.fill();ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=2;rr(6*T+T*0.18,1*T+T*0.4,T*1.64,T*1.3,T*0.08);ctx.stroke()}
+function armchair(c,r){const x=c*T+T/2,y=r*T;ctx.fillStyle='#4D6172';rr(x-T*0.32,y+T*0.2,T*0.64,T*0.56,T*0.14);ctx.fill();ctx.fillStyle='#6E8798';rr(x-T*0.22,y+T*0.28,T*0.44,T*0.36,T*0.1);ctx.fill()}
 function person(c,look,o){
   const px=c.x*T+T/2,py=c.y*T+T*0.62,walking=c.path&&c.path.length,bob=walking?Math.abs(Math.sin(c.phase||0))*T*0.05:0;
   const sit=o.sit,s=T;
@@ -1102,6 +1238,7 @@ function draw(){
   const now=performance.now();
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle='#141A20';ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);ctx.translate(0,OY);
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(!'#W'.includes(MAP[r][c]))floor(c,r);
+  if(has('lounge'))lounge();
   if(RT&&RT.tap&&RT.tap.t>0){ctx.strokeStyle='rgba(28,53,80,.6)';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(RT.tap.x*T+T/2,RT.tap.y*T+T*0.8,T*0.3*(1.2-RT.tap.t/2),T*0.12,0,0,7);ctx.stroke()}
   const L2=[];
   for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){const ch=MAP[r][c];
@@ -1114,6 +1251,12 @@ function draw(){
   IDS.forEach(id=>{const [c,r]=PEOPLE[id].seat;L2.push({y:r+0.3,f:()=>chair(c,r,true)})});
   L2.push({y:2.3,f:()=>chair(2,2,true)});
   SPOT.meet.forEach(([c,r])=>L2.push({y:r+0.3,f:()=>chair(c,r,false)}));
+  if(has('coffee'))L2.push({y:11.95,f:()=>espresso(12,11)});
+  if(has('plants'))PLANTS.forEach(([c,r])=>L2.push({y:r+0.9,f:()=>plant(c,r)}));
+  if(has('board'))L2.push({y:0.995,f:whiteboard});
+  if(has('door'))L2.push({y:5.995,f:doorSign});
+  if(has('screen'))L2.push({y:5.995,f:resultsScreen});
+  if(has('lounge'))[6,7].forEach(c=>L2.push({y:2.3,f:()=>armchair(c,2)}));
   const tops=[];
   if(RT){
     Object.values(RT.chars).forEach(c=>{const id=c.id,P=G.people[id];
@@ -1134,6 +1277,8 @@ function draw(){
         else if(P.stress>=85)iconAbove(res.px,res.top,'storm',now);else if(P.stress>=65)iconAbove(res.px,res.top,'cloud',now);else if(P.trust>=70&&P.stress<35&&Math.sin(now/900+c.phase)>0.6)iconAbove(res.px,res.top,'heart',now)}
       if(c.say&&c.sayT>0)speech(res.px,res.top,tx(c.say))});
     const ph=RT.markers.find(m=>m.kind==='phone');if(ph)iconAbove(3*T+T*0.5,T*0.1,'!',now);
+    (RT.floats||[]).forEach(f=>{const k=f.t/1.8,px=f.x*T+T/2,py=f.y*T-T*0.5-(1-k)*T*0.9;ctx.globalAlpha=Math.min(1,k*1.6);
+      ctx.font=`600 ${Math.max(11,Math.round(T*0.34))}px IBM Plex Mono, monospace`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineWidth=3;ctx.strokeStyle='rgba(20,26,32,.85)';ctx.strokeText(f.txt+' ◆',px,py);ctx.fillStyle='#E9C77F';ctx.fillText(f.txt+' ◆',px,py);ctx.globalAlpha=1});
   }
 }
 function drawHero(){
@@ -1156,7 +1301,7 @@ function demoRT(){
 /* ================= saving ================= */
 function autosave(){
   if(!G||!RT||SH||G.done)return;
-  S.G=G;S.RT=JSON.parse(JSON.stringify(RT,(k,v)=>k==='say'||k==='sayT'?undefined:v));save();
+  S.G=G;S.RT=JSON.parse(JSON.stringify(RT,(k,v)=>k==='say'||k==='sayT'||k==='floats'?undefined:v));save();
 }
 window.addEventListener('pagehide',autosave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)autosave()});
@@ -1165,7 +1310,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)autosave()}
 let last=performance.now();
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;
-  if(G&&RT&&over.hidden){step(dt);checkMeeting();if(RT.tap)RT.tap.t-=dt;
+  if(G&&RT&&over.hidden){step(dt);checkMeeting();if(RT.tap)RT.tap.t-=dt;if(RT.floats&&!RT.paused)RT.floats=RT.floats.filter(f=>(f.t-=dt)>0);
     if(!frame.h||now-frame.h>400){frame.h=now;renderHUD()}
     if(!frame.s||now-frame.s>5000){frame.s=now;autosave()}}
   if(G&&RT)draw();
