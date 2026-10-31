@@ -175,6 +175,23 @@ canvas{display:block;cursor:pointer}
 .dosrow{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;width:100%;cursor:pointer}
 .dosrow b{font-weight:600;font-size:14px}
 @media (max-width:480px){.hud-btns{flex-direction:column}}
+.cgroup{border-bottom:1px solid var(--line)}
+.cgroup summary{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:12px 0;cursor:pointer;list-style:none;font-weight:600;font-size:14.5px}
+.cgroup summary::-webkit-details-marker{display:none}
+.cgroup summary .small{font:500 11px var(--f-mono);letter-spacing:.06em;white-space:nowrap}
+.cards{display:flex;flex-direction:column;gap:8px;padding-bottom:14px}
+.icard{background:var(--raised);border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.icard.good{border-left-color:var(--good)} .icard.bad{border-left-color:var(--bad)}
+.icard.lock{background:transparent;border-style:dashed;border-left-style:dashed;color:var(--muted)}
+.icard b{font-size:13.5px;font-weight:600}
+.icard p{font:400 15.5px/1.45 var(--f-display)}
+.icard.lock p{font:400 13px/1.4 var(--f-body)}
+.stars{font-size:30px;letter-spacing:.12em;color:var(--mark);line-height:1}
+.stars .off{color:var(--line)}
+.typebtn .stars{font-size:15px;margin-left:6px;vertical-align:2px}
+.goals li.miss{color:var(--muted)}
+.goals li.ok .box{background:var(--good);border-color:var(--good);color:#0D1217}
+.goals li.miss .box{border-color:var(--bad);color:var(--bad)}
 
 @media (min-width:960px){
   .stage{grid-template-columns:minmax(0,1fr) 300px}
@@ -484,9 +501,9 @@ const optN=(o,a)=>typeof o.n==='function'?o.n(a):o.n;
 function openMicro(m){
   const M=MICRO[m.micro],a=m.who,st={res:null};
   openSheet({cost:0,render:()=>`${personHead(a)}<h2>${t(M.title)}</h2><p class="lead">${t(M.text(a))}</p>
-    ${st.res?`<p class="quote">${t(optN(M.opts[st.res.i],a))}</p>${fxH(st.res.fx)}${gainH(st.c0,a,st.n0)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`
+    ${st.res?`<p class="quote">${t(optN(M.opts[st.res.i],a))}</p>${fxH(st.res.fx)}${gainH(st.c0,a,st.n0)}${insightH(st.res.ins,st.nc?newCardLabel():null)}<button class="btn" data-sh="close">${u('close')}</button>`
       :`<div class="opts">${M.opts.map((o,k)=>`<button class="opt" data-mi="${k}"><span>${t(optN(o,a))}</span><span class="cost">${o.cost||20} ${u('min')}</span></button>`).join('')}</div>`}`,
-    mi:k=>{FX=[];st.c0=S.meta.cap;st.n0=dosN(a);const ins=M.opts[k].fx(a);const sc=FX.filter(f=>f.who===a||f.who==='all').reduce((s,f)=>s+(f.key==='trust'?f.v:f.key==='stress'?-f.v:0),0);st.res={i:k,fx:FX,ins};FX=null;hit();gain(sc>0?4:1,a);if(sc>0)know(a,1);SH.cost=M.opts[k].cost||20;renderSheet()},
+    mi:k=>{FX=[];st.c0=S.meta.cap;st.n0=dosN(a);const ins=M.opts[k].fx(a);const sc=FX.filter(f=>f.who===a||f.who==='all').reduce((s,f)=>s+(f.key==='trust'?f.v:f.key==='stress'?-f.v:0),0);st.res={i:k,fx:FX,ins};FX=null;hit();gain(sc>0?4:1,a);if(sc>0)know(a,1);st.nc=unlockCard('mi_'+m.micro+'_'+k,optN(M.opts[k],a),ins,sc>0?'good':sc<0?'bad':'');SH.cost=M.opts[k].cost||20;renderSheet()},
     after:()=>sendBack(a)});
 }
 
@@ -597,6 +614,10 @@ function renderHub(from){
   overIn.innerHTML=`<span data-hub hidden></span><p class="eyebrow">${t(L('Tavo progresas','Your progress'))}</p><h1>${t(L('Biuras ir bylos','Office and files'))}</h1>
     <div class="meters"><div class="meter wide"><span class="k">${t(L('Vadovo kapitalas','Leadership capital'))}</span><span class="v cap">◆ ${S.meta.cap}</span>
     <span class="small">${t(L('Uždirbi už gerus sprendimus, laiku išspręstus įvykius (serija didina daugiklį), įvykdytus tikslus ir planą.','Earned for good decisions, events handled in time (streaks raise the multiplier), goals and hitting the target.'))}</span></div></div>
+    <p class="eyebrow">${t(L('Įžvalgų knyga','Book of insights'))} · ${cardsN()}/${CARD_TOTAL}</p>
+    <button class="opt" data-ov="cards"><span>${t(L('Atversti knygą','Open the book'))}<br><span class="small">${t(L('Pamokos iš kiekvieno tavo sprendimo, gero ir blogo','Lessons from every choice you made, good and bad'))}</span></span>${bar(cardsN()/CARD_TOTAL*100,'var(--mark)')}</button>
+    <p class="eyebrow">${t(L('Savaitės žvaigždutės','Week stars'))}</p>
+    <div class="meters"><div class="meter"><span class="k">${u('sales')}</span>${starsH(S.meta.stars.sales||0)}</div><div class="meter"><span class="k">${u('project')}</span>${starsH(S.meta.stars.project||0)}</div></div>
     <p class="eyebrow">${t(L('Biuro patobulinimai','Office upgrades'))} · ${Object.keys(UP).filter(has).length}/${Object.keys(UP).length}</p>${shopH()}
     <p class="eyebrow">${t(L('Žmonių bylos','People files'))} · ${tot}/${IDS.length*6}</p>
     <div class="rows">${IDS.map(id=>`<button class="dosrow" data-ov="dos" data-id="${id}"><span class="av" style="background:${PEOPLE[id].shirt}">${esc(pn(id)[0])}</span><span><b>${esc(pn(id))}</b><br><span class="small">${tx(PEOPLE[id].role)}</span></span><span>${dotsH(id)}</span></button>`).join('')}</div>
@@ -604,6 +625,36 @@ function renderHub(from){
   over.hidden=false;over.scrollTop=0;
 }
 function renderDos(id){overIn.innerHTML=`<span data-dosv="${id}" hidden></span><p class="eyebrow">${t(L('Žmonių bylos','People files'))}</p>${dossierH(id)}<button class="btn ghost" data-ov="toHub">${t(L('Visos bylos','All files'))}</button>`;over.hidden=false;over.scrollTop=0}
+/* insight cards: one per choice in every situation; locked cards hint that another choice exists */
+const CGROUPS=[
+  ...EVENTS.map((E,i)=>({id:'ev'+i,label:L('Dilema','Dilemma'),title:E.title,slots:E.opts.map((_,k)=>'ev'+i+'_'+k)})),
+  {id:'meet',label:L('Susirinkimas','Meeting'),title:UI.meetH,slots:Object.keys(MEET).map(k=>'meet_'+k)},
+  ...Object.keys(MICRO).map(m=>({id:'mi_'+m,label:L('Situacija','Situation'),title:MICRO[m].title,slots:MICRO[m].opts.map((_,k)=>'mi_'+m+'_'+k)})),
+  {id:'cons',label:L('Pasekmės','Consequences'),title:L('Kas nutinka po kelių dienų','What happens days later'),slots:Object.keys(CONS).map(k=>'cons_'+k)}];
+const CARD_TOTAL=CGROUPS.reduce((s,g)=>s+g.slots.length,0);
+const cardsN=()=>Object.keys(S.meta.cards).length;
+function unlockCard(id,n,ins,k){
+  if(!ins||S.meta.cards[id])return false;S.meta.cards[id]={n,ins,k:k||''};const c=cardsN();
+  if(RT){gain(3,null,true);(RT.newCards=RT.newCards||[]).push(id)}else S.meta.cap+=3;
+  if(c%10===0||c===CARD_TOTAL){S.meta.cap+=30;toast(`<b>${t(L('Kolekcija','Collection'))}: ${c}/${CARD_TOTAL}</b> · ${t(L('Premija +30 ◆','Bonus +30 ◆'))}`,true)}
+  else if(!SH)toast(`<b>${t(L('Nauja įžvalga','New insight'))} ${c}/${CARD_TOTAL}</b>`,true);
+  return true;
+}
+const newCardLabel=()=>`${t(L('Nauja įžvalga','New insight'))} · ${cardsN()}/${CARD_TOTAL}`;
+function cardsH(){
+  return `<p class="small">${t(L('Kiekviena situacija turi kelis sprendimus, ir kiekvienas jų moko ko nors kito. Užrakintos kortelės rodo, kad dar yra ką atrasti. Kas 10 kortelių: +30 ◆.','Every situation has several choices, and each teaches something different. Locked cards show there is more to find. Every 10 cards: +30 ◆.'))}</p>
+  <div>${CGROUPS.map(g=>{const got=g.slots.filter(id=>S.meta.cards[id]).length;
+    return `<details class="cgroup"><summary><span>${tx(g.title)}</span><span class="small">${t(g.label)} · ${got}/${g.slots.length}</span></summary><div class="cards">${g.slots.map(id=>{const c=S.meta.cards[id];
+      return c?`<div class="icard ${c.k}"><b>${esc(tx(c.n))}</b><p>${esc(tx(c.ins))}</p></div>`:`<div class="icard lock"><b>?</b><p>${t(L('Neatrasta. Kitą kartą šioje situacijoje pabandyk kitą sprendimą.','Not found yet. Next time, try a different choice in this situation.'))}</p></div>`}).join('')}</div></details>`}).join('')}</div>`;
+}
+function renderCards(){overIn.innerHTML=`<span data-cardsv hidden></span><p class="eyebrow">${t(L('Tavo progresas','Your progress'))}</p><h1>${t(L('Įžvalgų knyga','Book of insights'))}</h1><p class="eyebrow">${cardsN()}/${CARD_TOTAL}</p>${cardsH()}<button class="btn ghost" data-ov="toHub">${t(L('Grįžti','Back'))}</button>`;over.hidden=false;over.scrollTop=0}
+
+/* weekly stars: best result per team type is kept, each new star pays out */
+const STAR_N=[L('Išlaikyti komandą: išeina ne daugiau kaip vienas žmogus','Hold the team together: at most one person leaves'),L('Įvykdyti savaitės planą','Hit the weekly target'),L('Niekas neišeina, o komandos pasitikėjimas bent 60','Nobody leaves and team trust is at least 60')];
+function starsOf(){if(G.over)return [false,false,false];const q=IDS.filter(id=>G.people[id].quit).length,tot=G.days.reduce((s,d)=>s+d.out,0),pl=G.days.reduce((s,d)=>s+d.plan,0);
+  return [q<=1,pl>0&&tot>=pl,q===0&&G.culture.trust>=60]}
+const starsH=n=>`<span class="stars">${[0,1,2].map(i=>i<n?'★':'<span class="off">★</span>').join('')}</span>`;
+
 const hubBtn=from=>`<button class="btn ghost" data-ov="hub" data-from="${from}">${t(L('Biuras ir bylos','Office and files'))} · ◆ ${S.meta.cap}</button>`;
 
 const ENDINGS={
@@ -644,7 +695,7 @@ let S={lang:'lt',G:null,commitment:null,checkin:null,bonus:0,meta:null};
 let G=null; // sim state (saved at day start)
 let RT=null; // runtime (positions etc)
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j))}catch(e){}S.meta=Object.assign({cap:0,up:{},dos:{}},S.meta||{})}
+function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j))}catch(e){}S.meta=Object.assign({cap:0,up:{},dos:{},cards:{},stars:{}},S.meta||{})}
 
 const t=o=>(o&&(o[S.lang]??o.lt))||'';
 const tx=o=>{if(!o)return '';if(o.sales||o.project)o=o[G?G.type:'sales'];return t(o)};
@@ -698,8 +749,8 @@ function startDay(){
   IDS.forEach(id=>{if(G.people[id].quit)return;const [x,y]=PEOPLE[id].seat;RT.chars[id]={id,x,y,path:[],state:'work',timer:30+Math.random()*90,next:null,say:null,sayT:0,phase:Math.random()*6}});
   // consequences due today
   const dueToday=G.due.filter(d=>d.d===G.day);G.due=G.due.filter(d=>d.d!==G.day);
-  dueToday.forEach(d=>{FX=[];const ins=CONS[d.id].fx(G);const fx=FX;FX=null;logE('bad',CONS[d.id].title);
-    RT.queue=(RT.queue||[]).concat([{kind:'cons',id:d.id,from:d.from,fx,ins}])});
+  dueToday.forEach(d=>{FX=[];const ins=CONS[d.id].fx(G);const fx=FX;FX=null;logE('bad',CONS[d.id].title);const nc=unlockCard('cons_'+d.id,CONS[d.id].title,ins,'bad');
+    RT.queue=(RT.queue||[]).concat([{kind:'cons',id:d.id,from:d.from,fx,ins,nc}])});
   if(G.sick&&RT.chars[G.sick])delete RT.chars[G.sick];
   setTimeout(nextCons,600);
 }
@@ -891,7 +942,7 @@ function doAction(a){
 const scrim=document.getElementById('scrim'),sheet=document.getElementById('sheet');
 let SH=null; // current sheet {render, cost}
 function openSheet(obj){SH=obj;RT.paused=true;RT.idle=0;scrim.hidden=false;renderSheet()}
-function renderSheet(){sheet.innerHTML=SH.dos?`${dossierH(SH.dos)}<button class="btn ghost" data-sh="back">${t(L('Atgal','Back'))}</button>`:SH.render();sheet.scrollTop=0}
+function renderSheet(){sheet.innerHTML=SH.book?`<h2>${t(L('Įžvalgų knyga','Book of insights'))}</h2><p class="eyebrow">${cardsN()}/${CARD_TOTAL}</p>${cardsH()}<button class="btn ghost" data-sh="back">${t(L('Atgal','Back'))}</button>`:SH.dos?`${dossierH(SH.dos)}<button class="btn ghost" data-sh="back">${t(L('Atgal','Back'))}</button>`:SH.render();sheet.scrollTop=0}
 function closeSheet(){scrim.hidden=true;const cost=SH&&SH.cost||0;const after=SH&&SH.after;SH=null;RT.paused=false;if(cost)skip(cost);after&&after();renderHUD();setTimeout(nextCons,300)}
 function skip(min){let left=min;while(left>0){const d=Math.min(5,left);RT.time+=d;tickSim(d);left-=d}Object.values(RT.chars).forEach(c=>{if(c.state==='wait')sendBack(c.id)});if(RT.time>=18*60)endDay()}
 function avatarH(id,lg){const P=G.people[id];const ring=!P||P.quit?'var(--line)':P.stress>=70?'var(--bad)':P.stress>=40?'var(--mark)':'var(--good)';
@@ -948,23 +999,24 @@ function talkRes(id,c){
 function openEvent(i,who){
   const E=EVENTS[i],st={res:null};const pre=E.pre?E.pre(G):null;
   openSheet({cost:20,render:()=>`<p class="eyebrow">${who?esc(pn(who)):'☎'}</p><h2>${tx(E.title)}</h2><p class="lead">${tx(E.text)}</p>${pre?`<p class="small">${t(pre)}</p>`:''}
-    ${st.res?`<p class="quote">${tx(E.opts[st.res.i].n)}</p>${fxH(st.res.fx)}${gainH(st.c0)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`
+    ${st.res?`<p class="quote">${tx(E.opts[st.res.i].n)}</p>${fxH(st.res.fx)}${gainH(st.c0)}${insightH(st.res.ins,st.nc?newCardLabel():null)}<button class="btn" data-sh="close">${u('close')}</button>`
       :`<div class="opts">${E.opts.map((o,k)=>`<button class="opt" data-ev="${k}"><span>${tx(o.n)}</span></button>`).join('')}</div>`}`,
-    ev:k=>{FX=[];st.c0=S.meta.cap;const r=E.opts[k].fx(G);st.res={i:k,fx:FX,ins:r.i};FX=null;logE(r.k||'',r.log);hit();gain(r.k==='good'?12:r.k==='bad'?2:5,who&&who!=='client'?who:null);renderSheet()},
+    ev:k=>{FX=[];st.c0=S.meta.cap;const r=E.opts[k].fx(G);st.res={i:k,fx:FX,ins:r.i};FX=null;logE(r.k||'',r.log);hit();gain(r.k==='good'?12:r.k==='bad'?2:5,who&&who!=='client'?who:null);st.nc=unlockCard('ev'+i+'_'+k,E.opts[k].n,r.i,r.k);renderSheet()},
     after:()=>{if(i===1)leaveClient();if(i===2)sendBack('lina');if(i===3)(G.fight||[]).forEach(sendBack)}});
 }
 function openCons(q){
   const C=CONS[q.id];
-  openSheet({cost:0,render:()=>`<p class="eyebrow">${t(L('Pasekmė iš','Consequence from'))} ${t(UI.days[q.from]).toLowerCase()}</p><h2>${tx(C.title)}</h2><p class="lead">${tx(C.text)}</p>${fxH(q.fx)}${insightH(q.ins)}<button class="btn" data-sh="close">${u('close')}</button>`});
+  openSheet({cost:0,render:()=>`<p class="eyebrow">${t(L('Pasekmė iš','Consequence from'))} ${t(UI.days[q.from]).toLowerCase()}</p><h2>${tx(C.title)}</h2><p class="lead">${tx(C.text)}</p>${fxH(q.fx)}${insightH(q.ins,q.nc?`${t(L('Nauja įžvalga','New insight'))}`:null)}<button class="btn" data-sh="close">${u('close')}</button>`});
 }
 function openDesk(){
   const st={res:null};
   openSheet({cost:0,render:()=>st.res?`<h2>${u('deskH')}</h2>${fxH(st.res.fx)}${insightH(st.res.ins)}<button class="btn" data-sh="close">${u('close')}</button>`
     :`<h2>${u('deskH')}</h2><div class="opts">
       <button class="opt" data-desk="report"><span>${u('report')}<br><span class="small">${u('reportD')}</span></span><span class="cost">45 ${u('min')}</span></button>
+      <button class="opt" data-desk="book"><span>${t(L('Įžvalgų knyga','Book of insights'))}<br><span class="small">${t(L('Atrasta','Found'))} ${cardsN()}/${CARD_TOTAL}</span></span><span class="cost">0 ${u('min')}</span></button>
       <button class="opt" data-desk="self"><span>${u('selfwork')}<br><span class="small">${u('selfD')}</span></span><span class="cost">1,5 ${u('h')}</span></button></div>
       <button class="btn ghost" data-sh="close">${u('later')}</button>`,
-    desk:k=>{FX=[];let ins;
+    desk:k=>{if(k==='book'){SH.book=1;renderSheet();return}FX=[];let ins;
       if(k==='report'){dB(8);G.stats.report++;SH.cost=45;ins=G.stats.report>=3?L('Vadovybė informuota, bet tu daugiau laiko praleidi ataskaitose nei su komanda.','Leadership is informed, but you spend more time on reports than with your team.'):L('Vadovybė mato, kas vyksta. Tai irgi tavo darbas.','Leadership can see what’s happening. That’s part of your job too.')}
       else{extra(14);dC('accountability',-3);G.stats.self++;SH.cost=90;ins=G.stats.self>=2?L('Darbą darai pats jau ne pirmą kartą. Komanda pratinasi laukti, kol vadovas išgelbės.','Not the first time you’ve done the work yourself. The team is learning to wait for you to rescue them.'):L('Rezultatas greitas. Bet kol dirbi pats, niekas nemato, kas vyksta komandoje.','Quick result. But while you work, nobody is watching what’s happening in the team.')}
       st.res={fx:FX,ins};FX=null;renderSheet()}});
@@ -989,10 +1041,10 @@ function openMeeting(){
   openSheet({cost:45,render:()=>{
     const intro=harm?`<p class="quote">${u('harmonyLow')}</p>${act('marius')?sayH('marius',L('Viskas gerai, sutinku.','All good, I agree.')):''}${act('lina')?sayH('lina',L('(tyli)','(silent)')):''}`
       :`<p class="quote">${u('harmonyOk')}</p>${act('tomas')?sayH('tomas',L('Siūlau kitaip, ir štai kodėl…','I’d do it differently, and here’s why…')):''}${act('lina')?sayH('lina',L('Nesutinku. Žiūrėk į skaičius.','I disagree. Look at the numbers.')):''}`;
-    const done=st.moves.map(m=>`<p class="eyebrow">${t(MEET[m.mv].n)}</p>${MEET[m.mv].r.filter(([id])=>act(id)).map(([id,l])=>sayH(id,l)).join('')}${fxH(m.fx)}${insightH(m.ins)}`).join('');
+    const done=st.moves.map(m=>`<p class="eyebrow">${t(MEET[m.mv].n)}</p>${MEET[m.mv].r.filter(([id])=>act(id)).map(([id,l])=>sayH(id,l)).join('')}${fxH(m.fx)}${insightH(m.ins,m.nc?newCardLabel():null)}`).join('');
     const MV=has('board')?3:2,left=MV-st.moves.length;
     return `<h2>${u('meetH')}</h2>${intro}${done}${left?`<p class="small">${u('meetPick')}${left}</p><div class="opts">${Object.keys(MEET).filter(k=>!st.moves.some(m=>m.mv===k)).map(k=>`<button class="opt" data-meet="${k}"><span>${t(MEET[k].n)}</span></button>`).join('')}</div>`:`<button class="btn" data-sh="close">${u('close')}</button>`}`},
-    meet:k=>{FX=[];const ins=MEET[k].fx(G);st.moves.push({mv:k,fx:FX,ins});FX=null;
+    meet:k=>{FX=[];const ins=MEET[k].fx(G);st.moves.push({mv:k,fx:FX,ins});FX=null;st.moves[st.moves.length-1].nc=unlockCard('meet_'+k,MEET[k].n,ins,k==='agree'?'bad':'good');
       if(st.moves.length===(has('board')?3:2)){gain(6,null,true);if(G.flags.fa){due('fa',G.day+2);logE('bad',L('Susirinkime priėmei tylų sutikimą','Accepted silent agreement in a meeting'))}G.flags.fa=undefined}
       renderSheet()},
     after:()=>IDS.forEach(sendBack)});
@@ -1009,7 +1061,7 @@ function logH(){return G.log.length?`<ul class="log">${G.log.slice().reverse().m
 
 sheet.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!SH)return;const d=b.dataset;
   if(d.sh==='close')closeSheet();else if(d.sh==='callMeet')callMeeting();
-  else if(d.sh==='back'){SH.dos=null;renderSheet()}else if(d.dos){SH.dos=d.dos;renderSheet()}else if(d.buy)buy(d.buy);
+  else if(d.sh==='back'){SH.dos=null;SH.book=null;renderSheet()}else if(d.dos){SH.dos=d.dos;renderSheet()}else if(d.buy)buy(d.buy);
   else if(d.talk)SH.talk(d.talk);else if(d.ev!==undefined)SH.ev(+d.ev);else if(d.desk)SH.desk(d.desk);else if(d.meet)SH.meet(d.meet);else if(d.mi!==undefined)SH.mi(+d.mi)});
 
 /* ================= day / week end ================= */
@@ -1033,6 +1085,7 @@ function renderDay(){
     <div class="meter"><span class="k">${u('boss')}</span><span class="v">${G.boss}</span>${bar(G.boss)}</div>
     <div class="meter"><span class="k">${u('team')}</span><span class="v">${IDS.filter(act).length} <small>/ ${IDS.length}</small></span>${bar(IDS.filter(act).length/IDS.length*100)}</div></div>
     <div class="meter wide"><span class="k">${t(L('Vadovo kapitalas','Leadership capital'))} · ${u('today')}</span><span class="v cap">+${RT.capDay||0} ◆ <small>/ ${t(L('iš viso','total'))} ${S.meta.cap}</small></span></div>
+    ${(RT.newCards||[]).length?`<p class="small">${t(L('Naujos įžvalgos šiandien','New insights today'))}: <b>${RT.newCards.length}</b> · ${t(L('knygoje','in the book'))} ${cardsN()}/${CARD_TOTAL}</p>`:''}
     ${(RT.facts||[]).length?`<p class="eyebrow">${t(L('Bylos papildytos','Files updated'))}</p><ul class="list">${RT.facts.map(f=>`<li><b>${esc(pn(f.id))} ${f.i+1}/6.</b> ${t(FACTS[f.id][f.i])}</li>`).join('')}</ul>`:''}
     <p class="eyebrow">${t(L('Dienos tikslai','Daily goals'))} · ${RT.goalsDone.length}/${RT.goals.length}${RT.goalsDone.length?` · ${u('boss')} +${RT.goalsDone.length*3}`:''}</p>
     <ul class="goals">${RT.goals.map(k=>`<li class="${RT.goalsDone.includes(k)?'done':''}"><span class="box">${RT.goalsDone.includes(k)?'✓':''}</span><span>${t(GOALS[k].n)}</span></li>`).join('')}</ul>
@@ -1064,11 +1117,14 @@ const realTask=()=>G.stats.listen<2
   ?L('Šią savaitę paklausk dviejų komandos narių: „Kas tau dabar svarbiausia darbe?“ Ir tik klausyk, nieko nesiūlyk.','This week, ask two people on your team: “What matters most to you at work right now?” Then just listen.')
   :L('Šią savaitę viename susirinkime pirmas įvardink savo klaidą ar tai, ko nežinai: „Čia aš suklydau“ arba „Nežinau. Kas galėtų padėti?“','This week, in one meeting, be the first to name a mistake or something you don’t know: “I got this wrong” or “I don’t know. Who can help?”');
 function showEnd(){
-  const ek=ending();if(!G.capDone){G.capDone=1;G.capBonus={great:60,burn:30,kind:30,mid:15}[ek]||5;S.meta.cap+=G.capBonus}
+  const ek=ending(),st=starsOf(),sn=st.filter(Boolean).length;if(!G.capDone){G.capDone=1;G.capBonus={great:60,burn:30,kind:30,mid:15}[ek]||5;
+    const best=S.meta.stars[G.type]||0;if(sn>best){G.capBonus+=(sn-best)*25;S.meta.stars[G.type]=sn;G.newBest=1}S.meta.cap+=G.capBonus}
   G.done=true;S.G=G;S.RT=null;save();
   const e=ENDINGS[ek],tot=Math.round(G.days.reduce((s,d)=>s+d.out,0)),pl=G.days.reduce((s,d)=>s+d.plan,0)||dayTarget()*5,quits=IDS.filter(id=>G.people[id].quit).length;
   const committed=S.commitment&&S.commitment.game===G.id;
-  overIn.innerHTML=`<p class="eyebrow">${G.over?u('endFail'):u('endEy')}</p><h1>${t(e.t)}</h1><p class="lead">${t(e.d)}</p>
+  overIn.innerHTML=`<p class="eyebrow">${G.over?u('endFail'):u('endEy')}</p><h1>${t(e.t)}</h1>${starsH(sn)}<p class="lead">${t(e.d)}</p>
+    <ul class="goals">${STAR_N.map((n,i)=>`<li class="${st[i]?'ok':'miss'}"><span class="box">${st[i]?'✓':'×'}</span><span>${t(n)}</span></li>`).join('')}</ul>
+    ${G.newBest?`<p class="small cap">${t(L('Naujas tavo rekordas šiai komandai. Kiekviena nauja žvaigždutė: +25 ◆.','A new personal best for this team. Each new star: +25 ◆.'))}</p>`:''}
     <div class="meters"><div class="meter wide"><span class="k">${t(metricName())}</span><span class="v">${tot} <small>/ ${pl} ${t(unitName())}</small></span>${bar(tot/pl*100)}</div>
     <div class="meter"><span class="k">${u('boss')}</span><span class="v">${G.boss}</span>${bar(G.boss)}</div>
     <div class="meter"><span class="k">${u('left')}</span><span class="v">${quits} <small>/ ${IDS.length}</small></span>${bar(quits/IDS.length*100,'var(--bad)')}</div>
@@ -1087,13 +1143,15 @@ function showWelcome(){
   overIn.innerHTML=`${check}<canvas class="hero-canvas" id="hero"></canvas><h1>${u('tagline')}</h1><p class="lead">${u('intro')}</p>
     ${resume?`<button class="btn" data-ov="resume">${u('cont')} · ${t(UI.days[S.G.day])} ${hhmm(S.RT?S.RT.time:540)}</button>`:''}
     <p class="eyebrow">${u('choose')}</p>
-    <div class="opts"><button class="opt typebtn" data-ov="type" data-type="sales"><b>${u('sales')}</b><span>${u('salesD')}</span></button>
-    <button class="opt typebtn" data-ov="type" data-type="project"><b>${u('project')}</b><span>${u('projectD')}</span></button></div>
-    ${S.meta.cap||Object.keys(S.meta.up).length||Object.keys(S.meta.dos).length?hubBtn('welcome'):''}<p class="small">${u('basis')}</p>`;
+    <div class="opts"><button class="opt typebtn" data-ov="type" data-type="sales"><b>${u('sales')} ${S.meta.stars.sales?starsH(S.meta.stars.sales):''}</b><span>${u('salesD')}</span></button>
+    <button class="opt typebtn" data-ov="type" data-type="project"><b>${u('project')} ${S.meta.stars.project?starsH(S.meta.stars.project):''}</b><span>${u('projectD')}</span></button></div>
+    ${S.meta.cap||Object.keys(S.meta.up).length||Object.keys(S.meta.dos).length||cardsN()?hubBtn('welcome'):''}<p class="small">${u('basis')}</p>`;
   over.hidden=false;over.scrollTop=0;drawHero();
 }
 function showHow(){
-  overIn.innerHTML=`<p class="eyebrow">${u(G.type)}</p><h1>${u('howH')}</h1><ol class="list">${UI.how.map(h=>`<li>${t(h)}</li>`).join('')}</ol><button class="btn" data-ov="go">${u('go')}</button>`;
+  overIn.innerHTML=`<p class="eyebrow">${u(G.type)}</p><h1>${u('howH')}</h1><ol class="list">${UI.how.map(h=>`<li>${t(h)}</li>`).join('')}</ol>
+  <p class="eyebrow">${t(L('Savaitės žvaigždutės','Week stars'))} · ${t(L('tavo rekordas','your best'))} ${starsH(S.meta.stars[G.type]||0)}</p>
+  <ul class="goals">${STAR_N.map(n=>`<li><span class="box">★</span><span>${t(n)}</span></li>`).join('')}</ul><button class="btn" data-ov="go">${u('go')}</button>`;
   over.hidden=false;
 }
 over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
@@ -1109,6 +1167,7 @@ over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)retur
     case 'hub':renderHub(d.from);break;
     case 'dos':renderDos(d.id);break;
     case 'toHub':renderHub();break;
+    case 'cards':renderCards();break;
     case 'hubBack':{const f=renderHub.from;if(f==='day')renderDay();else if(f==='end')showEnd();else showWelcome();break}
     case 'replay':{const ty=G.type;newGame(ty);RT=null;over.hidden=true;startDay();renderAll();break}
     case 'welcome':showWelcome();break;
@@ -1134,7 +1193,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-ui]');if(!
   if(b.dataset.ui==='shop'&&!SH&&!RT.paused)openShop();
   if(b.dataset.ui==='team')openTeam();if(b.dataset.ui==='log')openLog()});
 document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{S.lang=b.dataset.lang;save();setLang();
-  if(!over.hidden){const dv=overIn.querySelector('[data-dosv]');if(overIn.querySelector('[data-hub]'))renderHub();else if(dv)renderDos(dv.dataset.dosv);else if(overIn.querySelector('#hero'))showWelcome();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
+  if(!over.hidden){const dv=overIn.querySelector('[data-dosv]');if(overIn.querySelector('[data-hub]'))renderHub();else if(overIn.querySelector('[data-cardsv]'))renderCards();else if(dv)renderDos(dv.dataset.dosv);else if(overIn.querySelector('#hero'))showWelcome();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
   if(SH)renderSheet();renderHUD()}));
 document.getElementById('brand').addEventListener('click',()=>{if(SH){scrim.hidden=true;SH=null;if(RT)RT.paused=false}autosave();if(RT)RT.paused=true;showWelcome()});
 function setLang(){document.documentElement.lang=S.lang;document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===S.lang))}
@@ -1166,7 +1225,8 @@ function bossDesk(c,r){const x=c*T,y=r*T;
   ctx.fillStyle=COL.wood;rr(x+T*0.06,y+T*0.2,T*1.88,T*0.75,T*0.08);ctx.fill();ctx.fillStyle=COL.woodTop;rr(x+T*0.06,y+T*0.12,T*1.88,T*0.62,T*0.08);ctx.fill();
   ctx.fillStyle=COL.monitor;rr(x+T*0.22,y+T*0.02,T*0.6,T*0.4,T*0.05);ctx.fill();ctx.fillStyle=COL.screen;ctx.fillRect(x+T*0.27,y+T*0.06,T*0.5,T*0.3);
   const ring=RT&&RT.markers.some(m=>m.kind==='phone'),wob=ring?Math.sin(performance.now()/60)*T*0.04:0;
-  ctx.fillStyle=ring?'#E0574A':'#2E353D';rr(x+T*1.3+wob,y+T*0.3,T*0.36,T*0.24,T*0.05);ctx.fill()}
+  ctx.fillStyle=ring?'#E0574A':'#2E353D';rr(x+T*1.3+wob,y+T*0.3,T*0.36,T*0.24,T*0.05);ctx.fill();
+  ctx.fillStyle='#7A2E2E';rr(x+T*0.92,y+T*0.3,T*0.28,T*0.22,T*0.03);ctx.fill();ctx.fillStyle='#D2B06E';ctx.fillRect(x+T*0.95,y+T*0.33,T*0.03,T*0.16)}
 function table(c,r){const x=c*T,y=r*T;ctx.fillStyle=COL.wood;rr(x+T*0.08,y+T*0.2,T*1.84,T*1.7,T*0.18);ctx.fill();ctx.fillStyle=COL.woodTop;rr(x+T*0.08,y+T*0.1,T*1.84,T*1.62,T*0.18);ctx.fill();
   ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(x+T*0.5,y+T*0.6,T*0.4,T*0.3);ctx.fillRect(x+T*1.1,y+T*0.9,T*0.36,T*0.28)}
 function counter(c,r){const x=c*T,y=r*T;ctx.fillStyle=COL.counter;ctx.fillRect(x,y+T*0.15,T,T*0.85);ctx.fillStyle=COL.counterTop;ctx.fillRect(x,y+T*0.05,T,T*0.55);
