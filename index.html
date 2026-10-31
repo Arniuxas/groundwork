@@ -186,6 +186,18 @@ canvas{display:block;cursor:pointer;touch-action:pan-y}
 .icard b{font-size:13.5px;font-weight:600}
 .icard p{font:400 15.5px/1.45 var(--f-display)}
 .icard.lock p{font:400 13px/1.4 var(--f-body)}
+.radar-wrap{max-width:360px;margin:0 auto;width:100%}
+.radar{width:100%;height:auto;display:block}
+.radar .ring{fill:none;stroke:var(--line)}
+.radar .spoke{stroke:var(--line)}
+.radar .area{fill:rgba(201,215,232,.22);stroke:var(--accent);stroke-width:2}
+.radar .ghost{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:4 4}
+.radar .dot{fill:var(--accent)}
+.radar text{fill:var(--muted);font:500 10.5px var(--f-mono)}
+.tutbox{position:absolute;left:10px;right:10px;bottom:10px;background:rgba(13,18,23,.95);border:1px solid var(--mark);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.45}
+.tutbox .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.tutbox .eyebrow{color:var(--mark)}
+.tutbox button{background:none;border:0;color:var(--muted);font:500 12px var(--f-body);text-decoration:underline;cursor:pointer;padding:2px 0}
 .stars{font-size:30px;letter-spacing:.12em;color:var(--mark);line-height:1}
 .stars .off{color:var(--line)}
 .typebtn .stars{font-size:15px;margin-left:6px;vertical-align:2px}
@@ -212,7 +224,7 @@ canvas{display:block;cursor:pointer;touch-action:pan-y}
   <div class="stage">
     <section class="game">
       <div class="hud" id="hud"></div>
-      <div class="canvas-wrap"><canvas id="cv"></canvas><div class="toast" id="toast"></div></div>
+      <div class="canvas-wrap"><canvas id="cv"></canvas><div class="toast" id="toast"></div><div class="tutbox" id="tut" hidden></div></div>
       <p class="hint" id="hint"></p>
       <div class="goals-m" id="goalsM"></div>
       <div class="mobile-team"><button class="ibtn" data-ui="team" id="mteam"></button><button class="ibtn" data-ui="log" id="mlog"></button></div>
@@ -567,6 +579,92 @@ EVENTS.push(
       return {i:L('Jam lengviau, bet dabar darbus nešioja jau du vadovai, o komanda vis dar neauga.','It’s easier for them, but now two managers carry the work and the team still isn’t growing.'),log:L('Vadovo darbus perėmei pats','Took over the lead’s work'),k:''}}}]}
 );
 
+/* more dilemmas (indices 20-39): mixed into themed weeks by layer and into the endless pool */
+const DT=(lt,en)=>(g,w)=>L(`${NM(w).lt}: „${lt}“`,`${NM(w).en}: “${en}”`);
+const R3=(i,log,k)=>({i,log,k});
+EVENTS.push(
+  {lay:'results',title:L('Prašymas pakelti atlyginimą','A pay rise request'),text:DT('Dirbu čia dvejus metus, o atlyginimas nesikeitė. Kitur siūlo 20 % daugiau.','I’ve been here two years and my pay hasn’t changed. Others are offering 20% more.'),opts:[
+    {n:L('Padėkoti už atvirumą, paklausti, kas svarbiausia, ir pažadėti aiškų atsakymą iki penktadienio','Thank them for being open, ask what matters most, and promise a clear answer by Friday'),fx:g=>{dT(g.evWho,6);dS(g.evWho,-4);dC('commitment',2);return R3(L('Prašymas pakelti atlyginimą ne visada yra tik apie pinigus. Aiškus atsakymo terminas rodo pagarbą, net jei atsakymas bus „ne“.','A pay request isn’t always only about money. A clear deadline for an answer shows respect, even if the answer is no.'),L('Į atlyginimo prašymą atsakei pagarbiai','Handled a pay request with respect'),'good')}},
+    {n:L('„Dabar ne laikas, biudžetas uždarytas“','“Now isn’t the time, the budget is closed”'),fx:g=>{dT(g.evWho,-8);dS(g.evWho,8);return R3(L('Uždarytos durys be paaiškinimo verčia žmogų rimčiau žiūrėti į kitus pasiūlymus.','A closed door with no explanation makes people take other offers more seriously.'),L('Atlyginimo prašymą atmetei be pokalbio','Dismissed a pay request without a conversation'),'bad')}},
+    {n:L('Iškart pažadėti pakelti, kad neišeitų','Promise a rise on the spot so they stay'),fx:g=>{dB(-6);dT(g.evWho,4);allT(-2);return R3(L('Žmogus liko, bet kiti greitai sužinos, kad atlyginimą pakelia grasinimas išeiti.','They stayed, but the others will soon learn that threatening to leave gets you a raise.'),L('Atlyginimą pažadėjai spaudžiamas','Promised a raise under pressure'),'')}}]},
+  {lay:'accountability',title:L('Darbas suprastėjo','Work has slipped'),text:DT('Žinau, kad pastaruoju metu mano darbas prastesnis. Namuose sunku.','I know my work has been worse lately. Things are hard at home.'),opts:[
+    {n:L('Išklausyti ir kartu susitarti dėl laikino krūvio bei aiškių lūkesčių','Listen, then agree together on a temporary workload and clear expectations'),fx:g=>{dT(g.evWho,8);dS(g.evWho,-10);dC('accountability',4);return R3(L('Rūpestis ir aiškūs lūkesčiai vienas kitam neprieštarauja. Laikinas palengvinimas su aiškiu planu padeda grįžti.','Care and clear expectations don’t contradict each other. Temporary relief with a clear plan helps people come back.'),L('Rūpestį sujungei su aiškiais lūkesčiais','Combined care with clear expectations'),'good')}},
+    {n:L('„Visi turime problemų, darbas yra darbas“','“We all have problems, work is work”'),fx:g=>{dT(g.evWho,-10);dS(g.evWho,12);return R3(L('Žmogus atvirai pasakė tiesą ir buvo atstumtas. Kitą kartą jis tiesiog tylės.','They told you the truth openly and were pushed away. Next time they’ll just stay quiet.'),L('Atstūmei žmogų, kuriam sunku','Pushed away someone who was struggling'),'bad')}},
+    {n:L('Perimti dalį jo darbų sau','Take some of their work yourself'),fx:g=>{dS(g.evWho,-8);dC('accountability',-3);return R3(L('Padėjai, bet neaptarėte, kada ir kaip jis grįš į įprastą ritmą.','You helped, but you didn’t agree when and how they’ll get back to normal.'),L('Darbus perėmei be susitarimo','Took over work without an agreement'),'')}}]},
+  {lay:'trust',title:L('Gandai apie atleidimus','Rumours of layoffs'),text:L('Vadovybė: „Kitą mėnesį bus atleidimų. Komandai kol kas nesakyk.“ Bet koridoriuje jau sklinda gandai.','Leadership: “There will be layoffs next month. Don’t tell the team yet.” But rumours are already going round.'),opts:[
+    {n:L('Pasakyti komandai tiek, kiek gali: pokyčių bus, ir kada sužinos daugiau','Tell the team what you can: changes are coming, and when they’ll know more'),fx:g=>{allS(-4);allT(4);dB(-3);return R3(L('Kai visos tiesos pasakyti negali, sakyk tai, ką gali, ir kada bus daugiau. Tyla gandų metu atrodo kaip melas.','When you can’t tell the whole truth, say what you can and when there’ll be more. Silence during rumours looks like a lie.'),L('Apie pokyčius kalbėjai sąžiningai','Spoke honestly about coming changes'),'good')}},
+    {n:L('Paneigti gandus: „Nieko nebus“','Deny the rumours: “Nothing will happen”'),fx:g=>{allS(-6);due('lie',g.day+2);return R3(L('Šiandien ramu. Bet kai tiesa paaiškės, komanda prisimins, kad pasakei netiesą.','Calm today. But when the truth comes out, the team will remember you said something untrue.'),L('Komandai pasakei netiesą','Told the team something untrue'),'bad')}},
+    {n:L('Nieko nesakyti, kol nėra oficialaus pranešimo','Say nothing until the official announcement'),fx:g=>{allS(6);return R3(L('Formaliai teisinga, bet nežinomybė kelia daugiau streso nei bloga žinia.','Formally correct, but uncertainty causes more stress than bad news.'),L('Gandų metu tylėjai','Stayed silent during the rumours'),'')}}]},
+  {lay:'conflict',title:L('Ginčas su kitu skyriumi','A dispute with another department'),text:DT('Logistikos skyrius vėl vėluoja ir kaltina mus. Gal tu gali jiems pasakyti?','Logistics is late again and blaming us. Could you tell them?'),opts:[
+    {n:L('Pakviesti jį kartu nueiti pas logistikos vadovą ir ieškoti priežasties, ne kaltų','Invite them to go to the logistics lead together and look for causes, not culprits'),fx:g=>{dT(g.evWho,5);dC('conflict',5);dB(2);return R3(L('Tarpskyrinius konfliktus geriausia spręsti kartu ir kalbant apie procesą, ne apie kaltę. Žmogus mokosi tai daryti pats.','Cross-team conflicts are best solved together and about the process, not blame. The person learns to do it alone.'),L('Tarpskyrinį ginčą sprendėte kartu','Tackled a cross-team dispute together'),'good')}},
+    {n:L('Parašyti piktą laišką jų vadovui','Write an angry email to their lead'),fx:g=>{dB(-6);dT(g.evWho,3);return R3(L('Komanda jaučiasi apginta, bet santykiai su kitu skyriumi pablogėjo, o problema liko.','The team feels defended, but relations with the other department got worse and the problem stayed.'),L('Konfliktą su kitu skyriumi paaštrinai','Escalated a conflict with another department'),'bad')}},
+    {n:L('„Susitvarkyk pats, tu juos geriau pažįsti“','“Sort it out yourself, you know them better”'),fx:g=>{dS(g.evWho,6);dC('accountability',2);return R3(L('Savarankiškumas gerai, bet tarpskyriniame ginče žmogui dažnai reikia vadovo palaikymo.','Autonomy is good, but in a cross-team dispute people often need their manager’s backing.'),L('Tarpskyrinį ginčą palikai darbuotojui','Left a cross-team dispute to the employee'),'')}}]},
+  {lay:'commitment',title:L('Darbas iš namų','Working from home'),text:DT('Ar galėčiau dvi dienas per savaitę dirbti iš namų?','Could I work from home two days a week?'),opts:[
+    {n:L('Susitarti dėl bandomojo mėnesio su aiškiais rezultatais ir pasiekiamumu','Agree a trial month with clear results and availability'),fx:g=>{dT(g.evWho,6);dS(g.evWho,-6);dC('commitment',3);return R3(L('Aiškūs susitarimai dėl rezultatų svarbesni nei vieta, kur dirbama.','Clear agreements on results matter more than where the work happens.'),L('Dėl nuotolinio darbo susitarėte aiškiai','Agreed clearly on remote work'),'good')}},
+    {n:L('„Ne. Jei leisiu vienam, norės visi“','“No. If I allow one, everyone will want it”'),fx:g=>{dT(g.evWho,-8);dS(g.evWho,6);return R3(L('Atsisakymas dėl precedento baimės skamba kaip nepasitikėjimas. Kiekvieną prašymą verta įvertinti atskirai.','A refusal out of fear of precedent sounds like distrust. Each request deserves its own look.'),L('Atsisakei, bijodamas precedento','Refused for fear of precedent'),'bad')}},
+    {n:L('Leisti be jokių susitarimų','Allow it with no agreements'),fx:g=>{dT(g.evWho,6);dC('accountability',-4);return R3(L('Žmogus patenkintas, bet neaišku, kaip matuosite rezultatą ir kada jis pasiekiamas.','They’re happy, but it’s unclear how you’ll measure results or when they’re reachable.'),L('Leidai be susitarimų','Allowed it without agreements'),'')}}]},
+  {lay:'accountability',title:L('Pagražinti skaičius','Polish the numbers'),text:L('Vadovybė: „Ataskaitoje parodyk, kad planas įvykdytas. Skirtumą pasivysite kitą mėnesį.“','Leadership: “Show the target as met in the report. You’ll catch up next month.”'),opts:[
+    {n:L('Mandagiai atsisakyti ir pasiūlyti planą, kaip atsilikimą pasivyti','Politely refuse and propose a plan to close the gap'),fx:g=>{dB(-6);dC('accountability',6);allT(3);return R3(L('Sąžiningumas kainuoja trumpam, o melas ataskaitose griauna pasitikėjimą visais skaičiais.','Honesty costs you briefly; lies in reports destroy trust in every number.'),L('Atsisakei pagražinti skaičius','Refused to fudge the numbers'),'good')}},
+    {n:L('Pagražinti, kaip prašo','Polish them as asked'),fx:g=>{dB(6);dC('accountability',-8);allT(-3);return R3(L('Komanda mato tikrus skaičius. Ji ką tik išmoko, kad čia tiesa derinama prie vadovybės norų.','The team sees the real numbers. It just learned that truth here bends to what leadership wants.'),L('Pagražinai ataskaitos skaičius','Fudged the report'),'bad')}},
+    {n:L('Pateikti tikrus skaičius be jokių komentarų','Submit the real numbers without comment'),fx:g=>{dB(-8);dC('accountability',3);return R3(L('Sąžininga, bet be plano vadovybė mato tik problemą.','Honest, but without a plan leadership only sees a problem.'),L('Pateikei tikrus skaičius be plano','Submitted real numbers without a plan'),'')}}]},
+  {lay:'trust',title:L('Kritika tau','Criticism of you'),text:DT('Galiu atvirai? Kai kurie tavo sprendimai komandai atrodo neaiškūs. Niekas nedrįsta pasakyti.','Can I be honest? Some of your decisions seem unclear to the team. Nobody dares to say it.'),opts:[
+    {n:L('Padėkoti, paprašyti konkrečių pavyzdžių ir pasakyti, ką keisi','Thank them, ask for concrete examples, and say what you’ll change'),fx:g=>{dT(g.evWho,8);allT(4);dC('conflict',3);return R3(L('Kaip vadovas priima kritiką, taip komanda išmoksta kalbėti. Padėka už nepatogią tiesą yra stipriausias signalas.','How a leader takes criticism teaches the team how to speak. Thanks for an awkward truth is the strongest signal.'),L('Kritiką priėmei su padėka','Took criticism with thanks'),'good')}},
+    {n:L('Pasiteisinti ir paaiškinti, kodėl buvai teisus','Justify yourself and explain why you were right'),fx:g=>{dT(g.evWho,-8);dC('conflict',-5);return R3(L('Žmogus rizikavo ir buvo atmuštas. Kitą kartą tiesos tau nebesakys.','They took a risk and were rebuffed. They won’t tell you the truth again.'),L('Į kritiką atsakei gynyba','Met criticism with defensiveness'),'bad')}},
+    {n:L('Paklausti, kas būtent taip mano','Ask who exactly thinks so'),fx:g=>{dT(g.evWho,-4);allT(-2);return R3(L('Klausimas „kas“ verčia ieškoti kaltų, o ne problemų.','Asking “who” sends people looking for culprits instead of problems.'),L('Ieškojai, kas kritikuoja','Looked for who was criticising'),'')}}]},
+  {lay:'results',title:L('Kviečia į kitą skyrių','An offer from another department'),text:DT('Man pasiūlė vietą kitame skyriuje. Ten galėčiau augti.','I’ve been offered a role in another department. I could grow there.'),opts:[
+    {n:L('Pasidžiaugti, paklausti, ko jis ieško, ir padėti apsispręsti, net jei išeis','Be glad for them, ask what they’re looking for, and help them decide even if they leave'),fx:g=>{dT(g.evWho,10);dC('results',3);return R3(L('Vadovas, kuris padeda žmonėms augti net už komandos ribų, pritraukia geriausius. Žmonės prisimena, kaip buvo paleisti.','A leader who helps people grow beyond the team attracts the best. People remember how they were let go.'),L('Padėjai žmogui augti, net jei tai reiškia išėjimą','Helped someone grow, even if it means leaving'),'good')}},
+    {n:L('Įtikinti likti, nes be jo komanda nesusitvarkys','Persuade them to stay because the team can’t cope without them'),fx:g=>{dS(g.evWho,8);dT(g.evWho,-4);return R3(L('Spaudimas likti dėl komandos gerovės verčia jaustis įkalintu.','Pressure to stay for the team’s sake makes people feel trapped.'),L('Spaudei likti','Pressured them to stay'),'bad')}},
+    {n:L('Pasiūlyti naują iššūkį čia, tavo komandoje','Offer a new challenge here, in your team'),fx:g=>{const P=g.people[g.evWho];if(P&&P.mot==='growth'){dT(g.evWho,8);dS(g.evWho,-6)}else dT(g.evWho,2);return R3(L('Gera mintis, jei žinai, kad jam svarbu augti. Jei ne, tai tik bandymas išlaikyti.','A good idea if you know growth matters to them. If not, it’s just an attempt to hold on.'),L('Pasiūlei iššūkį komandoje','Offered a challenge within the team'),'')}}]},
+  {lay:'conflict',title:L('Pasisavinta idėja','A stolen idea'),text:L('Kito skyriaus vadovas susirinkime pristatė tavo komandos idėją kaip savo. Komanda tai girdėjo.','Another department’s lead presented your team’s idea as their own in a meeting. The team heard it.'),opts:[
+    {n:L('Ramiai pasikalbėti su juo akis į akį ir paprašyti viešai paminėti komandos indėlį','Talk to them calmly in private and ask them to credit your team publicly'),fx:g=>{allT(4);dC('conflict',4);dB(-2);return R3(L('Ginti komandos nuopelnus yra vadovo darbas. Tiesus pokalbis be scenos išsaugo ir teisingumą, ir santykius.','Defending the team’s credit is a leader’s job. A direct talk without a scene keeps both fairness and the relationship.'),L('Apgynei komandos nuopelnus','Defended the team’s credit'),'good')}},
+    {n:L('Nieko nedaryti: svarbu, kad idėja įgyvendinta','Do nothing: what matters is the idea gets done'),fx:g=>{allT(-5);dC('results',-3);return R3(L('Komanda išmoko, kad jos darbą čia galima pasisavinti, ir vadovas jo neapgins.','The team learned its work can be taken here and its leader won’t defend it.'),L('Komandos nuopelnų neapgynei','Didn’t defend the team’s credit'),'bad')}},
+    {n:L('Pasiskųsti savo vadovui','Complain to your own manager'),fx:g=>{dB(-4);allT(2);return R3(L('Gal ir padės, bet skundas aukštyn be pokalbio su kolega dažnai pagilina konfliktą.','It might help, but complaining upwards without talking to the colleague often deepens the conflict.'),L('Konfliktą perdavei aukštyn','Escalated the conflict upwards'),'')}}]},
+  {lay:'commitment',title:L('Per daug prioritetų','Too many priorities'),text:DT('Šią savaitę turiu septynis „svarbiausius“ darbus. Kuris iš tikrųjų svarbiausias?','This week I have seven “top priority” tasks. Which one really is?'),opts:[
+    {n:L('Kartu išrinkti tris svarbiausius ir pasakyti, ko šią savaitę nedarys','Pick the top three together and say what they won’t do this week'),fx:g=>{dS(g.evWho,-12);dC('commitment',6);return R3(L('Prioritetai be atsisakymų nėra prioritetai. Pasakyti, ko nedaryti, svarbu ne mažiau nei pasakyti, ką daryti.','Priorities without trade-offs aren’t priorities. Saying what not to do matters as much as what to do.'),L('Kartu nustatėte prioritetus','Set priorities together'),'good')}},
+    {n:L('„Visi svarbūs, pasistenk“','“They’re all important, do your best”'),fx:g=>{dS(g.evWho,10);dT(g.evWho,-5);return R3(L('Jei viskas svarbu, niekas nėra svarbu. Žmogus dirbs daug, bet ne tai, ko reikia labiausiai.','If everything matters, nothing does. They’ll work hard, but not on what matters most.'),L('Prioritetų nenustatei','Didn’t set priorities'),'bad')}},
+    {n:L('Pačiam sudėlioti jo darbų sąrašą','Order their task list yourself'),fx:g=>{dS(g.evWho,-6);dC('commitment',2);dC('accountability',-2);return R3(L('Sąrašas aiškus, bet jis tavo, ne jo. Kitą savaitę žmogus ateis vėl.','The list is clear, but it’s yours, not theirs. Next week they’ll be back.'),L('Prioritetus sudėliojai už jį','Set their priorities for them'),'')}}]},
+  {lay:'trust',title:L('Asmeninė krizė','A personal crisis'),text:DT('Mano tėtis ligoninėje. Nežinau, ar galėsiu susikaupti.','My father is in hospital. I don’t know if I can concentrate.'),opts:[
+    {n:L('Pasakyti: „Pirmiausia šeima.“ Ir kartu nuspręsti, ką perduoti kitiems','Say: “Family first.” Then decide together what to hand over'),fx:g=>{dT(g.evWho,12);dS(g.evWho,-10);extra(-6);allT(2);return R3(L('Tokiomis akimirkomis kuriamas pasitikėjimas, kuris išlieka metus. Komanda irgi mato, kaip elgiesi.','Moments like this build trust that lasts for years. The team sees how you act too.'),L('Sunkią akimirką palaikei žmogų','Supported someone in a hard moment'),'good')}},
+    {n:L('„Suprantu, bet terminas lieka“','“I understand, but the deadline stands”'),fx:g=>{dT(g.evWho,-12);dS(g.evWho,15);return R3(L('Terminas gal ir bus įvykdytas, bet žmogus prisimins, kad tau darbas buvo svarbiau už jį.','The deadline may be met, but they’ll remember work mattered more to you than they did.'),L('Krizės metu reikalavai termino','Held a deadline during a crisis'),'bad')}},
+    {n:L('Pasiūlyti laisvą dieną, bet nieko nepertvarkyti','Offer a day off but change nothing else'),fx:g=>{dT(g.evWho,6);dS(g.evWho,-4);allS(4);return R3(L('Gera mintis, bet jo darbai be paaiškinimo užgriuvo kitus.','A kind thought, but their work landed on others without explanation.'),L('Davei laisvą dieną be plano','Gave a day off without a plan'),'')}}]},
+  {lay:'accountability',title:L('Susitarimo nesilaikoma','An agreement isn’t kept'),text:DT('Susitarėme, kad klientams atsakome per dieną. Kai kurie vis tiek atsako po savaitės.','We agreed to answer clients within a day. Some still take a week.'),opts:[
+    {n:L('Paprašyti iškelti tai susirinkime ir leisti komandai pačiai susitarti dėl pasekmių','Ask them to raise it at the meeting and let the team agree the consequences'),fx:g=>{dC('accountability',8);dC('conflict',4);dT(g.evWho,3);return R3(L('Kai komanda pati prižiūri savo susitarimus, vadovui nereikia būti policininku.','When the team polices its own agreements, the leader doesn’t have to be the cop.'),L('Atsakomybę grąžinai komandai','Gave accountability back to the team'),'good')}},
+    {n:L('„Ačiū, pasakyk kas, aš su jais pasikalbėsiu“','“Thanks, tell me who and I’ll talk to them”'),fx:g=>{dC('accountability',-3);allT(-2);dT(g.evWho,2);return R3(L('Tapai vieninteliu, kuris prižiūri susitarimus. Komanda išmoks skųstis, o ne kalbėtis.','You became the only one who enforces agreements. The team will learn to complain instead of talk.'),L('Tapai susitarimų policininku','Became the agreement police'),'bad')}},
+    {n:L('Laišku priminti visiems susitarimą','Remind everyone of the agreement by email'),fx:g=>{dC('accountability',2);return R3(L('Priminimas nepakenks, bet nepasikalbėjus, kodėl susitarimo nesilaikoma, mažai kas pasikeis.','A reminder won’t hurt, but without talking about why it isn’t kept, little will change.'),L('Susitarimą priminei laišku','Sent a reminder email'),'')}}]},
+  {lay:'results',title:L('Sumažintas biudžetas','A budget cut'),text:L('Vadovybė: „Kitam ketvirčiui biudžetas 20 % mažesnis. Nuspręsk, ko atsisakysite.“','Leadership: “Next quarter’s budget is 20% smaller. Decide what you’ll drop.”'),opts:[
+    {n:L('Aptarti su komanda, kas duoda daugiausia vertės, ir nuspręsti kartu','Discuss with the team what adds most value and decide together'),fx:g=>{dC('results',6);dC('commitment',5);allS(3);return R3(L('Sunkūs sprendimai, priimti kartu, prigyja geriau nei primesti iš viršaus.','Hard decisions made together stick better than ones imposed from above.'),L('Biudžeto karpymą sprendėte kartu','Decided the cuts together'),'good')}},
+    {n:L('Nukirpti visiems po lygiai','Cut everyone equally'),fx:g=>{dC('results',-4);allS(4);return R3(L('Po lygiai atrodo teisinga, bet taip nusilpsta ir tai, kas svarbiausia.','Equal cuts look fair, but they weaken what matters most too.'),L('Biudžetą karpei po lygiai','Cut the budget equally'),'bad')}},
+    {n:L('Nuspręsti pačiam ir pranešti','Decide yourself and announce it'),fx:g=>{dC('commitment',-3);extra(4);return R3(L('Greita, bet komanda nesupras, kodėl atsisakyta būtent to.','Quick, but the team won’t understand why that was dropped.'),L('Karpymą nusprendei vienas','Decided the cuts alone'),'')}}]},
+  {lay:'conflict',title:L('Drąsus pasiūlymas','A bold proposal'),text:DT('Siūlau visiškai pakeisti, kaip dirbame su klientais. Žinau, kad tau tai nepatiks.','I propose we completely change how we work with clients. I know you won’t like it.'),opts:[
+    {n:L('Paprašyti pristatyti idėją komandai ir pačiam užduoti sunkiausią klausimą','Ask them to present it to the team, and ask the toughest question yourself'),fx:g=>{dC('conflict',8);dT(g.evWho,5);dS(g.evWho,3);return R3(L('Leisti idėjai atlaikyti rimtą diskusiją yra didžiausia pagarba jai, net jei galiausiai jos neįgyvendinsite.','Letting an idea face a serious debate is the greatest respect you can show it, even if you don’t adopt it.'),L('Idėją išbandėte diskusijoje','Tested an idea in open debate'),'good')}},
+    {n:L('„Ne. Dabar dirbame gerai“','“No. We work fine as it is”'),fx:g=>{dT(g.evWho,-8);dC('conflict',-5);return R3(L('Atmetęs be diskusijos, užgesinai ne tik idėją, bet ir norą siūlyti naujų.','Rejecting it without discussion killed not just the idea but the will to suggest others.'),L('Idėją atmetei be diskusijos','Rejected an idea without discussion'),'bad')}},
+    {n:L('Pasakyti, kad pagalvosi, ir atidėti','Say you’ll think about it and put it off'),fx:g=>{dT(g.evWho,-3);return R3(L('Atidėjimas be termino žmonėms skamba kaip mandagus „ne“.','Postponing with no date sounds like a polite no.'),L('Pasiūlymą atidėjai neribotam laikui','Shelved a proposal indefinitely'),'')}}]},
+  {lay:'commitment',title:L('Klientas vėl keičia reikalavimus','The client changes requirements again'),text:L('Didžiausias klientas trečią kartą keičia reikalavimus. Komanda pavargo nuo perdarymų.','Your biggest client is changing requirements for the third time. The team is tired of redoing work.'),opts:[
+    {n:L('Susitarti su klientu dėl aiškios pakeitimų tvarkos ir paaiškinti komandai, kas sutarta','Agree a clear change process with the client and explain it to the team'),fx:g=>{allS(-6);dC('commitment',5);dB(-2);return R3(L('Vadovas saugo komandą nuo chaoso ne atsisakydamas klientų, o kurdamas aiškias taisykles.','A leader protects the team from chaos not by refusing clients but by creating clear rules.'),L('Su klientu susitarei dėl pakeitimų tvarkos','Agreed a change process with the client'),'good')}},
+    {n:L('Liepti komandai daryti, ką klientas sako','Tell the team to do whatever the client says'),fx:g=>{allS(10);extra(6);return R3(L('Klientas šiandien patenkintas, bet komanda pradeda tikėti, kad jos darbas neturi vertės.','The client is happy today, but the team starts believing its work has no value.'),L('Komandą palikai kliento chaose','Left the team in the client’s chaos'),'bad')}},
+    {n:L('Perdaryti pačiam, kad komanda nesijaudintų','Redo it yourself so the team isn’t bothered'),fx:g=>{G.stats.self++;extra(8);dC('accountability',-3);return R3(L('Komandai lengviau, bet tavo laikas dingo, o problema su klientu liko.','Easier for the team, but your time is gone and the client problem remains.'),L('Perdarei pats','Redid it yourself'),'')}}]},
+  {lay:'trust',title:L('Jaučiasi atstumtas','Feeling left out'),text:DT('Man atrodo, kad pietauti visi eina kartu, o mane pamiršta.','It feels like everyone goes to lunch together and forgets me.'),opts:[
+    {n:L('Padėkoti už atvirumą ir pagalvoti, kaip komandoje sukurti daugiau bendrų akimirkų','Thank them for being open and think how to create more shared moments for the team'),fx:g=>{dT(g.evWho,6);allT(3);dS(g.evWho,-6);return R3(L('Priklausymo jausmas yra pasitikėjimo pagrindas. Kartais reikia ne pokalbio, o progos būti kartu.','Belonging is the foundation of trust. Sometimes what’s needed isn’t a talk but a chance to be together.'),L('Sukūrei daugiau bendrų akimirkų','Created more shared moments'),'good')}},
+    {n:L('„Tai ne darbo klausimas“','“That’s not a work issue”'),fx:g=>{dT(g.evWho,-8);dS(g.evWho,6);return R3(L('Žmogui, kuris jaučiasi atstumtas, ir darbe sunku. Tai ir yra darbo klausimas.','Someone who feels left out struggles at work too. That makes it a work issue.'),L('Atstumto žmogaus jausmus sumenkinai','Dismissed someone who felt left out'),'bad')}},
+    {n:L('Paprašyti kitų jį pakviesti','Ask the others to invite them'),fx:g=>{allT(-1);dT(g.evWho,3);return R3(L('Gerai, kad sureagavai, bet priverstinis kvietimas jaučiamas. Geriau kurti progas visiems.','Good that you reacted, but a forced invitation shows. Better to create occasions for everyone.'),L('Liepei kitiems pakviesti','Told the others to invite them'),'')}}]},
+  {lay:'results',title:L('Asmeninis rekordas','A personal record'),text:DT('Pasiekiau geriausią savo mėnesį! Nors komanda bendrai atsilieka…','I just had my best month ever! Even though the team overall is behind…'),opts:[
+    {n:L('Pasveikinti ir paprašyti pasidalinti su kitais, kas padėjo','Congratulate them and ask them to share what helped with the others'),fx:g=>{dT(g.evWho,6);dC('results',6);allS(-2);return R3(L('Asmeninė sėkmė tampa komandos sėkme, kai ja dalijamasi. Taip auga ir žmogus, ir visi.','Personal success becomes team success when it’s shared. The person grows, and so does everyone.'),L('Asmeninę sėkmę pavertei komandos sėkme','Turned personal success into team success'),'good')}},
+    {n:L('Pasveikinti prie visų ir pastatyti pavyzdžiu kitiems','Congratulate them in front of everyone and hold them up as an example'),fx:g=>{dT(g.evWho,4);allT(-4);dC('results',-3);return R3(L('Pavyzdys prie visų dažnai skamba kaip priekaištas likusiems.','Holding someone up as an example often sounds like a reproach to the rest.'),L('Vieną žmogų pastatei pavyzdžiu kitiems','Held one person up as an example'),'bad')}},
+    {n:L('Pasveikinti asmeniškai','Congratulate them privately'),fx:g=>{dT(g.evWho,5);return R3(L('Malonu, bet proga sustiprinti komandą liko nepanaudota.','Nice, but the chance to strengthen the team went unused.'),L('Pasveikinai asmeniškai','Congratulated privately'),'')}}]},
+  {lay:'accountability',title:L('Tavo paties klaida','Your own mistake'),text:L('Supratai, kad tavo klaidingas sprendimas praėjusią savaitę kainavo komandai dvi dienas darbo.','You realise a wrong call you made last week cost the team two days of work.'),opts:[
+    {n:L('Tiesiai pasakyti komandai: „Čia aš suklydau“, ir ką keisi','Tell the team straight: “I got this wrong”, and what you’ll change'),fx:g=>{allT(6);dC('accountability',6);return R3(L('Vadovas, kuris prisiima atsakomybę, moko komandą daryti tą patį. Tai stipriausia atskaitomybės pamoka.','A leader who owns mistakes teaches the team to do the same. It’s the strongest lesson in accountability.'),L('Prisipažinai komandai suklydęs','Owned your mistake to the team'),'good')}},
+    {n:L('Nieko nesakyti, gal niekas nepastebėjo','Say nothing, maybe nobody noticed'),fx:g=>{allT(-5);dC('accountability',-5);return R3(L('Komanda pastebėjo. Ir išmoko, kad klaidas čia geriau nutylėti.','The team noticed. And learned it’s better to keep mistakes quiet here.'),L('Savo klaidą nutylėjai','Kept quiet about your mistake'),'bad')}},
+    {n:L('Tyliai ištaisyti pasekmes pačiam','Quietly fix the consequences yourself'),fx:g=>{extra(4);dC('accountability',-2);return R3(L('Pasekmės ištaisytos, bet pamoka liko tik tau.','The damage is repaired, but the lesson stayed with you alone.'),L('Klaidą ištaisei tyliai','Fixed your mistake quietly'),'')}}]},
+  {lay:'commitment',title:L('Per daug susirinkimų','Too many meetings'),text:DT('Pusę savaitės praleidžiu susirinkimuose. Kada man dirbti?','I spend half the week in meetings. When am I supposed to work?'),opts:[
+    {n:L('Kartu su komanda peržiūrėti susirinkimus ir atsisakyti nereikalingų','Review the meetings with the team and drop the unnecessary ones'),fx:g=>{allS(-8);dC('commitment',4);return R3(L('Susirinkimas turi turėti tikslą ir sprendimą. Kas jų neturi, tik vagia laiką.','A meeting needs a purpose and a decision. Without them it just steals time.'),L('Kartu sumažinote susirinkimų','Cut meetings together'),'good')}},
+    {n:L('„Susirinkimai svarbūs, kad visi žinotų, kas vyksta“','“Meetings matter so everyone knows what’s happening”'),fx:g=>{dT(g.evWho,-6);dS(g.evWho,6);return R3(L('Informuoti galima ir greičiau. Žmogus išmoko, kad jo laikas nevertinamas.','There are faster ways to inform. They learned their time isn’t valued.'),L('Susirinkimų skundą atmetei','Dismissed a complaint about meetings'),'bad')}},
+    {n:L('Leisti jam praleisti dalį susirinkimų','Let them skip some meetings'),fx:g=>{dS(g.evWho,-6);dC('commitment',-3);return R3(L('Jam lengviau, bet jis praleis ir sprendimus, kurie jį liečia.','Easier for them, but they’ll miss decisions that affect them.'),L('Leidai praleisti susirinkimus','Let them skip meetings'),'')}}]},
+  {lay:'conflict',title:L('Juokelis, kuris įžeidė','A joke that hurt'),text:DT('Vakar per susirinkimą kolega pajuokavo apie mano akcentą. Visi juokėsi.','Yesterday in the meeting a colleague joked about my accent. Everyone laughed.'),opts:[
+    {n:L('Padėkoti, kad pasakė, ir pasikalbėti su juokavusiu: humoras neturi žeisti','Thank them for telling you, and talk to the joker: humour mustn’t hurt'),fx:g=>{dT(g.evWho,8);allT(3);dC('conflict',3);return R3(L('Vadovas nustato ribas. Jei nepatogų dalyką praleidi, jis tampa norma.','A leader sets the boundaries. Let an awkward thing slide, and it becomes the norm.'),L('Nustatei pagarbos ribas','Set boundaries for respect'),'good')}},
+    {n:L('„Tai tik juokas, neimk į galvą“','“It was just a joke, don’t take it to heart”'),fx:g=>{dT(g.evWho,-10);dS(g.evWho,8);allT(-2);return R3(L('Sumenkinęs žmogaus jausmus, pasakei, kad jis čia mažiau svarbus už juoką.','By brushing off their feelings, you said they matter less here than a laugh.'),L('Įžeidimą sumenkinai','Brushed off a hurtful joke'),'bad')}},
+    {n:L('Kitame susirinkime visiems priminti apie pagarbą','Remind everyone about respect at the next meeting'),fx:g=>{allT(1);dT(g.evWho,2);return R3(L('Bendras priminimas geriau nei nieko, bet žmogus nežino, ar jį išgirdai.','A general reminder beats nothing, but they don’t know if you really heard them.'),L('Apie pagarbą priminei visiems','Reminded everyone about respect'),'')}}]}
+);
+
 const CONS={
   overload:{title:L('Krūvis pasivijo','The workload caught up'),text:L('Darius šiandien susirgo ir neatėjo. Kitiems tenka jo darbai.','Dan is off sick today. The others pick up his work.'),
     fx:g=>{const id=act('darius')?'darius':IDS.find(act);if(id)g.sick=id;allS(6);
@@ -579,6 +677,8 @@ const CONS={
     fx:g=>{extra(-12);dB(-5);return L('Tylus sutikimas nėra įsipareigojimas. Kai žmonės neišsako abejonių, sprendimas neprigyja.','Silent agreement isn’t commitment. When people don’t voice doubts, the decision doesn’t stick.')}}
 };
 
+CONS.lie={title:L('Tiesa paaiškėjo','The truth came out'),text:L('Atleidimai paskelbti oficialiai. Komanda prisimena, kad sakei: „Nieko nebus.“','The layoffs were announced officially. The team remembers you said “Nothing will happen.”'),
+  fx:g=>{allT(-10);allS(6);return L('Pasitikėjimas, prarastas dėl netiesos, grįžta daug lėčiau, nei buvo prarastas.','Trust lost through an untruth comes back far more slowly than it was lost.')}};
 /* ================= micro-events & daily goals ================= */
 const NM=a=>PEOPLE[a].n,GEN=a=>PEOPLE[a].gen;
 const ok=i=>act(i)&&RT.chars[i]&&RT.chars[i].state!=='leaving';
@@ -679,6 +779,21 @@ function goalsH(){
   return `${leadLine()}<p class="eyebrow">${t(L('Šios dienos tikslai','Today’s goals'))}</p><ul class="goals">${RT.goals.map(k=>{const g=GOALS[k],d=g.ok();
     return `<li class="${d?(g.end?'pend':'done'):''}"><span class="box">${d?(g.end?'·':'✓'):''}</span><span>${t(g.n)}${g.prog?g.prog():''}</span></li>`}).join('')}</ul>`;
 }
+/* guided first day: time stands still until the player has talked, handled an event and held a meeting */
+const TUT=[
+  {m:L('Sveikas biure! Tu esi personažas su auksiniu žiedu. Paspausk ant Tomo, kad su juo pasikalbėtum, ir pasirink „Paklausti ir klausytis“.','Welcome to the office! You’re the character with the gold ring. Tap Tom to talk to him and choose “Ask and listen”.'),
+   at:()=>RT.chars.tomas,done:()=>RT.cnt.talks>=1&&!SH},
+  {m:L('Puiku. Klausytis yra greičiausias būdas suprasti žmones. Dabar pažiūrėk į Eglę: ženklas virš galvos reiškia, kad ji tavęs laukia. Paspausk ant jos.','Great. Listening is the fastest way to understand people. Now look at Emma: the sign above her head means she’s waiting for you. Tap her.'),
+   at:()=>RT.chars.egle,start:()=>{if(ok('egle'))addMarker({kind:'npc',who:'egle',micro:'q',icon:'q',until:RT.time+999,miss:'micro',tut:1})},done:()=>!RT.markers.some(m=>m.tut)&&!SH},
+  {m:L('Susirinkimai padeda komandai ginčytis ir susitarti. Paspausk ant susitikimų kambario (dešinėje viršuje) ir sušauk susirinkimą.','Meetings help the team argue and agree. Tap the meeting room (top right) and call a meeting.'),
+   at:()=>({x:10.5,y:2.6,big:1}),done:()=>RT.meetToday&&!RT.meeting&&!SH},
+  {m:L('Tu pasiruošęs! Dabar laikas pradės tekėti. Stebėk debesėlius virš galvų (stresas), reaguok į ženklus ir atsiliepk, kai skambės telefonas kabinete. Diena trunka apie 10 minučių.','You’re ready! Time starts moving now. Watch the clouds above heads (stress), respond to signs, and answer the phone in your office when it rings. A day lasts about 10 minutes.'),
+   at:()=>null,done:()=>RT.tut.t>16}];
+function tutTick(dt){const T=RT.tut;if(!T)return;T.t=(T.t||0)+dt;if(SH)return;
+  if(TUT[T.s].done()){T.s++;T.t=0;if(T.s>=TUT.length){tutEnd();return}TUT[T.s].start&&TUT[T.s].start();renderHUD()}}
+function tutEnd(){RT.tut=null;S.meta.tutDone=1;save();renderHUD()}
+function tutH(){const T=RT&&RT.tut;if(!T)return '';const last=T.s===TUT.length-1;
+  return `<div class="row"><span class="eyebrow">${t(L('Mokymas','Tutorial'))} · ${T.s+1}/${TUT.length}</span><button data-ui="tutskip">${last?t(L('Supratau','Got it')):t(L('Praleisti','Skip'))}</button></div><span>${t(TUT[T.s].m)}</span>`}
 function idleHint(){
   const c=IDS.filter(i=>ok(i)&&!RT.talked[i]&&RT.chars[i].state==='work').sort((a,b)=>G.people[b].stress-G.people[a].stress);
   const top=c[0];
@@ -690,11 +805,66 @@ function idleHint(){
 }
 
 /* ================= progression: capital, office upgrades, dossiers (kept across games in S.meta) ================= */
+/* ================= leadership test: 16 questions, a radar per Lencioni layer, retake to compare ================= */
+const DQ=[
+  {id:'years',q:L('Kiek laiko vadovauji žmonėms?','How long have you been managing people?'),o:[L('Mažiau nei metus','Less than a year'),L('1–3 metus','1–3 years'),L('3–7 metus','3–7 years'),L('Daugiau nei 7 metus','More than 7 years')]},
+  {id:'size',q:L('Kiek žmonių tavo komandoje?','How many people are on your team?'),o:[L('2–5','2–5'),L('6–10','6–10'),L('11–20','11–20'),L('Daugiau nei 20','More than 20')]},
+  {id:'mgrs',q:L('Ar tau pavaldūs kiti vadovai?','Do other managers report to you?'),o:[L('Ne','No'),L('Taip','Yes')]},
+  {id:'t1',layer:'trust',q:L('Komandos nariai atvirai pripažįsta savo klaidas.','Team members openly admit their mistakes.')},
+  {id:'t2',layer:'trust',q:L('Žmonės prašo pagalbos nebijodami atrodyti nekompetentingi.','People ask for help without worrying about looking incompetent.')},
+  {id:'c1',layer:'conflict',q:L('Susirinkimuose žmonės atvirai nesutinka su vieni kitų idėjomis.','In meetings, people openly disagree with each other’s ideas.')},
+  {id:'c2',layer:'conflict',rev:true,q:L('Tikros diskusijos prasideda tik po susirinkimo, koridoriuje.','The real discussion starts after the meeting, in the hallway.')},
+  {id:'m1',layer:'commitment',q:L('Po susirinkimo visi tiksliai žino, kas nuspręsta ir kas ką daro.','After a meeting, everyone knows exactly what was decided and who does what.')},
+  {id:'m2',layer:'commitment',rev:true,q:L('Priimti sprendimai dažnai svarstomi iš naujo, nes kažkas iš tikrųjų nesutiko.','Decisions often get reopened because someone never really agreed.')},
+  {id:'a1',layer:'accountability',q:L('Kolegos patys pasako vienas kitam, kai kas nors nesilaiko susitarimų.','Colleagues speak up to each other when someone doesn’t keep an agreement.')},
+  {id:'a2',layer:'accountability',rev:true,q:L('Pastabas dėl prasto darbo komandoje sakau tik aš.','I’m the only one on the team who raises poor performance.')},
+  {id:'r1',layer:'results',q:L('Bendras tikslas žmonėms svarbesnis už asmeninius nuopelnus.','The shared goal matters more to people than personal credit.')},
+  {id:'r2',layer:'results',rev:true,q:L('Žmonės gina savo sritį, net kai dėl to nukenčia visa komanda.','People defend their own area even when the whole team suffers for it.')},
+  {id:'s1',q:L('Dieną prieš terminą matai, kad kolegos darbas silpnas. Ką darai?','A day before the deadline, you see a colleague’s work is weak. What do you do?'),s:['rescuer','coach','controller','avoider'],
+    o:[L('Vakare pataisau pats','I fix it myself in the evening'),L('Paklausiu, kas sutrukdė, ir kartu susitariame dėl plano','I ask what got in the way and we agree on a plan together'),L('Tiksliai pasakau, ką perdaryti, ir tikrinu kas valandą','I tell them exactly what to redo and check every hour'),L('Šį kartą praleidžiu, terminas svarbiau','I let it go this time, the deadline matters more')]},
+  {id:'s2',q:L('Du komandos nariai susirinkime aštriai ginčijasi. Ką darai?','Two team members argue sharply in a meeting. What do you do?'),s:['avoider','controller','coach','rescuer'],
+    o:[L('Greitai pakeičiu temą','I quickly change the subject'),L('Nusprendžiu pats ir užbaigiu ginčą','I make the call myself and end the argument'),L('Paprašau abiejų įvardinti stipriausią kito argumentą','I ask each of them to state the other’s strongest argument'),L('Vėliau su kiekvienu pakalbu atskirai ir viską išlyginu','Later I talk to each one separately and smooth things over')]},
+  {id:'s3',q:L('Tavo klaida komandai kainavo savaitę darbo. Ką darai?','Your mistake cost the team a week of work. What do you do?'),s:['controller','rescuer','avoider','coach'],
+    o:[L('Įvedu papildomą patvirtinimą, kad tai nepasikartotų','I add an extra approval step so it can’t happen again'),L('Tyliai viską sutvarkau pats, kad komanda nesijaudintų','I quietly fix it myself so the team doesn’t worry'),L('Susitelkiame į naują planą: kas buvo, tas pražuvo','We focus on the new plan; what’s done is done'),L('Susirinkime papasakoju, kas nutiko ir ką keičiu','I tell the team in a meeting what happened and what I’m changing')]}];
+const LIKERT=[L('Visiškai nesutinku','Strongly disagree'),L('Nesutinku','Disagree'),L('Iš dalies','Somewhat'),L('Sutinku','Agree'),L('Visiškai sutinku','Strongly agree')];
+const STYLES={coach:{n:L('Treneris','Coach'),d:L('Tu linkęs klausti ir auginti žmones. Ilgainiui tai stipriausias stilius. Saugokis tik per ilgai svarstyti, kai reikia greito sprendimo.','You tend to ask and grow people. In the long run that’s the strongest style. Just watch out for deliberating too long when a quick call is needed.')},
+  rescuer:{n:L('Gelbėtojas','Rescuer'),d:L('Tu dažnai sutvarkai pats, kad komandai būtų lengviau. Trumpam tai padeda, bet komanda pratinasi laukti tavęs.','You often fix things yourself to make it easier for the team. It helps briefly, but the team learns to wait for you.')},
+  controller:{n:L('Kontrolierius','Controller'),d:L('Tu užtikrini tvarką ir aiškumą, bet per daug kontrolės slopina iniciatyvą ir atsakomybę.','You bring order and clarity, but too much control smothers initiative and ownership.')},
+  avoider:{n:L('Vengėjas','Avoider'),d:L('Tu saugai ramybę ir vengi nepatogumų. Bet neišspręstos problemos auga tyloje.','You keep the peace and avoid discomfort. But unsolved problems grow in silence.')}};
+function radarH(v,ghost){const cx=160,cy=140,r=96,pt=(i,x)=>{const a=-Math.PI/2+i*2*Math.PI/5;return [cx+r*x/100*Math.cos(a),cy+r*x/100*Math.sin(a)]},poly=o=>LAYERS.map((l,i)=>pt(i,o[l]).map(n=>n.toFixed(1)).join(',')).join(' ');
+  return `<svg viewBox="0 0 320 290" class="radar" role="img" aria-label="${t(L('Komandos profilis','Team profile'))}">${[25,50,75,100].map(x=>`<polygon points="${LAYERS.map((l,i)=>pt(i,x).map(n=>n.toFixed(1)).join(',')).join(' ')}" class="ring"/>`).join('')}
+    ${LAYERS.map((l,i)=>{const [x,y]=pt(i,100);return `<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" class="spoke"/>`}).join('')}
+    ${ghost?`<polygon points="${poly(ghost)}" class="ghost"/>`:''}<polygon points="${poly(v)}" class="area"/>
+    ${LAYERS.map((l,i)=>{const [x,y]=pt(i,v[l]),[lx,ly]=pt(i,126);return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" class="dot"/><text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle" dominant-baseline="middle">${t(LAYER[l])} ${v[l]}</text>`}).join('')}</svg>`}
+function diagScore(A){const raw={};LAYERS.forEach(l=>{const it=DQ.filter(q=>q.layer===l);raw[l]=Math.round(15+(it.reduce((s,q)=>s+(q.rev?6-A[q.id]:A[q.id]),0)/it.length-1)/4*70)});
+  const tally={};['s1','s2','s3'].forEach(id=>{const q=DQ.find(x=>x.id===id),st=q.s[A[id]];tally[st]=(tally[st]||0)+1});
+  const style=Object.keys(tally).sort((a,b)=>tally[b]-tally[a]||(a==='coach'?-1:1))[0];return {raw,style}}
+let DIAG=null;
+function renderTest(){const i=DIAG.i,q=DQ[i],like=!!q.layer;
+  overIn.innerHTML=`<span data-testv hidden></span><p class="eyebrow">${t(L('Vadovavimo testas','Leadership test'))} · ${i+1}/${DQ.length}</p>${bar(i/DQ.length*100,'var(--mark)')}
+    ${like?`<p class="small">${t(L('Kiek tai tinka tavo dabartinei komandai?','How true is this of your current team?'))}</p>`:''}<h2>${t(q.q)}</h2>
+    <div class="opts">${(like?LIKERT:q.o).map((o,k)=>`<button class="opt" data-ta="${like?k+1:k}"><span>${t(o)}</span></button>`).join('')}</div>
+    ${i?`<button class="link" data-ov="testBack">${t(L('Atgal','Back'))}</button>`:`<button class="link" data-ov="welcome">${t(L('Ne dabar','Not now'))}</button>`}`;
+  over.hidden=false;over.scrollTop=0}
+function weakest(raw){return LAYERS.reduce((a,b)=>raw[b]<raw[a]?b:a)}
+function renderTestResult(){const all=S.meta.diag,cur=all[all.length-1],first=all.length>1?all[0]:null,wk=weakest(cur.raw),St=STYLES[cur.style];
+  overIn.innerHTML=`<span data-resv hidden></span><p class="eyebrow">${t(L('Tavo vadovavimo profilis','Your leadership profile'))}${first?` · ${t(L('palyginimas su','compared with'))} ${first.d}`:''}</p>
+    <h1>${t(L('Silpniausia vieta','Weakest spot'))}: ${t(LAYER[wk]).toLowerCase()}</h1>
+    <div class="radar-wrap">${radarH(cur.raw,first&&first.raw)}</div>${first?`<p class="small">${t(L('Punktyras rodo tavo pirmąjį testą.','The dashed line shows your first test.'))}</p>`:''}
+    <div class="insight"><span class="eyebrow">${t(L('Tavo stilius','Your style'))}: ${t(St.n)}</span><p>${t(St.d)}</p></div>
+    <p>${t(L(`Lencioni modelyje kiekvienas lygmuo remiasi ankstesniu. Žaidime ${t(LAYER[wk]).toLowerCase()} mokomasi ${LAYERS.indexOf(wk)+1} savaitę. Ten ir pradėk ieškoti atsakymų.`,`In Lencioni’s model each level rests on the one below. In the game, ${t(LAYER[wk]).toLowerCase()} is taught in week ${LAYERS.indexOf(wk)+1}. Start looking for answers there.`))}</p>
+    <p class="small">${t(L('Pakartok testą po kelių savaičių ir pamatysi, kaip keičiasi tavo tikra komanda.','Retake the test in a few weeks to see how your real team is changing.'))}</p>
+    <button class="btn" data-ov="welcome">${t(L('Į žaidimą','To the game'))}</button>`;
+  over.hidden=false;over.scrollTop=0}
+function diagH(){const all=S.meta.diag||[];if(!all.length)return `<button class="opt" data-ov="test"><span>${t(L('Atlikti vadovavimo testą','Take the leadership test'))}<br><span class="small">${t(L('16 klausimų, apie 3 minutes','16 questions, about 3 minutes'))}</span></span></button>`;
+  const cur=all[all.length-1];return `<div class="radar-wrap">${radarH(cur.raw,all.length>1?all[0].raw:null)}</div><p class="small">${t(L('Stilius','Style'))}: <b>${t(STYLES[cur.style].n)}</b> · ${t(L('testas','test'))} ${cur.d}${all.length>1?` · ${t(L('punktyras: pirmasis testas','dashed: first test'))}`:''}</p>
+    <div class="opts"><button class="opt" data-ov="testRes"><span>${t(L('Rezultatų paaiškinimas','What the results mean'))}</span></button><button class="opt" data-ov="test"><span>${t(L('Pakartoti testą','Retake the test'))}</span></button></div>`}
+
 /* ================= career: weeks, team growth, skills ================= */
 const LAYER_START={trust:40,conflict:45,commitment:50,accountability:40,results:55};
 const ALL5=['tomas','lina','darius','egle','marius'];
 // default way each later-week dilemma enters the office: the phone, or a person coming to your door
-const EVDEF={17:['door','MEMBER'],18:['door','LEAD'],19:['door','LEAD'],5:['door','marius'],6:['door','lina'],7:['phone'],8:['phone'],9:['door','egle'],10:['door','tomas'],11:['door','darius'],12:['phone'],13:['door','lina'],14:['phone'],15:['door','tomas'],16:['door','marius']};
+const EVDEF={...Object.fromEntries(Array.from({length:20},(_,i)=>[20+i,[22,25,28,32,34,37].includes(20+i)?['phone']:['door','ANY']])),17:['door','MEMBER'],18:['door','LEAD'],19:['door','LEAD'],5:['door','marius'],6:['door','lina'],7:['phone'],8:['phone'],9:['door','egle'],10:['door','tomas'],11:['door','darius'],12:['phone'],13:['door','lina'],14:['phone'],15:['door','tomas'],16:['door','marius']};
 const WEEKS=[
   {n:L('Pasitikėjimas','Trust'),layer:'trust',team:['tomas','lina','egle'],
    intro:L('Gavai pirmą komandą: trys žmonės, kurie tavęs dar nepažįsta. Išsiaiškink, kas jiems svarbu, ir laimėk jų pasitikėjimą.','Your first team: three people who don’t know you yet. Find out what matters to them and earn their trust.')},
@@ -715,14 +885,15 @@ const WEEKS=[
 function weekCfg(w){
   if(w<WEEKS.length)return WEEKS[w];
   if(w>=WEEKS.length+2)return twoCfg(w);
-  const k=w-WEEKS.length+1,layer='lead',evs=shuffle(Object.keys(EVDEF).map(Number).filter(n=>n<=16)).slice(0,3);
+  const k=w-WEEKS.length+1,layer='lead',evs=shuffle(Object.keys(EVDEF).map(Number).filter(n=>n<=16||n>=20)).slice(0,3);
   return {n:L(`Vadovų vadovas · ${k} lygis`,`Leading leads · level ${k}`),layer,leadMode:true,team:ALL5,bump:10,plan:1.2+0.04*k,stress:Math.min(22,8+2*k),
     sched:[[0,14*60,evs[0]],[1,11*60,17],[2,11*60,evs[1]],[3,11*60,18],[4,11*60,19]],
     task:L('Šią savaitę, kai kas nors ateis su problema, vietoj atsakymo paklausk: „O kaip tu spręstum?“','This week, when someone brings you a problem, ask “How would you solve it?” instead of answering.'),
     intro:L(`Savaitė ${w+1}. Tu kyli: dabar komandai vadovausi per komandos vadovą. Pirmadienį išsirink, ką paaukštinti. Kasdienius įvykius sprendžia jis, o tavo darbas yra jį auginti: koučinti, palaikyti ir neapeiti. Kiekviena savaitė sunkesnė.`,`Week ${w+1}. You’re moving up: from now on you lead the team through a team lead. On Monday, choose whom to promote. They handle day-to-day events; your job is to grow them: coach, back them, and don’t go around them. Each week is harder.`)};
 }
 /* two teams (week 8+): team B sits on another floor; you promote its lead from five people and only see that lead in the office */
-function twoCfg(w){const k=w-WEEKS.length-1,evs=shuffle(Object.keys(EVDEF).map(Number).filter(n=>n<=16)).slice(0,2);
+function extraEv(cfg,w){const sc=cfg.sched.map(x=>x.slice());if(w>=1&&w<=4){const used=new Set(sc.map(x=>x[0])),free=[1,3,0,2,4].find(d=>!used.has(d)&&!(d===0&&cfg.hire)),pool=EVENTS.map((E,i)=>i).filter(i=>i>=20&&EVENTS[i].lay===cfg.layer);if(free!=null&&pool.length)sc.push([free,13*60,rnd(pool)])}return sc}
+function twoCfg(w){const k=w-WEEKS.length-1,evs=shuffle(Object.keys(EVDEF).map(Number).filter(n=>n<=16||n>=20)).slice(0,2);
   return {n:L(`Dvi komandos · ${k} lygis`,`Two teams · level ${k}`),layer:'lead',leadMode:true,twoTeams:true,team:ALL5,bump:10,plan:1.22+0.04*k,stress:Math.min(22,10+2*k),
     sched:[[0,14*60,evs[0]],[1,11*60,17],[2,11*60,evs[1]],[3,11*60,18],[4,11*60,19]],
     task:L('Šią savaitę pasikalbėk su vieno savo vadovo komandos nariu, bet tik klausyk. Ką išgirdai, aptark su vadovu, o ne spręsk pats.','This week, talk to someone in one of your leads’ teams, but only listen. Discuss what you heard with the lead instead of fixing it yourself.'),
@@ -781,7 +952,32 @@ const TBE=[
   {t:L('{N} dirba savaitgaliais','{N} works weekends'),x:L('Sužinai, kad {N} jau trečią savaitgalį dirba. {Ji} sako: „Kitaip nespėju.“','You learn {N} has worked three weekends in a row. {She} says: “Otherwise I can’t keep up.”'),o:[
     {n:L('Kartu peržiūrėti, ką {ji} galėtų deleguoti savo žmonėms','Review together what {she} could delegate to {hers} people'),k:'good',fx:()=>{tK(5);tL(-15)},i:L('Pervargęs vadovas augina pervargusią komandą. Deleguoti išmoksta tas, kuriam kas nors padeda pradėti.','An exhausted lead raises an exhausted team. People learn to delegate when someone helps them start.')},
     {n:L('Pagirti už atsidavimą','Praise the dedication'),k:'bad',fx:()=>{tL(10)},i:L('Pagyrei elgesį, kuris {ją} sudegins.','You praised the behaviour that will burn {her} out.')},
-    {n:L('Duoti {jai} laisvą dieną','Give {her} a day off'),k:'',fx:()=>{tL(-20);tS(6)},i:L('Poilsis padės, bet priežastis liko: {ji} vis dar viską neša {pati}.','Rest helps, but the cause remains: {she} still carries everything {herself}.')}]}
+    {n:L('Duoti {jai} laisvą dieną','Give {her} a day off'),k:'',fx:()=>{tL(-20);tS(6)},i:L('Poilsis padės, bet priežastis liko: {ji} vis dar viską neša {pati}.','Rest helps, but the cause remains: {she} still carries everything {herself}.')}]},
+  {t:L('Prašymas pereiti','A transfer request'),x:L('{M} iš {G} komandos prašo perkelti į tavo pirmąją komandą. {N} apie tai dar nežino.','{M} from {N}’s team asks to move to your first team. {N} doesn’t know yet.'),o:[
+    {n:L('Pasakyti, kad pirmiausia apie tai reikia pasikalbėti su {I}, ir pasiūlyti tai padaryti kartu','Say this needs a conversation with {N} first, and offer to have it together'),k:'good',fx:()=>{tA(3);tM(2)},i:L('Perkėlimas per vadovo galvą sugriautų {jos} autoritetą. Atviras pokalbis trise išsaugo pasitikėjimą.','A transfer over the lead’s head would wreck {hers} authority. An open three-way conversation keeps trust.')},
+    {n:L('Sutikti iškart','Agree straight away'),k:'bad',fx:()=>{tA(-8);tM(-4);tS(4)},i:L('{N} sužinos paskiausiai, o komanda išmoks, kad iš jos galima išeiti tiesiog per tave.','{N} will be the last to know, and the team will learn you can leave it simply by going through you.')},
+    {n:L('Atsisakyti, net neišklausius priežasčių','Refuse without hearing the reasons'),k:'',fx:()=>{tM(-6)},i:L('Gal perkėlimas ir nebuvo geras sprendimas, bet neišklausęs nesužinojai, kas negerai {G} komandoje.','Maybe the transfer wasn’t a good idea, but by not listening you never learned what’s wrong in {N}’s team.')}]},
+  {t:L('Sunkaus pokalbio baimė','Afraid of a hard conversation'),x:L('{N}: „Turiu vienam žmogui pasakyti apie prastą darbą, bet bijau, kad jis išeis.“','{N}: “I need to tell someone their work is poor, but I’m afraid they’ll quit.”'),o:[
+    {n:L('Kartu suplanuoti pokalbį: faktai, poveikis, ko tikiesi','Plan the conversation together: facts, impact, what you expect'),k:'good',fx:()=>{tK(5);tL(-4)},i:L('Sunkaus pokalbio baimė mažėja, kai turi planą. Taip auga {vadovės} drąsa.','Fear of a hard conversation shrinks once you have a plan. That’s how a lead’s courage grows.')},
+    {n:L('„Pasakysiu aš“','“I’ll tell them”'),k:'bad',fx:()=>{tA(-7)},i:L('Tu išsprendei, bet {N} neišmoko, o komanda pamatė, kas iš tikrųjų sprendžia.','You solved it, but {N} didn’t learn, and the team saw who really decides.')},
+    {n:L('„Gal palauk, gal pats pasitaisys“','“Maybe wait, they might improve”'),k:'',fx:()=>{tS(5);tM(-3)},i:L('Problema retai išsisprendžia pati. Laukimas kainuoja ir žmogui, ir komandai.','Problems rarely solve themselves. Waiting costs both the person and the team.')}]},
+  {t:L('Prašymas samdyti','A request to hire'),x:L('{N} prašo leidimo priimti dar vieną žmogų: „Mes nespėjame.“','{N} asks for permission to hire one more person: “We can’t keep up.”'),o:[
+    {n:L('Paprašyti duomenų: kiek darbo, kas trukdo, ar galima ko nors atsisakyti','Ask for data: how much work, what gets in the way, what could be dropped'),k:'good',fx:()=>{tK(4);tS(-3)},i:L('Prašymas samdyti dažnai yra prašymas pagalbos su prioritetais. Duomenys padeda abiem.','A hiring request is often a request for help with priorities. Data helps you both.')},
+    {n:L('Leisti samdyti','Allow the hire'),k:'',fx:()=>{tS(-8);dB(-6)},i:L('Komandai lengviau, bet kaina didelė, o priežastis gal visai ne žmonių trūkumas.','Easier for the team, but expensive, and the cause may not be a lack of people at all.')},
+    {n:L('„Biudžeto nėra, dirbkite efektyviau“','“There’s no budget, work more efficiently”'),k:'bad',fx:()=>{tS(8);tT(-4)},i:L('„Dirbkite efektyviau“ be pagalbos skamba kaip kaltinimas.','“Work more efficiently” without any help sounds like an accusation.')}]},
+  {t:L('Atšaukti komandos vakarą','Cancelling the team evening'),x:L('{N}: „Šį mėnesį per daug darbo. Atšaukiu komandos vakarą.“','{N}: “Too much work this month. I’m cancelling the team evening.”'),o:[
+    {n:L('Paklausti, ar galima perkelti, o ne atšaukti, ir ką apie tai mano komanda','Ask whether it can be moved instead of cancelled, and what the team thinks'),k:'good',fx:()=>{tM(4);tK(3)},i:L('Bendros akimirkos ypač svarbios tada, kai sunku. Leisti komandai pačiai nuspręsti stiprina nuotaiką.','Shared moments matter most when things are hard. Letting the team decide lifts morale.')},
+    {n:L('Sutikti: darbas svarbiau','Agree: work comes first'),k:'bad',fx:()=>{tM(-6)},i:L('Komanda išmoko, kad jos gerovė visada eina paskutinė.','The team learned its wellbeing always comes last.')},
+    {n:L('Liepti renginį palikti','Order the event to go ahead'),k:'',fx:()=>{tM(3);tA(-4)},i:L('Renginys liks, bet nurodymas per {vadovės} galvą sumažino {jos} autoritetą.','The event stays, but overruling the lead cut {hers} authority.')}]},
+  {t:L('Tavo vadovai nesutaria','Your leads disagree'),x:L('{N} skundžiasi, kad tavo pirmosios komandos vadovas pasiima geriausius projektus.','{N} complains that your first team’s lead takes the best projects.'),o:[
+    {n:L('Sukviesti abu vadovus ir paprašyti kartu susitarti dėl taisyklių','Bring both leads together and ask them to agree the rules'),k:'good',fx:()=>{tA(3);tK(3);if(G.lead)dL(2)},i:L('Vadovų konfliktai sprendžiami juos sujungiant, o ne teisiant. Taip jie tampa komanda.','Conflicts between leads are solved by bringing them together, not by judging. That’s how they become a team.')},
+    {n:L('Stoti į vieno pusę','Take one side'),k:'bad',fx:()=>{tA(-4);tT(-6)},i:L('Kai vienas iš vadovų pralaimi, vadovų komanda skyla į stovyklas.','When one lead loses, the leadership team splits into camps.')},
+    {n:L('Pačiam padalinti projektus','Divide the projects yourself'),k:'',fx:()=>{tA(-2);if(G.lead)dA(-2)},i:L('Šįkart ramu, bet kitą kartą jie vėl ateis pas tave.','Calm this time, but next time they’ll come to you again.')}]},
+  {t:L('Komandos nuotaika krenta','Team morale is falling'),x:L('{N}: „Mano žmonės pavargę ir nebeturi motyvacijos. Nežinau, ką daryti.“','{N}: “My people are tired and have lost motivation. I don’t know what to do.”'),o:[
+    {n:L('Paklausti, ką {ji} jau pastebėjo, ir pasiūlyti pasikalbėti su kiekvienu atskirai','Ask what {she} has noticed, and suggest talking to each person individually'),k:'good',fx:()=>{tK(5);tM(5);tS(-5)},i:L('Motyvacija individuali. Vadovas, kuris išklauso kiekvieną, randa svertus, kurių nemato žiūrėdamas į visą komandą.','Motivation is individual. A lead who listens to each person finds levers invisible at the team level.')},
+    {n:L('Pasiūlyti premiją','Offer a bonus'),k:'',fx:()=>{tM(4);dB(-4)},i:L('Pinigai pakelia nuotaiką trumpam, bet priežastys liko neaiškios.','Money lifts morale briefly, but the causes remain unclear.')},
+    {n:L('„Tai praeis“','“It’ll pass”'),k:'bad',fx:()=>{tM(-5);tS(5)},i:L('Pavargusi komanda, kurios niekas nepaiso, pati neatsigauna.','A tired team that nobody pays attention to doesn’t recover on its own.')}]}
+
 ];
 const TBV=[
   {n:L('Tik klausytis ir klausti, kas trukdo dirbti','Only listen and ask what gets in the way'),k:'good',fx:()=>{tM(6);tS(-8)},i:L('Apsilankymas pas kito vadovo komandą be sprendimų už jį: žmonės jaučiasi matomi, o {vadovės} autoritetas nenukenčia.','Visiting a lead’s team without making their decisions: people feel seen and the lead’s authority stays intact.')},
@@ -938,9 +1134,9 @@ function openInterview(id){
 }
 function runEv(ev){const [kind,w0]=EVDEF[ev];
   if(kind==='phone'){addMarker({kind:'phone',ev,x:3,y:1,until:RT.time+120,miss:'evx'});return}
-  const want=w0==='LEAD'?G.lead:w0==='MEMBER'?(['egle','marius','lina','darius','tomas'].find(i=>i!==G.lead&&ok(i))):w0;
-  if((w0==='LEAD'||w0==='MEMBER')&&!ok(want))return;
-  const who=ok(want)&&RT.chars[want].state==='work'?want:(w0==='LEAD'||w0==='MEMBER')?want:IDS.find(i=>ok(i)&&RT.chars[i].state==='work');if(!who)return;
+  const want=w0==='LEAD'?G.lead:w0==='MEMBER'?(['egle','marius','lina','darius','tomas'].find(i=>i!==G.lead&&ok(i))):w0==='ANY'?(rnd(IDS.filter(i=>i!==G.lead&&ok(i)&&RT.chars[i].state==='work'))||rnd(IDS.filter(i=>i!==G.lead&&ok(i)))):w0;
+  if((w0==='LEAD'||w0==='MEMBER'||w0==='ANY')&&!ok(want))return;
+  const who=ok(want)&&RT.chars[want].state==='work'?want:(w0==='LEAD'||w0==='MEMBER'||w0==='ANY')?want:IDS.find(i=>ok(i)&&RT.chars[i].state==='work');if(!who)return;
   const c=RT.chars[who];c.state='visit';c.timer=90;walkTo(c,SPOT.door[0]+1,SPOT.door[1]);addMarker({kind:'npc',who,ev,until:RT.time+90,miss:'evx'})}
 function curSched(){if(!G.week&&!G.sched)return SCHED;
   if(curSched.k!==G.id){curSched.k=G.id;curSched.v=[...(G.hire?[{d:0,t:9*60+20,run:()=>spawnCand(G.hire)}]:[]),...(G.sched||[]).map(([d,t,ev])=>({d,t,run:()=>runEv(ev)}))]}
@@ -1099,6 +1295,7 @@ function renderHub(from){
   overIn.innerHTML=`<span data-hub hidden></span><p class="eyebrow">${t(L('Tavo progresas','Your progress'))}</p><h1>${t(L('Biuras ir bylos','Office and files'))}</h1>
     <div class="meters"><div class="meter wide"><span class="k">${t(L('Vadovo kapitalas','Leadership capital'))}</span><span class="v cap">◆ ${S.meta.cap}</span>
     <span class="small">${t(L('Uždirbi už gerus sprendimus, laiku išspręstus įvykius (serija didina daugiklį), įvykdytus tikslus ir planą.','Earned for good decisions, events handled in time (streaks raise the multiplier), goals and hitting the target.'))}</span></div></div>
+    <p class="eyebrow">${t(L('Vadovavimo profilis','Leadership profile'))}</p>${diagH()}
     <p class="eyebrow">${t(L('Įžvalgų knyga','Book of insights'))} · ${cardsN()}/${CARD_TOTAL}</p>
     <button class="opt" data-ov="cards"><span>${t(L('Atversti knygą','Open the book'))}<br><span class="small">${t(L('Pamokos iš kiekvieno tavo sprendimo, gero ir blogo','Lessons from every choice you made, good and bad'))}</span></span>${bar(cardsN()/CARD_TOTAL*100,'var(--mark)')}</button>
     <p class="eyebrow">${t(L('Savaitės žvaigždutės','Week stars'))}</p>
@@ -1192,7 +1389,7 @@ let S={lang:'lt',G:null,commitment:null,checkin:null,bonus:0,meta:null};
 let G=null; // sim state (saved at day start)
 let RT=null; // runtime (positions etc)
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j))}catch(e){}S.meta=Object.assign({cap:0,up:{},dos:{},cards:{},stars:{},skills:{}},S.meta||{});['sales','project'].forEach(k=>{if(typeof S.meta.stars[k]==='number'){S.meta.stars[k+'_0']=S.meta.stars[k];delete S.meta.stars[k]}})}
+function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j))}catch(e){}S.meta=Object.assign({cap:0,up:{},dos:{},cards:{},stars:{},skills:{},diag:[]},S.meta||{});['sales','project'].forEach(k=>{if(typeof S.meta.stars[k]==='number'){S.meta.stars[k+'_0']=S.meta.stars[k];delete S.meta.stars[k]}})}
 
 const t=o=>{const r=(o&&(o[S.lang]??o.lt))||'';return r.indexOf('{')<0?r:subst(r)};
 const tx=o=>{if(!o)return '';if(o.sales||o.project)o=o[G?G.type:'sales'];return t(o)};
@@ -1233,7 +1430,7 @@ function unitName(){return G.type==='sales'?L('tūkst. €','k€'):L('taškų',
 function newGame(type,w=0){
   const mots=shuffle(Object.keys(MOT)),people={},cfg=weekCfg(w);
   IDS.forEach((id,i)=>people[id]={stress:Math.min(90,PEOPLE[id].stress+(cfg.stress||0)),trust:PEOPLE[id].trust+(dosFull(id)?10:0)+(cfg.bump||0),mot:mots[i],known:false,trait:null,quit:false,hired:cfg.team.includes(id),h:Math.floor(Math.random()*2)});
-  G={tb:cfg.twoTeams?{lead:null,prev:null,gone:[],demoted:[],m:null,fit:1,res:1,burn:false,size:4,quits:0,stress:35+(cfg.stress||0),morale:55,auth:50,skill:40,trust:45,lstress:30,ev:[]}:null,type,week:w,layer:cfg.layer,leadMode:!!cfg.leadMode,lead:null,auth:50,lskill:30,hire:cfg.hire||null,sched:cfg.sched||null,day:0,people,culture:Object.assign({...LAYER_START},cfg.set||{}),boss:60+(S.bonus?8:0),planMult:1,out:0,dayOut:0,days:[],
+  G={tb:cfg.twoTeams?{lead:null,prev:null,gone:[],demoted:[],m:null,fit:1,res:1,burn:false,size:4,quits:0,stress:35+(cfg.stress||0),morale:55,auth:50,skill:40,trust:45,lstress:30,ev:[]}:null,type,week:w,layer:cfg.layer,leadMode:!!cfg.leadMode,lead:null,auth:50,lskill:30,hire:cfg.hire||null,sched:cfg.sched?extraEv(cfg,w):null,day:0,people,culture:Object.assign({...LAYER_START},cfg.set||{}),boss:60+(S.bonus?8:0),planMult:1,out:0,dayOut:0,days:[],
      flags:{},due:[],log:[],stats:{listen:0,right:0,wrong:0,self:0,report:0,meet:0,talks:0,missed:0},over:null,done:false,id:Date.now(),c0:null,sick:null};
   if(cfg.plan)G.planMult=cfg.plan;S.bonus=0;syncTrust();G.c0={...G.culture};
 }
@@ -1245,6 +1442,7 @@ function startDay(){
   RT={time:9*60,paused:false,speed:RT?RT.speed:0,chars:{},player:{x:SPOT.start[0],y:SPOT.start[1],path:[],pending:null,face:1},
       markers:[],talked:{},meetToday:false,fired:{},toasts:[],dayIns:[],meeting:null,visitCheck:0,mentorShown:G.mentorShown||{},microT:15,cnt:{talks:0,reveal:0,miss:0,praise:0},usedMicro:{},idle:0,suggest:null,goals:null};
   RT.goals=pickGoals();
+  if(!S.meta.tutDone&&!(G.week)&&G.day===0)RT.tut={s:0,t:0};
   G.dayOut=0;G.sick=null;
   if(sk('morning'))IDS.filter(act).forEach(id=>{G.people[id].stress=clamp(G.people[id].stress-4,0,100);G.culture.commitment=clamp(G.culture.commitment+0.2,0,100)});
   IDS.forEach(id=>{if(!act(id))return;const [x,y]=PEOPLE[id].seat;RT.chars[id]={id,x,y,path:[],state:'work',timer:30+Math.random()*90,next:null,say:null,sayT:0,phase:Math.random()*6}});
@@ -1370,7 +1568,8 @@ function updatePlayer(dt){
 function step(dtReal){
   if(!G||!RT)return;
   if(RT.paused)return;
-  const dm=dtReal*SPEEDS[RT.speed];RT.time+=dm;
+  tutTick(dtReal);
+  const dm=RT.tut&&RT.tut.s<TUT.length-1?0:dtReal*SPEEDS[RT.speed];RT.time+=dm;
   updatePlayer(dtReal);
   Object.values(RT.chars).forEach(c=>updateNPC(c,dm,dtReal));
   tickSim(dm);
@@ -1679,7 +1878,8 @@ function showWelcome(){
   if(S.commitment&&!S.checkin&&S.commitment.date!==today())check=`<div class="meter"><p class="eyebrow">${u('checkEy')}</p><p><b>${t(S.commitment.task)}</b></p><div class="opts"><button class="opt" data-ck="yes">${u('ckYes')}</button><button class="opt" data-ck="part">${u('ckPart')}</button><button class="opt" data-ck="no">${u('ckNo')}</button></div></div>`;
   else if(S.checkin&&S.commitment)check=`<div class="meter"><p class="eyebrow">${u('checkEy')}</p><p>${u({yes:'ckYesR',part:'ckPartR',no:'ckNoR'}[S.checkin])}</p></div>`;
   const resume=S.G&&!S.G.done;
-  overIn.innerHTML=`${check}<canvas class="hero-canvas" id="hero"></canvas><h1>${u('tagline')}</h1><p class="lead">${u('intro')}</p>
+  const cta=!S.meta.diag.length&&!resume?`<div class="task"><p class="eyebrow">${t(L('Pradėk nuo savęs','Start with yourself'))}</p><q>${t(L('3 minučių testas parodys, kur tavo tikra komanda stipriausia ir kur silpniausia.','A 3-minute test shows where your real team is strongest and weakest.'))}</q><button class="btn" data-ov="test">${t(L('Atlikti testą','Take the test'))}</button></div>`:'';
+  overIn.innerHTML=`${check}<canvas class="hero-canvas" id="hero"></canvas><h1>${u('tagline')}</h1><p class="lead">${u('intro')}</p>${cta}
     ${resume?`<button class="btn" data-ov="resume">${u('cont')} · ${t(L('Savaitė','Week'))} ${(S.G.week||0)+1} · ${t(UI.days[S.G.day])} ${hhmm(S.RT?S.RT.time:540)}</button>`:''}
     <p class="eyebrow">${u('choose')}</p>
     <div class="opts"><button class="opt typebtn" data-ov="type" data-type="sales"><b>${u('sales')}${starsType('sales')?` <span class="cap" style="font:500 14px var(--f-mono)">★ ${starsType('sales')}</span>`:''}</b><span>${u('salesD')}</span></button>
@@ -1698,6 +1898,7 @@ over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)retur
   if(d.ck){S.checkin=d.ck;if(d.ck==='yes')S.bonus=1;S.meta.cap+={yes:40,part:20,no:0}[d.ck];save();showWelcome();return}
   if(d.buy){buy(d.buy);return}
   if(d.skill){learn(d.skill);return}
+  if(d.ta!==undefined&&DIAG){DIAG.A[DQ[DIAG.i].id]=+d.ta;DIAG.i++;if(DIAG.i<DQ.length)renderTest();else{const r=diagScore(DIAG.A);S.meta.diag.push({d:today(),raw:r.raw,style:r.style,A:DIAG.A});if(S.meta.diag.length>12)S.meta.diag.splice(1,1);DIAG=null;save();renderTestResult()}return}
   switch(d.ov){
     case 'type':renderCareer(d.type);break;
     case 'week':newGame(renderCareer.ty,+d.w);RT=null;showHow();break;
@@ -1715,6 +1916,9 @@ over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)retur
     case 'hubBack':{const f=renderHub.from;if(f==='day')renderDay();else if(f==='end')showEnd();else showWelcome();break}
     case 'replay':{const ty=G.type;newGame(ty,G.week||0);RT=null;over.hidden=true;startDay();renderAll();break}
     case 'welcome':showWelcome();break;
+    case 'test':DIAG={i:0,A:{}};renderTest();break;
+    case 'testBack':if(DIAG&&DIAG.i>0){DIAG.i--;renderTest()}break;
+    case 'testRes':renderTestResult();break;
   }});
 
 /* ================= HUD & side ================= */
@@ -1725,6 +1929,7 @@ function renderHUD(){
     <div class="gauge"><span class="k"><span>${t(metricName())}</span><b>${Math.round(wk)}/${wt}</b></span>${bar(wk/wt*100)}</div>
     <div class="gauge"><span class="k"><span>${u('boss')}</span><b>${G.boss}</b></span>${bar(G.boss,G.boss<30?'var(--bad)':null)}</div>
     <div class="hud-btns"><button class="ibtn cap" data-ui="shop" title="${t(L('Vadovo kapitalas','Leadership capital'))}">◆ ${S.meta.cap}${mult()>1?` ×${fmtMult(mult())}`:''}</button><button class="ibtn" data-ui="speed" aria-pressed="${RT.speed>0}" title="${u('speed')}">×${[1,2,4][RT.speed]}</button></div>`;
+  const tb=document.getElementById('tut'),th=tutH();tb.hidden=!th;if(th&&tb.dataset.h!==th){tb.innerHTML=th;tb.dataset.h=th}
   document.getElementById('mteam').textContent=u('team');document.getElementById('mlog').textContent=u('log');
   const side=document.getElementById('side');
   document.getElementById('goalsM').innerHTML=goalsH();
@@ -1733,11 +1938,12 @@ function renderHUD(){
   document.getElementById('hint').textContent=waiting?`${waiting}: ${u('waiting')}`:u('hintIdle');
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ui]');if(!b||!RT)return;
+  if(b.dataset.ui==='tutskip'){tutEnd();return}
   if(b.dataset.ui==='speed'){RT.speed=(RT.speed+1)%SPEEDS.length;renderHUD()}
   if(b.dataset.ui==='shop'&&!SH&&!RT.paused)openShop();
   if(b.dataset.ui==='team')openTeam();if(b.dataset.ui==='log')openLog()});
 document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{S.lang=b.dataset.lang;save();setLang();
-  if(!over.hidden){const dv=overIn.querySelector('[data-dosv]');if(overIn.querySelector('[data-hub]'))renderHub();else if(overIn.querySelector('[data-cardsv]'))renderCards();else if(overIn.querySelector('[data-careerv]'))renderCareer();else if(dv)renderDos(dv.dataset.dosv);else if(overIn.querySelector('#hero'))showWelcome();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
+  if(!over.hidden){const dv=overIn.querySelector('[data-dosv]');if(overIn.querySelector('[data-testv]')&&DIAG)renderTest();else if(overIn.querySelector('[data-resv]'))renderTestResult();else if(overIn.querySelector('[data-hub]'))renderHub();else if(overIn.querySelector('[data-cardsv]'))renderCards();else if(overIn.querySelector('[data-careerv]'))renderCareer();else if(dv)renderDos(dv.dataset.dosv);else if(overIn.querySelector('#hero'))showWelcome();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
   if(SH)renderSheet();renderHUD()}));
 document.getElementById('brand').addEventListener('click',()=>{if(SH){scrim.hidden=true;SH=null;if(RT)RT.paused=false}autosave();if(RT)RT.paused=true;showWelcome()});
 function setLang(){document.documentElement.lang=S.lang;document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===S.lang))}
@@ -1868,6 +2074,7 @@ function draw(){
         const res=person(c,LOOK[id],{sit:seated,back:seated||c.dir==='up',type:seated,headphones:P&&P.trait==='withdrawn'});tops.push({c,res,id})}})});
     const p=RT.player;L2.push({y:p.y+0.62,f:()=>{const res=person(p,LOOK.player,{ring:true,back:p.dir==='up'});tops.push({c:p,res,id:'player'})}});
   }
+  const tg=RT&&RT.tut&&TUT[RT.tut.s].at();if(tg){const k=0.5+0.5*Math.sin(now/180),b=tg.big?2.2:1;ctx.strokeStyle=`rgba(210,176,110,${0.55+0.45*k})`;ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(tg.x*T+T/2,tg.y*T+T*0.8,T*(0.4+0.08*k)*b,T*(0.16+0.03*k)*b,0,0,7);ctx.stroke()}
   if(RT&&RT.suggest&&RT.chars[RT.suggest]){const sc=RT.chars[RT.suggest],k=0.5+0.5*Math.sin(now/200);ctx.strokeStyle=`rgba(210,176,110,${0.5+0.5*k})`;ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(sc.x*T+T/2,sc.y*T+T*0.8,T*(0.34+0.06*k),T*(0.13+0.02*k),0,0,7);ctx.stroke()}
   L2.sort((a,b)=>a.y-b.y).forEach(o=>o.f());
   // names, icons, bubbles
