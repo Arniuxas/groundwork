@@ -16,7 +16,7 @@
 <link rel="stylesheet" href="fonts/fonts.css">
 <style>
 /* Layout: the office canvas is the stage; a slim HUD sits above it, sheets slide up from the bottom, desktop adds a team sidebar */
-*,*::before,*::after{box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   color-scheme:dark;
   --bg:#0D1217; --surface:#151C23; --raised:#1B242D; --ink:#E7EBEE; --muted:#97A2AD; --line:#26303A; --tint:#1B242D;
@@ -214,7 +214,7 @@ canvas{display:block;cursor:pointer;touch-action:pan-y}
 .setrow[aria-checked="true"] .sw{background:var(--good)}
 .setrow[aria-checked="true"] .sw::after{transform:translateX(16px);background:#0D1217}
 .code{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font:500 11px/1.4 var(--f-mono);word-break:break-all;resize:none}
-#setv{z-index:40}
+#setv{z-index:70}
 #setIn{display:flex;flex-direction:column;gap:14px}
 #setIn>*{flex:none}
 a.btn{display:block;text-align:center;text-decoration:none}
@@ -249,6 +249,43 @@ html.big .over-in,html.big .sheet,html.big .side,html.big .hint,html.big .goals-
 .intro .lang button{padding:9px 14px;font-size:12px}
 .intro .opt{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
 .intro .opt:nth-child(2){animation-delay:.08s}
+
+/* Main menu: the same live office sits dimmed behind a game-style menu */
+.intro[data-mode="menu"] .intro-scene{position:absolute;inset:0;padding:calc(env(safe-area-inset-top,0px) + 8px) 0 0;overflow:hidden;display:flex;align-items:flex-start;justify-content:center}
+.intro[data-mode="menu"] .intro-scene::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(13,18,23,.15) 0%,rgba(13,18,23,.55) 35%,var(--bg) 62%)}
+.intro[data-mode="menu"] .intro-scene canvas{opacity:.55;filter:saturate(.75);border:0;border-radius:0}
+.intro[data-mode="menu"] .intro-text{position:relative;flex:1 1 auto;overflow:auto;justify-content:flex-end;max-width:460px;padding-bottom:max(22px,env(safe-area-inset-bottom,0px))}
+.intro[data-mode="menu"] .intro-top{position:relative;z-index:1}
+.menu-head{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;margin:auto 0 18px}
+.menu-head svg{width:84px;height:84px;filter:drop-shadow(0 10px 30px rgba(0,0,0,.5))}
+.menu-head h1{font-size:46px}
+.menu-head p{color:var(--muted);font-size:15px;max-width:300px;text-shadow:0 1px 8px var(--bg)}
+.menu{display:flex;flex-direction:column;gap:8px}
+.menu .btn small{display:block;font:500 11px var(--f-mono);letter-spacing:.06em;opacity:.7;margin-top:3px}
+.menu .setlist{background:rgba(21,28,35,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.menu .setrow{background:transparent}
+.menu .setrow>span:last-child{font:500 12px var(--f-mono)}
+.menu-foot{text-align:center;font:500 10.5px var(--f-mono);letter-spacing:.08em;color:var(--muted);margin-top:6px}
+.steps{display:flex;gap:6px;align-items:center;font:500 11px var(--f-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.steps i{flex:1;height:3px;border-radius:2px;background:var(--line)}
+.steps i.on{background:var(--mark)}
+.howsec{display:flex;flex-direction:column;gap:8px}
+.howsec h3{font-size:22px}
+.howsec ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;color:var(--ink)}
+.pyr{display:flex;flex-direction:column;gap:5px}
+.pyr div{border-radius:6px;padding:8px 12px;color:#0D1217;font-size:13.5px;line-height:1.35}
+.pyr b{font-weight:600}
+
+/* Back navigation: a top-left arrow on every sub-screen, plus swipe right (and Android back) */
+.backbtn{position:fixed;z-index:35;top:calc(env(safe-area-inset-top,0px) + 10px);left:max(12px,env(safe-area-inset-left,0px));width:40px;height:40px;border-radius:20px;border:1px solid var(--line);background:rgba(21,28,35,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:grid;place-items:center;cursor:pointer;color:var(--ink);padding:0}
+.backbtn svg{width:20px;height:20px}
+.backbtn.inline{position:static;flex:none;align-self:flex-start;margin:-4px 0 -6px -6px;background:transparent;border-color:transparent}
+.over.hasback .over-in{padding-top:64px}
+.intro-top .backbtn{position:static}
+.intro-top>span{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+.intro-top>span .steps{flex:1}
+.swiping{transition:none!important}
+.swipe-back{transition:transform .25s cubic-bezier(.2,.7,.2,1),opacity .25s}
 @media (min-width:960px){
   .stage{grid-template-columns:minmax(0,1fr) 300px}
   .side{display:flex;flex-direction:column;gap:12px;position:sticky;top:10px}
@@ -278,6 +315,7 @@ html.big .over-in,html.big .sheet,html.big .side,html.big .hint,html.big .goals-
 </div>
 <div class="scrim" id="scrim" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 <div class="over" id="over" hidden><div class="over-in" id="overIn"></div></div>
+<button class="backbtn" id="back" hidden aria-label="Atgal / Back"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 <div class="scrim" id="setv" hidden><div class="sheet" id="setIn" role="dialog" aria-modal="true" aria-label="Settings"></div></div>
 
 <div class="intro" id="intro" hidden><div class="intro-top"><span></span><button class="intro-skip" id="introSkip"></button></div><div class="intro-scene" id="introScene"><canvas id="introCv"></canvas><div class="intro-mark" id="introMark"></div></div><div class="intro-text" id="introText"></div></div>
@@ -888,20 +926,20 @@ function diagScore(A){const raw={};LAYERS.forEach(l=>{const it=DQ.filter(q=>q.la
   const style=Object.keys(tally).sort((a,b)=>tally[b]-tally[a]||(a==='coach'?-1:1))[0];return {raw,style}}
 let DIAG=null;
 function renderTest(){const i=DIAG.i,q=DQ[i],like=!!q.layer;
-  overIn.innerHTML=`<span data-testv hidden></span><p class="eyebrow">${t(L('Vadovavimo testas','Leadership test'))} · ${i+1}/${DQ.length}</p>${bar(i/DQ.length*100,'var(--mark)')}
+  overIn.innerHTML=`<span data-testv hidden></span>${NG?stepsH(1):''}<p class="eyebrow">${t(L('Vadovavimo testas','Leadership test'))} · ${i+1}/${DQ.length}</p>${bar(i/DQ.length*100,'var(--mark)')}
     ${like?`<p class="small">${t(L('Kiek tai tinka tavo dabartinei komandai?','How true is this of your current team?'))}</p>`:''}<h2>${t(q.q)}</h2>
     <div class="opts">${(like?LIKERT:q.o).map((o,k)=>`<button class="opt" data-ta="${like?k+1:k}"><span>${t(o)}</span></button>`).join('')}</div>
-    ${i?`<button class="link" data-ov="testBack">${t(L('Atgal','Back'))}</button>`:`<button class="link" data-ov="welcome">${t(L('Ne dabar','Not now'))}</button>`}`;
+    ${i?`<button class="link" data-ov="testBack">${t(L('Atgal','Back'))}</button>`:`<button class="link" data-ov="${NG?'ngBack':'welcome'}">${t(NG?L('Atgal','Back'):L('Ne dabar','Not now'))}</button>`}`;
   over.hidden=false;over.scrollTop=0}
 function weakest(raw){return LAYERS.reduce((a,b)=>raw[b]<raw[a]?b:a)}
 function renderTestResult(){const all=S.meta.diag,cur=all[all.length-1],first=all.length>1?all[0]:null,wk=weakest(cur.raw),St=STYLES[cur.style];
-  overIn.innerHTML=`<span data-resv hidden></span><p class="eyebrow">${t(L('Tavo vadovavimo profilis','Your leadership profile'))}${first?` · ${t(L('palyginimas su','compared with'))} ${first.d}`:''}</p>
+  overIn.innerHTML=`<span data-resv hidden></span>${NG?stepsH(1):''}<p class="eyebrow">${t(L('Tavo vadovavimo profilis','Your leadership profile'))}${first?` · ${t(L('palyginimas su','compared with'))} ${first.d}`:''}</p>
     <h1>${t(L('Silpniausia vieta','Weakest spot'))}: ${t(LAYER[wk]).toLowerCase()}</h1>
     <div class="radar-wrap">${radarH(cur.raw,first&&first.raw)}</div>${first?`<p class="small">${t(L('Punktyras rodo tavo pirmąjį testą.','The dashed line shows your first test.'))}</p>`:''}
     <div class="insight"><span class="eyebrow">${t(L('Tavo stilius','Your style'))}: ${t(St.n)}</span><p>${t(St.d)}</p></div>
     <p>${t(L(`Lencioni modelyje kiekvienas lygmuo remiasi ankstesniu. Žaidime ${t(LAYER[wk]).toLowerCase()} mokomasi ${LAYERS.indexOf(wk)+1} savaitę. Ten ir pradėk ieškoti atsakymų.`,`In Lencioni’s model each level rests on the one below. In the game, ${t(LAYER[wk]).toLowerCase()} is taught in week ${LAYERS.indexOf(wk)+1}. Start looking for answers there.`))}</p>
     <p class="small">${t(L('Pakartok testą po kelių savaičių ir pamatysi, kaip keičiasi tavo tikra komanda.','Retake the test in a few weeks to see how your real team is changing.'))}</p>
-    <button class="btn" data-ov="welcome">${t(L('Į žaidimą','To the game'))}</button>`;
+    ${NG?`<button class="btn" data-ov="ngTeam">${t(L('Toliau: pasirink komandą','Next: choose your team'))}</button>`:`<button class="btn" data-ov="welcome">${t(L('Grįžti į meniu','Back to menu'))}</button><button class="link" data-ov="test">${t(L('Pakartoti testą','Retake the test'))}</button>`}`;
   over.hidden=false;over.scrollTop=0}
 function diagH(){const all=S.meta.diag||[];if(!all.length)return `<button class="opt" data-ov="test"><span>${t(L('Atlikti vadovavimo testą','Take the leadership test'))}<br><span class="small">${t(L('16 klausimų, apie 3 minutes','16 questions, about 3 minutes'))}</span></span></button>`;
   const cur=all[all.length-1];return `<div class="radar-wrap">${radarH(cur.raw,all.length>1?all[0].raw:null)}</div><p class="small">${t(L('Stilius','Style'))}: <b>${t(STYLES[cur.style].n)}</b> · ${t(L('testas','test'))} ${cur.d}${all.length>1?` · ${t(L('punktyras: pirmasis testas','dashed: first test'))}`:''}</p>
@@ -1256,10 +1294,11 @@ const leadLine=()=>(G&&G.tb?tbLine():'')+(G&&G.lead?`<p class="small">${t(L('Kom
 function renderCareer(ty){if(ty)renderCareer.ty=ty;ty=renderCareer.ty;
   let last=0;while(starsAt(ty,last)>=2)last++;const n=Math.max(WEEKS.length,last+1);
   overIn.innerHTML=`<span data-careerv hidden></span><p class="eyebrow">${u(ty)} · ${esc(rank())}</p><h1>${t(L('Tavo karjera','Your career'))}</h1>
+    <div class="lang" role="group"><button data-ov="type" data-type="sales" aria-pressed="${ty==='sales'}">${u('sales').toUpperCase()}</button><button data-ov="type" data-type="project" aria-pressed="${ty==='project'}">${u('project').toUpperCase()}</button></div>
     <p class="lead">${t(L('Kiekviena savaitė moko vieno komandos lygmens. Kad atsirakintų kita, savaitę reikia baigti bent dviem žvaigždutėmis. Po penktos savaitės iššūkiai tęsiasi ir sunkėja.','Each week teaches one level of teamwork. To unlock the next, finish the week with at least two stars. After week five the challenges continue and get harder.'))}</p>
     <div class="opts">${Array.from({length:n},(_,w)=>{const c=weekCfg(w),open=unlocked(ty,w),sa=starsAt(ty,w);
       return `<button class="opt typebtn" data-ov="week" data-w="${w}"${open?'':' disabled style="opacity:.5;cursor:default"'}><b>${t(L('Savaitė','Week'))} ${w+1} · ${t(c.n)} ${starsH(sa)}</b><span>${open&&needPro(w)?t(L('Pilnoje versijoje','In the full version')):open?(w<WEEKS.length?`${(c.team.length+(c.hire?1:0))} ${t(L('žmonės','people'))}${c.hire?` · ${t(L('įdarbinimas','hiring'))}`:''}`:t(L('Nesibaigiantis iššūkis','Endless challenge'))):t(L('Užrakinta: reikia ★★ ankstesnėje savaitėje','Locked: needs ★★ on the previous week'))}</span></button>`}).join('')}</div>
-    <button class="btn ghost" data-ov="welcome">${t(L('Grįžti','Back'))}</button>`;
+    <button class="btn ghost" data-ov="welcome">${t(L('Grįžti į meniu','Back to menu'))}</button>`;
   over.hidden=false;over.scrollTop=0;
 }
 
@@ -1920,23 +1959,10 @@ function showEnd(){
     ${hubBtn('end')}<button class="btn ghost" data-ov="replay">${u('replay')}</button><button class="btn ghost" data-ov="career">${t(L('Karjeros žemėlapis','Career map'))}</button><p class="small">${u('replayNote')}</p><button class="link" data-ov="welcome">${u('newTeam')}</button>`;
   over.hidden=false;over.scrollTop=0;
 }
-function showWelcome(){
-  let check='';
-  if(S.commitment&&!S.checkin&&S.commitment.date!==today())check=`<div class="meter"><p class="eyebrow">${u('checkEy')}</p><p><b>${t(S.commitment.task)}</b></p><div class="opts"><button class="opt" data-ck="yes">${u('ckYes')}</button><button class="opt" data-ck="part">${u('ckPart')}</button><button class="opt" data-ck="no">${u('ckNo')}</button></div></div>`;
-  else if(S.checkin&&S.commitment)check=`<div class="meter"><p class="eyebrow">${u('checkEy')}</p><p>${u({yes:'ckYesR',part:'ckPartR',no:'ckNoR'}[S.checkin])}</p></div>`;
-  const resume=S.G&&!S.G.done;
-  const cta=!S.meta.diag.length&&!resume?`<div class="task"><p class="eyebrow">${t(L('Pradėk nuo savęs','Start with yourself'))}</p><q>${t(L('3 minučių testas parodys, kur tavo tikra komanda stipriausia ir kur silpniausia.','A 3-minute test shows where your real team is strongest and weakest.'))}</q><button class="btn" data-ov="test">${t(L('Atlikti testą','Take the test'))}</button></div>`:'';
-  overIn.innerHTML=`${check}<canvas class="hero-canvas" id="hero"></canvas><h1>${u('tagline')}</h1><p class="lead">${u('intro')}</p>${cta}
-    ${resume?`<button class="btn" data-ov="resume">${u('cont')} · ${t(L('Savaitė','Week'))} ${(S.G.week||0)+1} · ${t(UI.days[S.G.day])} ${hhmm(S.RT?S.RT.time:540)}</button>`:''}
-    <p class="eyebrow">${u('choose')}</p>
-    <div class="opts"><button class="opt typebtn" data-ov="type" data-type="sales"><b>${u('sales')}${starsType('sales')?` <span class="cap" style="font:500 14px var(--f-mono)">★ ${starsType('sales')}</span>`:''}</b><span>${u('salesD')}</span></button>
-    <button class="opt typebtn" data-ov="type" data-type="project"><b>${u('project')}${starsType('project')?` <span class="cap" style="font:500 14px var(--f-mono)">★ ${starsType('project')}</span>`:''}</b><span>${u('projectD')}</span></button></div>
-    ${S.meta.cap||Object.keys(S.meta.up).length||Object.keys(S.meta.dos).length||cardsN()?hubBtn('welcome'):''}${isPro()?'':`<button class="link" data-ov="pay">${t(L(`Nemokamai: pirmos ${FREE_WEEKS} savaitės · Apie pilną versiją`,`Free: the first ${FREE_WEEKS} weeks · About the full version`))}</button>`}<p class="small">${u('basis')}</p>`;
-  over.hidden=false;over.scrollTop=0;drawHero();
-}
+function showWelcome(){NG=null;showMenu()}
 function showHow(){
   const cfg=weekCfg(G.week||0);
-  overIn.innerHTML=`<p class="eyebrow">${u(G.type)} · ${t(L('Savaitė','Week'))} ${(G.week||0)+1}</p><h1>${t(cfg.n)}</h1><p class="lead">${t(cfg.intro)}</p><p class="eyebrow">${u('howH')}</p><ol class="list">${UI.how.map(h=>`<li>${t(h)}</li>`).join('')}</ol>
+  overIn.innerHTML=`<span data-wkv hidden></span><p class="eyebrow">${u(G.type)} · ${t(L('Savaitė','Week'))} ${(G.week||0)+1}</p><h1>${t(cfg.n)}</h1><p class="lead">${t(cfg.intro)}</p><p class="eyebrow">${u('howH')}</p><ol class="list">${UI.how.map(h=>`<li>${t(h)}</li>`).join('')}</ol>
   <p class="eyebrow">${t(L('Savaitės žvaigždutės','Week stars'))} · ${t(L('tavo rekordas','your best'))} ${starsH(starsAt(G.type,G.week||0))}</p>
   <ul class="goals">${STAR_N().map(n=>`<li><span class="box">★</span><span>${t(n)}</span></li>`).join('')}</ul><button class="btn" data-ov="go">${u('go')}</button>`;
   over.hidden=false;
@@ -1969,6 +1995,11 @@ over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)retur
     case 'test':DIAG={i:0,A:{}};renderTest();break;
     case 'testBack':if(DIAG&&DIAG.i>0){DIAG.i--;renderTest()}break;
     case 'testRes':renderTestResult();break;
+    case 'ngTest':DIAG={i:0,A:{}};renderTest();break;
+    case 'ngTeam':ngTeam();break;
+    case 'ngBack':ngStart();break;
+    case 'ngGo':ngStart();break;
+    case 'ngType':ngType(d.type);break;
   }});
 
 /* ================= HUD & side ================= */
@@ -1993,7 +2024,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-ui]');if(!
   if(b.dataset.ui==='shop'&&!SH&&!RT.paused)openShop();
   if(b.dataset.ui==='team')openTeam();if(b.dataset.ui==='log')openLog()});
 document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{S.lang=b.dataset.lang;save();setLang();
-  if(!over.hidden){const dv=overIn.querySelector('[data-dosv]');if(overIn.querySelector('[data-testv]')&&DIAG)renderTest();else if(overIn.querySelector('[data-resv]'))renderTestResult();else if(overIn.querySelector('[data-hub]'))renderHub();else if(overIn.querySelector('[data-cardsv]'))renderCards();else if(overIn.querySelector('[data-careerv]'))renderCareer();else if(dv)renderDos(dv.dataset.dosv);else if(overIn.querySelector('#hero'))showWelcome();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
+  if(!over.hidden){const dv=overIn.querySelector('[data-dosv]');if(overIn.querySelector('[data-testv]')&&DIAG)renderTest();else if(overIn.querySelector('[data-resv]'))renderTestResult();else if(overIn.querySelector('[data-hub]'))renderHub();else if(overIn.querySelector('[data-cardsv]'))renderCards();else if(overIn.querySelector('[data-careerv]'))renderCareer();else if(dv)renderDos(dv.dataset.dosv);else if(overIn.querySelector('[data-howv]'))renderHowTo();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
   if(SH)renderSheet();renderHUD()}));
 document.getElementById('brand').addEventListener('click',()=>{if(SH){scrim.hidden=true;SH=null;if(RT)RT.paused=false}autosave();if(RT)RT.paused=true;showWelcome()});
 function setLang(){document.documentElement.lang=S.lang;document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===S.lang))}
@@ -2328,7 +2359,7 @@ function renderSettings(){
     <button class="setrow" data-set="reset"><span style="color:var(--bad)">${t(L('Ištrinti progresą','Delete progress'))}</span><span>›</span></button></div>
     <p class="small">Groundwork ${APP_VER} · ${t(L('Žaidimas remiasi P. Lencioni penkių komandos disfunkcijų modeliu. Jis nepakeičia profesionalaus koučingo.','Based on P. Lencioni’s five dysfunctions of a team model. It does not replace professional coaching.'))}</p>
     <button class="btn" data-set="close">${t(L('Uždaryti','Close'))}</button>`;
-  setIn.innerHTML=body;setIn.scrollTop=0;
+  setIn.innerHTML=`<button class="backbtn inline" data-set="${m?'back':'close'}" aria-label="${t(L('Atgal','Back'))}">${BACK_SVG}</button>`+body;setIn.scrollTop=0;
 }
 setv.addEventListener('click',e=>{
   if(e.target===setv){closeSettings();return}
@@ -2337,7 +2368,7 @@ setv.addEventListener('click',e=>{
   if(['snd','mus','vib','big'].includes(k)){SET()[k]=SET()[k]?0:1;save();applyBig();musicSync();renderSettings();if(k==='vib')buzz('tap');return}
   switch(k){
     case 'close':closeSettings();break;
-    case 'intro':closeSettings();if(RT){autosave();RT.paused=true}showIntro(true);break;
+    case 'intro':closeSettings();if(RT){autosave();RT.paused=true}showStory(true);break;
     case 'back':renderSettings.mode='';renderSettings.err=0;renderSettings();break;
     case 'export':case 'import':case 'reset':renderSettings.mode=k;renderSettings.err=0;renderSettings();break;
     case 'copy':{const ta=setIn.querySelector('textarea');ta.select();(navigator.clipboard?navigator.clipboard.writeText(ta.value):Promise.reject()).catch(()=>document.execCommand('copy'));b.textContent=t(L('Nukopijuota','Copied'));break}
@@ -2357,78 +2388,216 @@ window.addEventListener('pagehide',autosave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)autosave()});
 
 
-/* ================= first-launch intro ================= */
-// Story slides play over a live office scene; each slide scripts walks and speech by its own clock.
+/* ================= main menu, new game and story ================= */
+// The front end lives in #intro: a game-style menu over a live office, and the story that opens a new career.
+const PYR='<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#1C3550"/>'+[[35,22,30,'#5C7DA6'],[28,34,44,'#7896BB'],[21,46,58,'#97B0CF'],[14,58,72,'#BFD0E3'],[7,70,86,'#FFFFFF']].map(([x,y,w,c],k)=>`<rect class="bar" style="animation-delay:${.25+.12*(4-k)}s" x="${x}" y="${y}" width="${w}" height="9" rx="1.5" fill="${c}"/>`).join('')+'</svg>';
 const INTRO=[
-  {ey:null},
   {ey:L('Pirmadienis · 8:55','Monday · 8:55'),h:L('Šiandien tavo pirma diena vadovo kėdėje.','Today is your first day in the manager’s chair.'),
    p:L('Dar vakar dirbai šalia jų. Nuo šiandien jie žiūri į tave ir laukia, ką darysi.','Yesterday you sat next to them. From today they look to you and wait to see what you do.'),
    go(r){r.player={x:7,y:14,path:[],dir:'up'};walkTo(r.player,7,9)},
    at:[[2.2,'tomas',L('Tai čia naujas vadovas?','So that’s the new manager?')],[4.4,'egle',L('Labas!','Hi!')]]},
   {ey:L('Tavo komanda','Your team'),h:L('Trys žmonės. Trys skirtingi pasauliai.','Three people. Three different worlds.'),
    p:L('Kiekvienas turi savo nuotaiką, ribas ir slaptą motyvą. Kas juos iš tikrųjų veda, teks atrasti pačiam.','Each has their own mood, limits and a hidden motive. What really drives them is for you to find out.'),
-   go(r){r.player={x:7,y:9,path:[],dir:'down'};demoG().people.egle.stress=92},
+   go(r){r.player={x:7,y:9,path:[],dir:'down'};IN.G.people.egle.stress=92},
    at:[[0.6,'tomas',L('Planą įvykdysiu. Tik netrukdyk.','I’ll hit the target. Just don’t micromanage.')],[3.0,'lina',L('Ar kas nors čia apskritai klauso?','Does anyone here actually listen?')],[5.4,'egle',L('O jeigu vėl suklysiu…','What if I mess up again…')]]},
   {ey:L('Tavo darbas','Your job'),h:L('Ne daryti viską pačiam, o kad komanda veiktų.','Not to do it all yourself, but to make the team work.'),
    p:L('Kalbėkis, klausyk, spręsk ginčus ir laikykis žodžio. Kiekvienas sprendimas turi pasekmes, kartais po kelių dienų.','Talk, listen, settle arguments and keep your word. Every call has consequences, sometimes days later.'),
-   go(r){r.player={x:7,y:9,path:[],dir:'up'};demoG().people.egle.stress=40;walkTo(r.player,...SPOT.start)},
-   at:[[1.4,'lina',L('Gal turi minutę?','Got a minute?')],[4.2,'tomas',L('Klientas skambina!','Client on the phone!')]]},
-  {choose:1}
+   go(r){r.player={x:7,y:9,path:[],dir:'up'};IN.G.people.egle.stress=40;walkTo(r.player,...SPOT.start)},
+   at:[[1.4,'lina',L('Gal turi minutę?','Got a minute?')],[4.2,'tomas',L('Klientas skambina!','Client on the phone!')]]}
 ];
-let IN=null;
-const demoG=()=>IN.G;
-function shouldIntro(){return !S.meta.introDone&&!S.G&&!S.meta.cap&&!Object.keys(S.meta.stars).length}
-function showIntro(replay){
-  const el=document.getElementById('intro');
+// idle chatter for the menu background
+const CHAT=[['tomas',L('Kas šiandien su kava?','Who’s on coffee today?')],['lina',L('Pažiūrėk į šituos skaičius.','Look at these numbers.')],['egle',L('Ar čia gerai padariau?','Did I do this right?')],['tomas',L('Dar vienas klientas!','One more client!')],['lina',L('Kada susirinkimas?','When’s the meeting?')],['egle',L('Ačiū už pagalbą!','Thanks for the help!')]];
+let IN=null,NG=null;
+function inScene(){
+  if(IN)return IN;
   const r=demoRT();delete r.chars.darius;delete r.chars.marius;r.chars.lina.say=null;r.chars.lina.x=6;r.chars.lina.y=8;r.chars.lina.state='work';
-  IN={s:0,t:0,rt:r,G:{type:'sales',people:Object.fromEntries(IDS.map(id=>[id,{stress:30,trust:50,hired:id!=='darius'&&id!=='marius'}])),culture:{}},fired:{},last:performance.now(),replay:!!replay};
-  el.hidden=false;el.classList.remove('out');renderIntro();requestAnimationFrame(introLoop);
+  IN={mode:'menu',s:0,t:0,rt:r,G:{type:'sales',people:Object.fromEntries(IDS.map(id=>[id,{stress:30,trust:50,hired:id!=='darius'&&id!=='marius'}])),culture:{}},fired:{},last:performance.now(),chat:2};
+  requestAnimationFrame(introLoop);return IN;
+}
+function inShow(mode){const el=document.getElementById('intro');inScene();IN.mode=mode;el.dataset.mode=mode;el.hidden=false;el.classList.remove('out');over.hidden=true}
+function inHide(){const el=document.getElementById('intro');el.hidden=true}
+function saveLabel(){const g=S.G;return `${t(L('Savaitė','Week'))} ${(g.week||0)+1} · ${t(UI.days[g.day])} ${hhmm(S.RT?S.RT.time:540)} · ${u(g.type)}`}
+function showMenu(){
+  if(RT&&!RT.ended)RT.paused=true;
+  inShow('menu');IN.rt.player={x:6,y:9,path:[],dir:'down'};IN.G.people.egle.stress=40;
+  const resume=S.G&&!S.G.done,anyStars=starsType('sales')+starsType('project')>0,diag=S.meta.diag.length;
+  let check='';
+  if(S.commitment&&!S.checkin&&S.commitment.date!==today())check=`<div class="meter"><p class="eyebrow">${u('checkEy')}</p><p><b>${t(S.commitment.task)}</b></p><div class="opts"><button class="opt" data-ck="yes">${u('ckYes')}</button><button class="opt" data-ck="part">${u('ckPart')}</button><button class="opt" data-ck="no">${u('ckNo')}</button></div></div>`;
+  const row=(k,lab,right)=>`<button class="setrow" data-m="${k}"><span>${t(lab)}</span><span>${right||'›'}</span></button>`;
+  document.getElementById('introSkip').hidden=true;
+  document.getElementById('introMark').innerHTML='';
+  document.querySelector('.intro-top>span').innerHTML=`<div class="lang" role="group" aria-label="Kalba / Language"><button data-il="lt" aria-pressed="${S.lang==='lt'}">LT</button><button data-il="en" aria-pressed="${S.lang==='en'}">EN</button></div>`;
+  document.getElementById('introText').innerHTML=`<div class="menu-head">${PYR}<h1>Groundwork</h1><p>${t(L('Vadovavimo žaidimas, kuriame komanda reaguoja į kiekvieną tavo sprendimą.','A leadership game where your team reacts to every call you make.'))}</p></div>
+    ${check}<nav class="menu">
+    ${resume?`<button class="btn" data-m="resume">${u('cont')}<small>${saveLabel()}</small></button>`:''}
+    <button class="btn${resume?' ghost':''}" data-m="new">${t(L('Naujas žaidimas','New game'))}</button>
+    <div class="setlist">
+      ${anyStars?row('career',L('Karjeros žemėlapis','Career map'),`★ ${starsType('sales')+starsType('project')}`):''}
+      ${row('hub',L('Biuras ir parduotuvė','Office and shop'),`◆ ${S.meta.cap}`)}
+      ${row('test',L('Vadovavimo testas','Leadership test'),diag?t(STYLES[S.meta.diag[diag-1].style].n):t(L('3 min','3 min')))}
+      ${row('how',L('Kaip žaisti','How to play'))}
+      ${row('settings',L('Nustatymai','Settings'))}
+      ${isPro()?'':row('pay',L('Pilna versija','Full version'),`${FREE_WEEKS}/∞`)}
+    </div></nav><p class="menu-foot">v${APP_VER} · ${t(L('Paremta P. Lencioni modeliu','Based on P. Lencioni’s model'))}</p>`;
+  sizeIntro();
+}
+// new game, step 1: leadership profile
+function ngStart(){
+  NG={step:1};
+  const d=S.meta.diag,cur=d.length?d[d.length-1]:null;
+  overIn.innerHTML=`<span data-ngv="1" hidden></span>${stepsH(1)}<h1>${t(L('Tavo vadovo profilis','Your leader profile'))}</h1>
+    ${cur?`<p class="lead">${t(L('Jau turi profilį. Gali jį naudoti arba atlikti testą iš naujo ir pamatyti, kas pasikeitė.','You already have a profile. Use it, or retake the test to see what has changed.'))}</p>
+      <div class="radar-wrap">${radarH(cur.raw,null)}</div><div class="insight"><span class="eyebrow">${t(L('Tavo stilius','Your style'))}: ${t(STYLES[cur.style].n)}</span><p>${t(STYLES[cur.style].d)}</p></div>
+      <button class="btn" data-ov="ngTeam">${t(L('Naudoti šį profilį','Use this profile'))}</button><button class="btn ghost" data-ov="ngTest">${t(L('Atlikti testą iš naujo','Retake the test'))}</button>`
+    :`<p class="lead">${t(L('Prieš pradedant – 16 klausimų apie tave ir tavo tikrą komandą. Testas parodys tavo vadovavimo stilių ir silpniausią komandos vietą, o žaidimas padės ją sustiprinti.','Before you start: 16 questions about you and your real team. The test shows your leadership style and your team’s weakest spot, and the game helps you work on it.'))}</p>
+      <ul class="list"><li>${t(L('Apie 3 minutes','About 3 minutes'))}</li><li>${t(L('Atsakyk apie savo dabartinę komandą, ne apie idealą','Answer about your current team, not the ideal'))}</li><li>${t(L('Rezultatą galėsi palyginti po kelių savaičių','You can compare results in a few weeks'))}</li></ul>
+      <button class="btn" data-ov="ngTest">${t(L('Pradėti testą','Start the test'))}</button><button class="btn ghost" data-ov="ngTeam">${t(L('Praleisti, atliksiu vėliau','Skip, I’ll do it later'))}</button>`}
+    <button class="link" data-ov="welcome">${t(L('Atšaukti','Cancel'))}</button>`;
+  inHide();over.hidden=false;over.scrollTop=0;
+}
+function stepsH(n){return `<div class="steps"><span>${t(L('Naujas žaidimas','New game'))} · ${n}/3</span>${[1,2,3].map(k=>`<i class="${k<=n?'on':''}"></i>`).join('')}</div>`}
+// step 2: team
+function ngTeam(){
+  NG=NG||{};NG.step=2;
+  const card=(ty,d)=>`<button class="opt typebtn" data-ov="ngType" data-type="${ty}"><b>${u(ty)}${starsType(ty)?` <span class="cap" style="font:500 14px var(--f-mono)">★ ${starsType(ty)}</span>`:''}</b><span>${t(d)}</span></button>`;
+  overIn.innerHTML=`<span data-ngv="2" hidden></span>${stepsH(2)}<h1>${t(L('Kokiai komandai vadovausi?','Which team will you lead?'))}</h1>
+    <p class="lead">${t(L('Žmonės tie patys, bet darbas ir spaudimas skiriasi. Vėliau galėsi išbandyti ir kitą.','Same people, different work and pressure. You can try the other one later.'))}</p>
+    <div class="opts">${card('sales',L('Dienos planas, skambučiai, premijų dalybos. Greitas tempas.','Daily targets, calls, bonus splits. Fast pace.'))}${card('project',L('Terminai, kokybė, kliento lūkesčiai. Ilgesnis kelias.','Deadlines, quality, client expectations. A longer road.'))}</div>
+    <button class="link" data-ov="ngBack">${t(L('Atgal','Back'))}</button>`;
+  inHide();over.hidden=false;over.scrollTop=0;
+}
+// step 3: story, then day one (or the career map for players who already passed week one)
+function ngType(ty){
+  NG={step:3,type:ty};
+  if(starsAt(ty,0)>=2){renderCareer(ty);return}
+  showStory(false);
+}
+function showStory(replay){
+  inShow('story');IN.replay=!!replay;IN.s=0;IN.rt.chars.egle.stress=0;
+  document.querySelector('.intro-top>span').innerHTML=`<button class="backbtn" data-in="back" aria-label="${t(L('Atgal','Back'))}">${BACK_SVG}</button>${replay?'':stepsH(3)}`;
+  renderStory();
+}
+function renderStory(){
+  const tx=document.getElementById('introText'),sl=INTRO[IN.s],last=IN.s===INTRO.length-1;
+  IN.t=0;IN.fired={};Object.values(IN.rt.chars).forEach(c=>{c.say=null;c.sayT=0});
+  const sk=document.getElementById('introSkip');sk.hidden=last;sk.textContent=t(L('Praleisti','Skip'));
+  document.getElementById('introMark').innerHTML='';
+  sl.go(IN.rt);
+  const dots=`<span class="dots">${INTRO.map((_,i)=>`<i class="${i===IN.s?'on':''}"></i>`).join('')}</span>`;
+  const btn=last?(IN.replay?t(L('Grįžti','Back')):t(L('Pradėti pirmą dieną','Start day one'))):t(L('Toliau','Next'));
+  tx.innerHTML=`<div class="in"><p class="eyebrow">${t(sl.ey)}</p><h2>${t(sl.h)}</h2><p class="lead">${t(sl.p)}</p></div><div class="intro-foot">${dots}<button class="btn" data-in="${last?'done':'next'}">${btn}</button></div>`;
+  sizeIntro();
+}
+function storyDone(){
+  if(IN.replay||!NG||!NG.type){showMenu();return}
+  const ty=NG.type;NG=null;S.meta.introDone=1;
+  const el=document.getElementById('intro');el.classList.add('out');
+  newGame(ty,0);RT=null;startDay();renderAll();
+  setTimeout(()=>{el.hidden=true;el.classList.remove('out')},450);
+}
+function renderHowTo(){
+  const sec=(h,items)=>`<section class="howsec"><h3>${t(h)}</h3><ul>${items.map(x=>`<li>${t(x)}</li>`).join('')}</ul></section>`;
+  const PC=['#A3C0E2','#84A6CF','#688CB6','#52739A','#415C7C'];
+  const PD={trust:L('žmonės drįsta pripažinti klaidas ir prašyti pagalbos','people dare to admit mistakes and ask for help'),conflict:L('ginčijamasi dėl idėjų, ne dėl žmonių','people argue about ideas, not each other'),commitment:L('aiškūs sprendimai, kuriuos palaiko visi','clear decisions everyone backs'),accountability:L('kolegos laiko vieni kitus atsakingais','peers hold each other to account'),results:L('komandos tikslas svarbesnis už asmeninį','the team goal beats personal goals')};
+  overIn.innerHTML=`<span data-howv hidden></span><p class="eyebrow">Groundwork</p><h1>${t(L('Kaip žaisti','How to play'))}</h1>
+    <p class="lead">${t(L('Tu esi komandos vadovas. Savaitė trunka penkias darbo dienas, diena – apie 10 minučių. Tavo tikslas: įvykdyti planą ir nepalaužti žmonių.','You lead a team. A week is five working days, each about 10 minutes. Your goal: hit the target without breaking your people.'))}</p>
+    ${sec(L('Valdymas','Controls'),UI.how)}
+    ${sec(L('Žmonės','People'),[L('Kiekvienas turi stresą, pasitikėjimą tavimi ir slaptą motyvą: pripažinimą, savarankiškumą, augimą, stabilumą arba pinigus.','Everyone has stress, trust in you and a hidden motive: recognition, autonomy, growth, stability or money.'),L('Pokalbyje „Paklausti ir klausytis“ motyvas atsiskleidžia, jei pasitikėjimas pakankamas. Atspėtas motyvas veikia stipriausiai.','“Ask and listen” reveals the motive once trust is high enough. Using the right motive works best.'),L('Kai stresas pasiekia 100, žmogus lūžta. Lūžęs dar kartą – išeina. Trys išėjimai baigia žaidimą.','At 100 stress a person breaks. Breaking again means they quit. Three quits end the game.')])}
+    ${sec(L('Savaitė ir žvaigždutės','Weeks and stars'),[L('Kiekviena diena turi tris tikslus. Kiekviena savaitė – iki trijų žvaigždučių.','Each day has three goals. Each week gives up to three stars.'),L('Su bent ★★ atsirakina kita savaitė ir naujas iššūkis: samdymas, komandos vadovas, antra komanda.','With at least ★★ the next week unlocks a new challenge: hiring, a team lead, a second team.'),L('Žvaigždutėmis perki vadovavimo įgūdžius, kurie lieka visam laikui.','Stars buy leadership skills that stay for good.')])}
+    ${sec(L('Kapitalas ◆ ir biuras','Capital ◆ and the office'),[L('◆ uždirbi už gerus sprendimus ir laiku išspręstus įvykius. Serijos didina daugiklį.','You earn ◆ for good calls and events handled in time. Streaks raise the multiplier.'),L('Biuro parduotuvėje ◆ keiti į patobulinimus: kavos aparatą, augalus, lentą ir kitus.','In the office shop ◆ buys upgrades: an espresso machine, plants, a whiteboard and more.'),L('Žmonių bylos pildosi, kai juos geriau pažįsti.','People files fill in as you get to know them.')])}
+    <section class="howsec"><h3>${t(L('Penki komandos lygmenys','Five levels of a team'))}</h3><p class="small">${t(L('Žaidimas remiasi Patricko Lencioni modeliu: kiekvienas lygmuo laikosi ant žemesniojo. Kiekviena karjeros savaitė moko vieno lygmens.','The game follows Patrick Lencioni’s model: each level rests on the one below. Each career week teaches one level.'))}</p>
+    <div class="pyr">${LAYERS.slice().reverse().map((k,i)=>`<div style="background:${PC[4-i]};margin:0 ${(4-i)*5}%;${4-i>=3?'color:#E7EBEE':''}"><b>${t(LAYER[k])}</b> – ${t(PD[k])}</div>`).join('')}</div></section>
+    <button class="btn" data-ov="welcome">${t(L('Grįžti į meniu','Back to menu'))}</button>`;
+  inHide();over.hidden=false;over.scrollTop=0;
 }
 function sizeIntro(){
   const sc=document.getElementById('introScene'),c=document.getElementById('introCv');if(!sc||!IN)return;
-  const w=sc.clientWidth-36,h=sc.clientHeight-16;IN.T=Math.max(12,Math.floor(Math.min(w/COLS,h/(ROWS+0.6))));
+  const menu=IN.mode==='menu',w=menu?sc.clientWidth:sc.clientWidth-36,h=menu?sc.clientHeight:sc.clientHeight-16;
+  IN.T=Math.max(12,Math.floor(menu?Math.max(w/COLS,Math.min(44,h*0.55/(ROWS+0.6))):Math.min(w/COLS,h/(ROWS+0.6))));
   c.width=IN.T*COLS*DPR;c.height=Math.round(IN.T*(ROWS+0.6))*DPR;c.style.width=IN.T*COLS+'px';c.style.height=Math.round(IN.T*(ROWS+0.6))+'px';
 }
-function renderIntro(){
-  const el=document.getElementById('intro'),tx=document.getElementById('introText'),sl=INTRO[IN.s];
-  el.dataset.s=IN.s;IN.t=0;IN.fired={};
-  const sk=document.getElementById('introSkip');sk.hidden=IN.s===0||!!sl.choose;sk.textContent=t(L('Praleisti','Skip'));
-  document.getElementById('introMark').innerHTML=IN.s===0?'<svg viewBox="0 0 100 100" aria-hidden="true"><rect class="tile" width="100" height="100" rx="22" fill="#1C3550"/><rect class="bar" style="animation-delay:0.91s" x="35" y="22" width="30" height="9" rx="1.5" fill="#5C7DA6"/><rect class="bar" style="animation-delay:0.77s" x="28" y="34" width="44" height="9" rx="1.5" fill="#7896BB"/><rect class="bar" style="animation-delay:0.63s" x="21" y="46" width="58" height="9" rx="1.5" fill="#97B0CF"/><rect class="bar" style="animation-delay:0.49s" x="14" y="58" width="72" height="9" rx="1.5" fill="#BFD0E3"/><rect class="bar" style="animation-delay:0.35s" x="7" y="70" width="86" height="9" rx="1.5" fill="#FFFFFF"/></svg>':'';
-  if(sl.choose||IN.s===0)Object.values(IN.rt.chars).forEach(c=>{c.say=null;c.sayT=0});
-  const dots=`<span class="dots">${INTRO.slice(1,-1).map((_,i)=>`<i class="${i+1===IN.s?'on':''}"></i>`).join('')}</span>`;
-  if(IN.s===0)tx.innerHTML=`<div class="in"><h1>Groundwork</h1><p class="lead">${t(L('Vadovavimo žaidimas, kuriame komanda reaguoja į kiekvieną tavo sprendimą.','A leadership game where your team reacts to every call you make.'))}</p>
-    <div class="lang" role="group" aria-label="Kalba / Language"><button data-il="lt" aria-pressed="${S.lang==='lt'}">LIETUVIŲ</button><button data-il="en" aria-pressed="${S.lang==='en'}">ENGLISH</button></div>
-    <button class="btn" data-in="next">${t(L('Pradėti','Begin'))}</button></div>`;
-  else if(sl.choose)tx.innerHTML=`<div class="in"><p class="eyebrow">${t(L('Paskutinis klausimas','One last thing'))}</p><h2>${t(L('Kokiai komandai vadovausi?','Which team will you lead?'))}</h2>
-    ${IN.replay?`<button class="btn" data-in="done">${t(L('Grįžti','Back'))}</button>`:`<div class="opts"><button class="opt typebtn" data-it="sales"><b>${u('sales')}</b><span>${u('salesD')}</span></button><button class="opt typebtn" data-it="project"><b>${u('project')}</b><span>${u('projectD')}</span></button></div>
-    <p class="small">${t(L('Pirmą dieną tave lydės trumpas mokymas. Progresas išsaugomas automatiškai.','A short tutorial guides your first day. Progress saves automatically.'))}</p>`}</div>`;
-  else{const re=IN.rt;sl.go&&sl.go(re);
-    tx.innerHTML=`<div class="in"><p class="eyebrow">${t(sl.ey)}</p><h2>${t(sl.h)}</h2><p class="lead">${t(sl.p)}</p></div><div class="intro-foot">${dots}<button class="btn" data-in="next">${t(L('Toliau','Next'))}</button></div>`}
-  sizeIntro();
-}
 function introLoop(now){
-  if(!IN)return;const dt=Math.min(0.05,(now-IN.last)/1000);IN.last=now;introTick(dt);requestAnimationFrame(introLoop);
+  if(!IN)return;const dt=Math.min(0.05,(now-IN.last)/1000);IN.last=now;
+  if(!document.getElementById('intro').hidden)introTick(dt);requestAnimationFrame(introLoop);
 }
 function introTick(dt){
-  const r=IN.rt,sl=INTRO[IN.s];IN.t+=dt;
+  const r=IN.rt;IN.t+=dt;
   if(r.player.path.length)moveAlong(r.player,dt,2.4);
   Object.values(r.chars).forEach(c=>{if(c.sayT>0){c.sayT-=dt;if(c.sayT<=0)c.say=null}c.phase=(c.phase||0)+dt*0.6});
-  (sl.at||[]).forEach(([at,id,line],i)=>{if(IN.t>=at&&!IN.fired[i]){IN.fired[i]=1;const c=r.chars[id];if(c){c.say=line;c.sayT=3.4}}});
+  if(IN.mode==='story')(INTRO[IN.s].at||[]).forEach(([at,id,line],i)=>{if(IN.t>=at&&!IN.fired[i]){IN.fired[i]=1;const c=r.chars[id];if(c){c.say=line;c.sayT=3.4}}});
+  else if((IN.chat-=dt)<=0){IN.chat=3+Math.random()*2.5;const [id,line]=pickOne(CHAT);const c=r.chars[id];if(c&&!c.say){c.say=line;c.sayT=2.8}
+    if(!r.player.path.length&&Math.random()<0.5){const sp=pickOne([[6,9],[9,9],[4,9],[7,6],[10,10]]);walkTo(r.player,...sp)}}
   const cv=document.getElementById('introCv'),keep={ctx,T,OY,RT,G,CX};
   ctx=cv.getContext('2d');T=IN.T;OY=Math.round(IN.T*0.6);RT=r;G=IN.G;CX=0;
   try{draw()}finally{ctx=keep.ctx;T=keep.T;OY=keep.OY;RT=keep.RT;G=keep.G;CX=keep.CX}
 }
-function closeIntro(then){
-  const el=document.getElementById('intro');S.meta.introDone=1;save();el.classList.add('out');
-  setTimeout(()=>{el.hidden=true;IN=null;then&&then()},450);
-}
-document.getElementById('intro').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!IN)return;sfx('tap');buzz('tap');
-  if(b.dataset.il){S.lang=b.dataset.il;save();setLang();renderIntro();return}
-  if(b.dataset.in==='done'){closeIntro(showWelcome);return}
-  if(b.dataset.in==='next'){IN.s=Math.min(INTRO.length-1,IN.s+1);renderIntro();return}
-  if(b.id==='introSkip'){IN.s=INTRO.length-1;renderIntro();return}
-  if(b.dataset.it){const ty=b.dataset.it;closeIntro();newGame(ty,0);RT=null;over.hidden=true;startDay();renderAll()}});
+document.getElementById('intro').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!IN)return;sfx('tap');buzz('tap');const d=b.dataset;
+  if(d.il){S.lang=d.il;save();setLang();if(IN.mode==='menu')showMenu();else renderStory();return}
+  if(d.ck){S.checkin=d.ck;if(d.ck==='yes')S.bonus=1;S.meta.cap+={yes:40,part:20,no:0}[d.ck];save();showMenu();return}
+  if(d.in==='back'){storyBack();return}
+  if(d.in==='next'){IN.s++;renderStory();return}
+  if(d.in==='done'||b.id==='introSkip'){if(b.id==='introSkip'){IN.s=INTRO.length-1;renderStory();return}storyDone();return}
+  switch(d.m){
+    case 'resume':inHide();overAct('resume');break;
+    case 'new':if(S.G&&!S.G.done){overIn.innerHTML=`<span data-ngv="0" hidden></span><h1>${t(L('Pradėti naują žaidimą?','Start a new game?'))}</h1><p class="lead">${t(L('Dabartinė savaitė bus nutraukta. Žvaigždutės, kapitalas, įgūdžiai ir bylos lieka.','Your current week will be abandoned. Stars, capital, skills and files stay.'))}</p><p class="small">${saveLabel()}</p><button class="btn" data-ov="ngGo">${t(L('Taip, pradėti naują','Yes, start new'))}</button><button class="btn ghost" data-ov="welcome">${t(L('Atšaukti','Cancel'))}</button>`;inHide();over.hidden=false}else ngStart();break;
+    case 'career':inHide();renderCareer((S.G&&S.G.type)||renderCareer.ty||(starsType('project')>starsType('sales')?'project':'sales'));break;
+    case 'hub':inHide();renderHub('welcome');break;
+    case 'test':inHide();if(S.meta.diag.length)renderTestResult();else{DIAG={i:0,A:{}};renderTest()}break;
+    case 'how':renderHowTo();break;
+    case 'settings':openSettings();break;
+    case 'pay':inHide();renderPaywall('welcome');break;
+  }});
+function overAct(k){const b=document.createElement('button');b.dataset.ov=k;overIn.appendChild(b);b.click();b.remove()}
 window.addEventListener('resize',()=>{if(IN)sizeIntro()});
+
+
+/* ================= back navigation ================= */
+const BACK_SVG='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const backEl=document.getElementById('back');
+// which data-ov action "back" means on the overlay screen now showing (null = no way back, e.g. day summary)
+function backAct(){
+  if(over.hidden)return null;const q=x=>overIn.querySelector(x),ng=q('[data-ngv]');
+  if(ng)return ng.dataset.ngv==='2'?'ngBack':'welcome';
+  if(q('[data-testv]'))return DIAG&&DIAG.i>0?'testBack':NG?'ngBack':'welcome';
+  if(q('[data-resv]'))return NG?'ngBack':'welcome';
+  if(q('[data-careerv]'))return NG?'ngTeam':'welcome';
+  if(q('[data-hub]'))return 'hubBack';
+  if(q('[data-cardsv]')||q('[data-dosv]'))return 'toHub';
+  if(q('[data-payv]'))return 'payBack';
+  if(q('[data-howv]'))return 'welcome';
+  if(q('[data-wkv]'))return 'career';
+  return null;
+}
+function syncBack(){const k=backAct();backEl.hidden=!k;over.classList.toggle('hasback',!!k)}
+new MutationObserver(syncBack).observe(overIn,{childList:true});
+new MutationObserver(syncBack).observe(over,{attributes:true,attributeFilter:['hidden']});
+backEl.addEventListener('click',()=>{sfx('tap');buzz('tap');goBack()});
+function storyBack(){if(IN.s>0){IN.s--;renderStory()}else if(IN.replay)showMenu();else ngTeam()}
+// one "back" for every surface: settings sheet, story, overlay screens; false when there is nowhere to go
+function goBack(){
+  if(!setv.hidden){if(renderSettings.mode){renderSettings.mode='';renderSettings.err=0;renderSettings()}else closeSettings();return true}
+  const intro=document.getElementById('intro');
+  if(!intro.hidden&&IN&&IN.mode==='story'){storyBack();return true}
+  if(!intro.hidden)return false;
+  const k=backAct();if(k){if(k==='career'){G=S.G?JSON.parse(JSON.stringify(S.G)):G}overAct(k);return true}
+  return false;
+}
+// swipe right anywhere on a screen that has a way back; the page follows the finger
+function swipeBack(el,target,can){
+  let sx=0,sy=0,on=false,dx=0;
+  el.addEventListener('touchstart',e=>{if(e.touches.length!==1||!can())return;sx=e.touches[0].clientX;sy=e.touches[0].clientY;on=true;dx=0},{passive:true});
+  el.addEventListener('touchmove',e=>{if(!on)return;const x=e.touches[0].clientX-sx,y=e.touches[0].clientY-sy;
+    if(Math.abs(y)>Math.abs(x)&&Math.abs(y)>12&&dx<8){on=false;target().style.transform='';return}
+    dx=Math.max(0,x);if(dx>8){const t=target();t.classList.add('swiping');t.style.transform=`translateX(${dx*0.6}px)`;t.style.opacity=String(1-Math.min(.35,dx/900))}},{passive:true});
+  const end=()=>{if(!on)return;on=false;const t=target();t.classList.remove('swiping');t.classList.add('swipe-back');
+    if(dx>80){t.style.transform=`translateX(${Math.min(innerWidth,dx*0.6+80)}px)`;t.style.opacity='0';
+      setTimeout(()=>{t.classList.remove('swipe-back');t.style.transform='';t.style.opacity='';sfx('tap');buzz('tap');goBack()},160)}
+    else{t.style.transform='';t.style.opacity='';setTimeout(()=>t.classList.remove('swipe-back'),260)}};
+  el.addEventListener('touchend',end);el.addEventListener('touchcancel',end);
+}
+swipeBack(over,()=>overIn,()=>!!backAct());
+swipeBack(setv,()=>setIn,()=>!setv.hidden);
+swipeBack(document.getElementById('intro'),()=>document.getElementById('introText'),()=>IN&&IN.mode==='story');
 
 /* ================= loop ================= */
 let last=performance.now();
@@ -2445,10 +2614,10 @@ function frame(now){
 (async()=>{
   await nativeLoad();load();setLang();applyBig();resize();
   if(S.G&&!S.G.done)G=JSON.parse(JSON.stringify(S.G));
+  if(!localStorage.getItem(KEY)&&!/^lt/i.test(navigator.language||'')){S.lang='en';setLang()}
   showWelcome();
-  if(shouldIntro()){if(!localStorage.getItem(KEY)&&!/^lt/i.test(navigator.language||''))S.lang='en',setLang();showIntro()}
   requestAnimationFrame(frame);
-  if(NATIVE){const A=plug('App');A&&A.addListener('pause',autosave);document.body.classList.add('native')}
+  if(NATIVE){const A=plug('App');A&&A.addListener('pause',autosave);A&&A.addListener('backButton',()=>{if(goBack())return;const intro=document.getElementById('intro');if(!intro.hidden&&IN&&IN.mode==='menu'){A.exitApp();return}if(over.hidden&&RT&&!SH&&!RT.ended){autosave();showWelcome()}});document.body.classList.add('native')}
   else if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
