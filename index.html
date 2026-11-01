@@ -221,6 +221,34 @@ a.btn{display:block;text-align:center;text-decoration:none}
 .btn[disabled]{opacity:.55;cursor:default}
 html.big .over-in,html.big .sheet,html.big .side,html.big .hint,html.big .goals-m,html.big .toast{zoom:1.12}
 
+
+/* First-launch intro: a full-screen story over a live office scene, then team choice and straight into day one */
+.intro{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);opacity:1;transition:opacity .45s}
+.intro.out{opacity:0}
+.intro-top{display:flex;justify-content:space-between;align-items:center;padding:12px 18px 0;min-height:44px}
+.intro-skip{background:none;border:0;color:var(--muted);font:500 12px var(--f-mono);letter-spacing:.1em;text-transform:uppercase;padding:8px 0;cursor:pointer}
+.intro-scene{flex:1 1 auto;min-height:0;display:grid;place-items:center;padding:8px 18px;position:relative}
+.intro-scene canvas{border-radius:16px;border:1px solid var(--line);display:block;transition:opacity .8s,filter .8s,transform 1.2s cubic-bezier(.2,.7,.2,1)}
+.intro[data-s="0"] .intro-scene canvas{opacity:.28;filter:blur(1.5px) saturate(.6);transform:scale(.96)}
+.intro-mark{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.intro-mark svg{width:112px;height:112px;filter:drop-shadow(0 10px 30px rgba(0,0,0,.45))}
+.intro-mark .bar{opacity:0;transform:translateY(-14px);animation:pbar .5s cubic-bezier(.2,.8,.2,1.15) forwards}
+@keyframes pbar{to{opacity:1;transform:none}}
+.intro-text{flex:none;max-width:560px;width:100%;margin:0 auto;padding:6px 22px 22px;display:flex;flex-direction:column;gap:12px}
+.intro-text>.in{display:flex;flex-direction:column;gap:10px;animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
+.intro-text h1{font-size:44px}
+.intro-text h2{font-size:30px}
+.intro-text p.lead{font-size:16px;color:var(--muted);line-height:1.5}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.intro-foot{display:flex;align-items:center;gap:14px}
+.intro-foot .btn{flex:1}
+.dots{display:flex;gap:6px;flex:none}
+.dots i{width:6px;height:6px;border-radius:3px;background:var(--line);transition:width .3s,background .3s}
+.dots i.on{width:18px;background:var(--accent)}
+.intro .lang{align-self:flex-start}
+.intro .lang button{padding:9px 14px;font-size:12px}
+.intro .opt{animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
+.intro .opt:nth-child(2){animation-delay:.08s}
 @media (min-width:960px){
   .stage{grid-template-columns:minmax(0,1fr) 300px}
   .side{display:flex;flex-direction:column;gap:12px;position:sticky;top:10px}
@@ -251,6 +279,8 @@ html.big .over-in,html.big .sheet,html.big .side,html.big .hint,html.big .goals-
 <div class="scrim" id="scrim" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 <div class="over" id="over" hidden><div class="over-in" id="overIn"></div></div>
 <div class="scrim" id="setv" hidden><div class="sheet" id="setIn" role="dialog" aria-modal="true" aria-label="Settings"></div></div>
+
+<div class="intro" id="intro" hidden><div class="intro-top"><span></span><button class="intro-skip" id="introSkip"></button></div><div class="intro-scene" id="introScene"><canvas id="introCv"></canvas><div class="intro-mark" id="introMark"></div></div><div class="intro-text" id="introText"></div></div>
 
 <script>
 const L=(lt,en)=>({lt,en});
@@ -2057,10 +2087,16 @@ function iconAbove(px,top,kind,t0){
   if(kind==='heart'){ctx.fillStyle='#E07A8A';ctx.beginPath();ctx.arc(px-T*0.05,y,T*0.06,0,7);ctx.arc(px+T*0.05,y,T*0.06,0,7);ctx.moveTo(px-T*0.11,y+T*0.02);ctx.lineTo(px,y+T*0.14);ctx.lineTo(px+T*0.11,y+T*0.02);ctx.fill()}
 }
 function speech(px,top,text){
-  ctx.font=`500 ${Math.max(10,Math.round(T*0.27))}px IBM Plex Sans, sans-serif`;const w=Math.min(ctx.measureText(text).width+T*0.4,T*5.2),h=T*0.48;
+  ctx.font=`500 ${Math.max(10,Math.round(T*0.27))}px IBM Plex Sans, sans-serif`;
+  const pad=T*0.2,maxW=T*5.2,lh=Math.max(10,Math.round(T*0.27))*1.25;let lines=[text];
+  if(ctx.measureText(text).width+pad*2>maxW){const ws=text.split(' ');let best=null;
+    for(let k=1;k<ws.length;k++){const a=ws.slice(0,k).join(' '),b=ws.slice(k).join(' '),m=Math.max(ctx.measureText(a).width,ctx.measureText(b).width);if(!best||m<best.m)best={m,l:[a,b]}}
+    if(best)lines=best.l}
+  const w=Math.min(Math.max(...lines.map(l=>ctx.measureText(l).width))+pad*2,maxW),h=T*0.48+(lines.length-1)*lh;
   let x=clamp(px-w/2,CX+2,CX+ctx.canvas.width/DPR-w-2),y=top-T*0.62-h;
   ctx.fillStyle='rgba(255,255,255,.96)';rr(x,y,w,h,T*0.12);ctx.fill();ctx.beginPath();ctx.moveTo(px-T*0.08,y+h);ctx.lineTo(px,y+h+T*0.12);ctx.lineTo(px+T*0.08,y+h);ctx.fill();
-  ctx.fillStyle='#1E2328';ctx.textAlign='left';ctx.textBaseline='middle';ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();ctx.fillText(text,x+T*0.2,y+h/2+1);ctx.restore();
+  ctx.fillStyle='#1E2328';ctx.textAlign='left';ctx.textBaseline='middle';ctx.save();ctx.beginPath();ctx.rect(x,y,w,h);ctx.clip();
+  lines.forEach((l,n)=>ctx.fillText(l,x+pad,y+T*0.24+n*lh+1));ctx.restore();
 }
 const LOOK=Object.fromEntries(IDS.map(id=>[id,PEOPLE[id]]));
 LOOK.ruta={shirt:'#5B4B8A',skin:'#EBC2A2',hair:'#2B1D16',long:true};LOOK.player={shirt:'#1C3550',skin:'#E5B48F',hair:'#2B2018',tie:'#D2B06E'};LOOK.client={shirt:'#4B5058',skin:'#D9A57E',hair:'#55493F',tie:'#A33'};
@@ -2288,6 +2324,7 @@ function renderSettings(){
     ${CONTACT?`<a class="setrow" href="mailto:${CONTACT}?subject=${encodeURIComponent('Groundwork '+APP_VER+' · '+PLAT)}"><span>${t(L('Parašyk atsiliepimą','Send feedback'))}</span><span>›</span></a>`:''}
     <a class="setrow" href="${SITE}privacy.html${S.lang==='en'?'#en':''}" target="_blank" rel="noopener"><span>${t(L('Privatumo politika','Privacy policy'))}</span><span>↗</span></a>
     <a class="setrow" href="${SITE}terms.html${S.lang==='en'?'#en':''}" target="_blank" rel="noopener"><span>${t(L('Naudojimo sąlygos','Terms of use'))}</span><span>↗</span></a>
+    <button class="setrow" data-set="intro"><span>${t(L('Peržiūrėti įžangą','Replay the intro'))}</span><span>›</span></button>
     <button class="setrow" data-set="reset"><span style="color:var(--bad)">${t(L('Ištrinti progresą','Delete progress'))}</span><span>›</span></button></div>
     <p class="small">Groundwork ${APP_VER} · ${t(L('Žaidimas remiasi P. Lencioni penkių komandos disfunkcijų modeliu. Jis nepakeičia profesionalaus koučingo.','Based on P. Lencioni’s five dysfunctions of a team model. It does not replace professional coaching.'))}</p>
     <button class="btn" data-set="close">${t(L('Uždaryti','Close'))}</button>`;
@@ -2300,6 +2337,7 @@ setv.addEventListener('click',e=>{
   if(['snd','mus','vib','big'].includes(k)){SET()[k]=SET()[k]?0:1;save();applyBig();musicSync();renderSettings();if(k==='vib')buzz('tap');return}
   switch(k){
     case 'close':closeSettings();break;
+    case 'intro':closeSettings();if(RT){autosave();RT.paused=true}showIntro(true);break;
     case 'back':renderSettings.mode='';renderSettings.err=0;renderSettings();break;
     case 'export':case 'import':case 'reset':renderSettings.mode=k;renderSettings.err=0;renderSettings();break;
     case 'copy':{const ta=setIn.querySelector('textarea');ta.select();(navigator.clipboard?navigator.clipboard.writeText(ta.value):Promise.reject()).catch(()=>document.execCommand('copy'));b.textContent=t(L('Nukopijuota','Copied'));break}
@@ -2318,6 +2356,80 @@ function autosave(){
 window.addEventListener('pagehide',autosave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)autosave()});
 
+
+/* ================= first-launch intro ================= */
+// Story slides play over a live office scene; each slide scripts walks and speech by its own clock.
+const INTRO=[
+  {ey:null},
+  {ey:L('Pirmadienis · 8:55','Monday · 8:55'),h:L('Šiandien tavo pirma diena vadovo kėdėje.','Today is your first day in the manager’s chair.'),
+   p:L('Dar vakar dirbai šalia jų. Nuo šiandien jie žiūri į tave ir laukia, ką darysi.','Yesterday you sat next to them. From today they look to you and wait to see what you do.'),
+   go(r){r.player={x:7,y:14,path:[],dir:'up'};walkTo(r.player,7,9)},
+   at:[[2.2,'tomas',L('Tai čia naujas vadovas?','So that’s the new manager?')],[4.4,'egle',L('Labas!','Hi!')]]},
+  {ey:L('Tavo komanda','Your team'),h:L('Trys žmonės. Trys skirtingi pasauliai.','Three people. Three different worlds.'),
+   p:L('Kiekvienas turi savo nuotaiką, ribas ir slaptą motyvą. Kas juos iš tikrųjų veda, teks atrasti pačiam.','Each has their own mood, limits and a hidden motive. What really drives them is for you to find out.'),
+   go(r){r.player={x:7,y:9,path:[],dir:'down'};demoG().people.egle.stress=92},
+   at:[[0.6,'tomas',L('Planą įvykdysiu. Tik netrukdyk.','I’ll hit the target. Just don’t micromanage.')],[3.0,'lina',L('Ar kas nors čia apskritai klauso?','Does anyone here actually listen?')],[5.4,'egle',L('O jeigu vėl suklysiu…','What if I mess up again…')]]},
+  {ey:L('Tavo darbas','Your job'),h:L('Ne daryti viską pačiam, o kad komanda veiktų.','Not to do it all yourself, but to make the team work.'),
+   p:L('Kalbėkis, klausyk, spręsk ginčus ir laikykis žodžio. Kiekvienas sprendimas turi pasekmes, kartais po kelių dienų.','Talk, listen, settle arguments and keep your word. Every call has consequences, sometimes days later.'),
+   go(r){r.player={x:7,y:9,path:[],dir:'up'};demoG().people.egle.stress=40;walkTo(r.player,...SPOT.start)},
+   at:[[1.4,'lina',L('Gal turi minutę?','Got a minute?')],[4.2,'tomas',L('Klientas skambina!','Client on the phone!')]]},
+  {choose:1}
+];
+let IN=null;
+const demoG=()=>IN.G;
+function shouldIntro(){return !S.meta.introDone&&!S.G&&!S.meta.cap&&!Object.keys(S.meta.stars).length}
+function showIntro(replay){
+  const el=document.getElementById('intro');
+  const r=demoRT();delete r.chars.darius;delete r.chars.marius;r.chars.lina.say=null;r.chars.lina.x=6;r.chars.lina.y=8;r.chars.lina.state='work';
+  IN={s:0,t:0,rt:r,G:{type:'sales',people:Object.fromEntries(IDS.map(id=>[id,{stress:30,trust:50,hired:id!=='darius'&&id!=='marius'}])),culture:{}},fired:{},last:performance.now(),replay:!!replay};
+  el.hidden=false;el.classList.remove('out');renderIntro();requestAnimationFrame(introLoop);
+}
+function sizeIntro(){
+  const sc=document.getElementById('introScene'),c=document.getElementById('introCv');if(!sc||!IN)return;
+  const w=sc.clientWidth-36,h=sc.clientHeight-16;IN.T=Math.max(12,Math.floor(Math.min(w/COLS,h/(ROWS+0.6))));
+  c.width=IN.T*COLS*DPR;c.height=Math.round(IN.T*(ROWS+0.6))*DPR;c.style.width=IN.T*COLS+'px';c.style.height=Math.round(IN.T*(ROWS+0.6))+'px';
+}
+function renderIntro(){
+  const el=document.getElementById('intro'),tx=document.getElementById('introText'),sl=INTRO[IN.s];
+  el.dataset.s=IN.s;IN.t=0;IN.fired={};
+  const sk=document.getElementById('introSkip');sk.hidden=IN.s===0||!!sl.choose;sk.textContent=t(L('Praleisti','Skip'));
+  document.getElementById('introMark').innerHTML=IN.s===0?'<svg viewBox="0 0 100 100" aria-hidden="true"><rect class="tile" width="100" height="100" rx="22" fill="#1C3550"/><rect class="bar" style="animation-delay:0.91s" x="35" y="22" width="30" height="9" rx="1.5" fill="#5C7DA6"/><rect class="bar" style="animation-delay:0.77s" x="28" y="34" width="44" height="9" rx="1.5" fill="#7896BB"/><rect class="bar" style="animation-delay:0.63s" x="21" y="46" width="58" height="9" rx="1.5" fill="#97B0CF"/><rect class="bar" style="animation-delay:0.49s" x="14" y="58" width="72" height="9" rx="1.5" fill="#BFD0E3"/><rect class="bar" style="animation-delay:0.35s" x="7" y="70" width="86" height="9" rx="1.5" fill="#FFFFFF"/></svg>':'';
+  if(sl.choose||IN.s===0)Object.values(IN.rt.chars).forEach(c=>{c.say=null;c.sayT=0});
+  const dots=`<span class="dots">${INTRO.slice(1,-1).map((_,i)=>`<i class="${i+1===IN.s?'on':''}"></i>`).join('')}</span>`;
+  if(IN.s===0)tx.innerHTML=`<div class="in"><h1>Groundwork</h1><p class="lead">${t(L('Vadovavimo žaidimas, kuriame komanda reaguoja į kiekvieną tavo sprendimą.','A leadership game where your team reacts to every call you make.'))}</p>
+    <div class="lang" role="group" aria-label="Kalba / Language"><button data-il="lt" aria-pressed="${S.lang==='lt'}">LIETUVIŲ</button><button data-il="en" aria-pressed="${S.lang==='en'}">ENGLISH</button></div>
+    <button class="btn" data-in="next">${t(L('Pradėti','Begin'))}</button></div>`;
+  else if(sl.choose)tx.innerHTML=`<div class="in"><p class="eyebrow">${t(L('Paskutinis klausimas','One last thing'))}</p><h2>${t(L('Kokiai komandai vadovausi?','Which team will you lead?'))}</h2>
+    ${IN.replay?`<button class="btn" data-in="done">${t(L('Grįžti','Back'))}</button>`:`<div class="opts"><button class="opt typebtn" data-it="sales"><b>${u('sales')}</b><span>${u('salesD')}</span></button><button class="opt typebtn" data-it="project"><b>${u('project')}</b><span>${u('projectD')}</span></button></div>
+    <p class="small">${t(L('Pirmą dieną tave lydės trumpas mokymas. Progresas išsaugomas automatiškai.','A short tutorial guides your first day. Progress saves automatically.'))}</p>`}</div>`;
+  else{const re=IN.rt;sl.go&&sl.go(re);
+    tx.innerHTML=`<div class="in"><p class="eyebrow">${t(sl.ey)}</p><h2>${t(sl.h)}</h2><p class="lead">${t(sl.p)}</p></div><div class="intro-foot">${dots}<button class="btn" data-in="next">${t(L('Toliau','Next'))}</button></div>`}
+  sizeIntro();
+}
+function introLoop(now){
+  if(!IN)return;const dt=Math.min(0.05,(now-IN.last)/1000);IN.last=now;introTick(dt);requestAnimationFrame(introLoop);
+}
+function introTick(dt){
+  const r=IN.rt,sl=INTRO[IN.s];IN.t+=dt;
+  if(r.player.path.length)moveAlong(r.player,dt,2.4);
+  Object.values(r.chars).forEach(c=>{if(c.sayT>0){c.sayT-=dt;if(c.sayT<=0)c.say=null}c.phase=(c.phase||0)+dt*0.6});
+  (sl.at||[]).forEach(([at,id,line],i)=>{if(IN.t>=at&&!IN.fired[i]){IN.fired[i]=1;const c=r.chars[id];if(c){c.say=line;c.sayT=3.4}}});
+  const cv=document.getElementById('introCv'),keep={ctx,T,OY,RT,G,CX};
+  ctx=cv.getContext('2d');T=IN.T;OY=Math.round(IN.T*0.6);RT=r;G=IN.G;CX=0;
+  try{draw()}finally{ctx=keep.ctx;T=keep.T;OY=keep.OY;RT=keep.RT;G=keep.G;CX=keep.CX}
+}
+function closeIntro(then){
+  const el=document.getElementById('intro');S.meta.introDone=1;save();el.classList.add('out');
+  setTimeout(()=>{el.hidden=true;IN=null;then&&then()},450);
+}
+document.getElementById('intro').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!IN)return;sfx('tap');buzz('tap');
+  if(b.dataset.il){S.lang=b.dataset.il;save();setLang();renderIntro();return}
+  if(b.dataset.in==='done'){closeIntro(showWelcome);return}
+  if(b.dataset.in==='next'){IN.s=Math.min(INTRO.length-1,IN.s+1);renderIntro();return}
+  if(b.id==='introSkip'){IN.s=INTRO.length-1;renderIntro();return}
+  if(b.dataset.it){const ty=b.dataset.it;closeIntro();newGame(ty,0);RT=null;over.hidden=true;startDay();renderAll()}});
+window.addEventListener('resize',()=>{if(IN)sizeIntro()});
+
 /* ================= loop ================= */
 let last=performance.now();
 function frame(now){
@@ -2334,6 +2446,7 @@ function frame(now){
   await nativeLoad();load();setLang();applyBig();resize();
   if(S.G&&!S.G.done)G=JSON.parse(JSON.stringify(S.G));
   showWelcome();
+  if(shouldIntro()){if(!localStorage.getItem(KEY)&&!/^lt/i.test(navigator.language||''))S.lang='en',setLang();showIntro()}
   requestAnimationFrame(frame);
   if(NATIVE){const A=plug('App');A&&A.addListener('pause',autosave);document.body.classList.add('native')}
   else if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
