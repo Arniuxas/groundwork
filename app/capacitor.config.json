@@ -1,0 +1,12 @@
+{
+  "appId": "com.arniuxas.groundwork",
+  "appName": "Groundwork",
+  "webDir": "www",
+  "backgroundColor": "#0D1217",
+  "ios": { "contentInset": "never", "backgroundColor": "#0D1217" },
+  "android": { "backgroundColor": "#0D1217" },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 600, "backgroundColor": "#0D1217", "showSpinner": false },
+    "StatusBar": { "style": "DARK", "backgroundColor": "#0D1217", "overlaysWebView": true }
+  }
+}

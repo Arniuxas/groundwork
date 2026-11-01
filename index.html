@@ -13,9 +13,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Groundwork">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="fonts/fonts.css">
 <style>
 /* Layout: the office canvas is the stage; a slim HUD sits above it, sheets slide up from the bottom, desktop adds a team sidebar */
 *,*::before,*::after{box-sizing:border-box}
@@ -205,6 +203,24 @@ canvas{display:block;cursor:pointer;touch-action:pan-y}
 .goals li.ok .box{background:var(--good);border-color:var(--good);color:#0D1217}
 .goals li.miss .box{border-color:var(--bad);color:var(--bad)}
 
+.topr{display:flex;align-items:center;gap:8px}
+.gear{border:1px solid var(--line);background:var(--surface);border-radius:8px;width:34px;height:31px;display:grid;place-items:center;cursor:pointer;color:var(--muted);padding:0}
+.setlist{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.setrow{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;background:var(--raised);border:0;border-bottom:1px solid var(--line);padding:13px 14px;text-align:left;font-size:15px;cursor:pointer;color:var(--ink);text-decoration:none}
+.setrow:last-child{border-bottom:0}
+.setrow>span:last-child{color:var(--muted)}
+.sw{width:40px;height:24px;border-radius:12px;background:var(--line);position:relative;flex:none;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:transform .15s,background .15s}
+.setrow[aria-checked="true"] .sw{background:var(--good)}
+.setrow[aria-checked="true"] .sw::after{transform:translateX(16px);background:#0D1217}
+.code{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font:500 11px/1.4 var(--f-mono);word-break:break-all;resize:none}
+#setv{z-index:40}
+#setIn{display:flex;flex-direction:column;gap:14px}
+#setIn>*{flex:none}
+a.btn{display:block;text-align:center;text-decoration:none}
+.btn[disabled]{opacity:.55;cursor:default}
+html.big .over-in,html.big .sheet,html.big .side,html.big .hint,html.big .goals-m,html.big .toast{zoom:1.12}
+
 @media (min-width:960px){
   .stage{grid-template-columns:minmax(0,1fr) 300px}
   .side{display:flex;flex-direction:column;gap:12px;position:sticky;top:10px}
@@ -219,7 +235,7 @@ canvas{display:block;cursor:pointer;touch-action:pan-y}
 <div class="app">
   <header class="top">
     <button class="brand" id="brand"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><polygon points="11,1.5 20.5,8.4 16.9,19.6 5.1,19.6 1.5,8.4" fill="none" stroke="#97A2AD"/><polygon points="11,2.5 16.7,9.6 13.9,15.4 8,17 4.3,9.3" fill="#C9D7E8"/></svg><span>Groundwork</span></button>
-    <div class="lang" role="group" aria-label="Kalba / Language"><button data-lang="lt">LT</button><button data-lang="en">EN</button></div>
+    <div class="topr"><div class="lang" role="group" aria-label="Kalba / Language"><button data-lang="lt">LT</button><button data-lang="en">EN</button></div><button class="gear" id="gear" aria-label="Nustatymai / Settings"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button></div>
   </header>
   <div class="stage">
     <section class="game">
@@ -234,6 +250,7 @@ canvas{display:block;cursor:pointer;touch-action:pan-y}
 </div>
 <div class="scrim" id="scrim" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
 <div class="over" id="over" hidden><div class="over-in" id="overIn"></div></div>
+<div class="scrim" id="setv" hidden><div class="sheet" id="setIn" role="dialog" aria-modal="true" aria-label="Settings"></div></div>
 
 <script>
 const L=(lt,en)=>({lt,en});
@@ -1211,7 +1228,7 @@ function renderCareer(ty){if(ty)renderCareer.ty=ty;ty=renderCareer.ty;
   overIn.innerHTML=`<span data-careerv hidden></span><p class="eyebrow">${u(ty)} · ${esc(rank())}</p><h1>${t(L('Tavo karjera','Your career'))}</h1>
     <p class="lead">${t(L('Kiekviena savaitė moko vieno komandos lygmens. Kad atsirakintų kita, savaitę reikia baigti bent dviem žvaigždutėmis. Po penktos savaitės iššūkiai tęsiasi ir sunkėja.','Each week teaches one level of teamwork. To unlock the next, finish the week with at least two stars. After week five the challenges continue and get harder.'))}</p>
     <div class="opts">${Array.from({length:n},(_,w)=>{const c=weekCfg(w),open=unlocked(ty,w),sa=starsAt(ty,w);
-      return `<button class="opt typebtn" data-ov="week" data-w="${w}"${open?'':' disabled style="opacity:.5;cursor:default"'}><b>${t(L('Savaitė','Week'))} ${w+1} · ${t(c.n)} ${starsH(sa)}</b><span>${open?(w<WEEKS.length?`${(c.team.length+(c.hire?1:0))} ${t(L('žmonės','people'))}${c.hire?` · ${t(L('įdarbinimas','hiring'))}`:''}`:t(L('Nesibaigiantis iššūkis','Endless challenge'))):t(L('Užrakinta: reikia ★★ ankstesnėje savaitėje','Locked: needs ★★ on the previous week'))}</span></button>`}).join('')}</div>
+      return `<button class="opt typebtn" data-ov="week" data-w="${w}"${open?'':' disabled style="opacity:.5;cursor:default"'}><b>${t(L('Savaitė','Week'))} ${w+1} · ${t(c.n)} ${starsH(sa)}</b><span>${open&&needPro(w)?t(L('Pilnoje versijoje','In the full version')):open?(w<WEEKS.length?`${(c.team.length+(c.hire?1:0))} ${t(L('žmonės','people'))}${c.hire?` · ${t(L('įdarbinimas','hiring'))}`:''}`:t(L('Nesibaigiantis iššūkis','Endless challenge'))):t(L('Užrakinta: reikia ★★ ankstesnėje savaitėje','Locked: needs ★★ on the previous week'))}</span></button>`}).join('')}</div>
     <button class="btn ghost" data-ov="welcome">${t(L('Grįžti','Back'))}</button>`;
   over.hidden=false;over.scrollTop=0;
 }
@@ -1266,10 +1283,10 @@ const mult=()=>RT&&RT.combo>=5?2:RT&&RT.combo>=3?1.5:1;
 const fmtMult=m=>S.lang==='lt'?String(m).replace('.',','):String(m);
 function gain(v,who,flat){
   if(!RT)return 0;const n=Math.round(v*(flat?1:mult()));if(!n)return 0;
-  S.meta.cap+=n;RT.capDay=(RT.capDay||0)+n;
+  S.meta.cap+=n;RT.capDay=(RT.capDay||0)+n;sfx('coin');
   const c=who&&RT.chars[who],p=c||RT.player;(RT.floats=RT.floats||[]).push({x:p.x,y:p.y,txt:`+${n}`,t:1.8});return n;
 }
-function hit(){RT.combo=(RT.combo||0)+1;if(RT.combo===3||RT.combo===5)toast(`<b>${t(L('Serija','Streak'))} ×${fmtMult(mult())}</b> · ${t(L(`${RT.combo} įvykiai iš eilės be praleidimų. Kapitalas auga greičiau.`,`${RT.combo} events in a row, none missed. Capital grows faster.`))}`)}
+function hit(){RT.combo=(RT.combo||0)+1;if(RT.combo===3||RT.combo===5)sfx('streak'),buzz('ok'),toast(`<b>${t(L('Serija','Streak'))} ×${fmtMult(mult())}</b> · ${t(L(`${RT.combo} įvykiai iš eilės be praleidimų. Kapitalas auga greičiau.`,`${RT.combo} events in a row, none missed. Capital grows faster.`))}`)}
 function know(id,v){
   if(!PEOPLE[id]||!RT||!v)return;const b=dosN(id);S.meta.dos[id]=dosPts(id)+v;const a=dosN(id);
   for(let i=b;i<a;i++){(RT.facts=RT.facts||[]).push({id,i});gain(3,id,true);if(!SH)toast(`<b>${t(L('Byla','File'))} · ${esc(pn(id))} ${i+1}/6</b> ${t(FACTS[id][i])}`,true)}
@@ -1327,7 +1344,7 @@ const CGROUPS=[
 const CARD_TOTAL=CGROUPS.reduce((s,g)=>s+g.slots.length,0);
 const cardsN=()=>Object.keys(S.meta.cards).length;
 function unlockCard(id,n,ins,k){
-  if(!ins||S.meta.cards[id])return false;S.meta.cards[id]={n,ins,k:k||''};const c=cardsN();
+  if(!ins||S.meta.cards[id])return false;S.meta.cards[id]={n,ins,k:k||''};const c=cardsN();setTimeout(()=>sfx('card'),250);
   if(RT){gain(3,null,true);(RT.newCards=RT.newCards||[]).push(id)}else S.meta.cap+=3;
   if(c%10===0||c===CARD_TOTAL){S.meta.cap+=30;toast(`<b>${t(L('Kolekcija','Collection'))}: ${c}/${CARD_TOTAL}</b> · ${t(L('Premija +30 ◆','Bonus +30 ◆'))}`,true)}
   else if(!SH)toast(`<b>${t(L('Nauja įžvalga','New insight'))} ${c}/${CARD_TOTAL}</b>`,true);
@@ -1388,8 +1405,8 @@ const KEY='groundwork.v3';
 let S={lang:'lt',G:null,commitment:null,checkin:null,bonus:0,meta:null};
 let G=null; // sim state (saved at day start)
 let RT=null; // runtime (positions etc)
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j))}catch(e){}S.meta=Object.assign({cap:0,up:{},dos:{},cards:{},stars:{},skills:{},diag:[]},S.meta||{});['sales','project'].forEach(k=>{if(typeof S.meta.stars[k]==='number'){S.meta.stars[k+'_0']=S.meta.stars[k];delete S.meta.stars[k]}})}
+function save(){try{S.ts=Date.now();const j=JSON.stringify(S);localStorage.setItem(KEY,j);if(typeof nativeSave==='function')nativeSave(j)}catch(e){}}
+function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j))}catch(e){}S.meta=Object.assign({cap:0,up:{},dos:{},cards:{},stars:{},skills:{},diag:[]},S.meta||{});if(!S.meta.pro&&Object.keys(S.meta.stars).some(k=>+k.split('_')[1]>=FREE_WEEKS))S.meta.pro='legacy';['sales','project'].forEach(k=>{if(typeof S.meta.stars[k]==='number'){S.meta.stars[k+'_0']=S.meta.stars[k];delete S.meta.stars[k]}})}
 
 const t=o=>{const r=(o&&(o[S.lang]??o.lt))||'';return r.indexOf('{')<0?r:subst(r)};
 const tx=o=>{if(!o)return '';if(o.sales||o.project)o=o[G?G.type:'sales'];return t(o)};
@@ -1491,7 +1508,7 @@ const MISS={
   tb:m=>{tbAuto(m.tb);rutaLeave()},
   micro:m=>{FX=null;const lg=MICRO[m.micro].miss(m.who);logE('bad',lg);toast(t(lg))}
 };
-function addMarker(m){m.id=Math.random().toString(36).slice(2);RT.markers.push(m);if(m.kind==='phone')toast(`<b>☎</b> ${t(L('Skambina telefonas tavo kabinete.','The phone is ringing in your office.'))}`);
+function addMarker(m){m.id=Math.random().toString(36).slice(2);RT.markers.push(m);if(m.kind==='phone'){sfx('ring');buzz('hard')}else{sfx('ping');buzz('tap')}if(m.kind==='phone')toast(`<b>☎</b> ${t(L('Skambina telefonas tavo kabinete.','The phone is ringing in your office.'))}`);
   if(m.who==='client')toast(t(L('Į biurą įėjo piktas klientas.','An angry client has walked in.')));
   if(m.who==='lina'&&m.ev===2)toast(`${esc(pn('lina'))} ${u('waiting')}.`);
   if(typeof m.ev==='number'&&m.ev>=5&&m.who)toast(`<b>${esc(pn(m.who))}</b> ${u('waiting')}.`);
@@ -1519,7 +1536,7 @@ function tickSim(dm){
 }
 function breakPoint(id){
   const P=G.people[id];
-  if(P.trait&&P.trait!=='resolute'){P.quit=true;if(id===G.lead){G.prevLead=id;G.lead=null;RT.markers.forEach(m=>{m.leadAt=null})}logE('bad',NL(id,' išėjo iš komandos',' left the team'));RT.dayIns.push(NL(id,' išėjo. Lūžęs žmogus be pagalbos ilgai neišbūna.',' quit. A broken person without support doesn’t stay long.'));
+  if(P.trait&&P.trait!=='resolute'){P.quit=true;sfx('quit');buzz('warn');if(id===G.lead){G.prevLead=id;G.lead=null;RT.markers.forEach(m=>{m.leadAt=null})}logE('bad',NL(id,' išėjo iš komandos',' left the team'));RT.dayIns.push(NL(id,' išėjo. Lūžęs žmogus be pagalbos ilgai neišbūna.',' quit. A broken person without support doesn’t stay long.'));
     toast(`<b>${esc(pn(id))}</b> ${t(L('išeina iš darbo.','is quitting.'))}`);const c=RT.chars[id];if(c){c.state='leaving';walkTo(c,...SPOT.exit);say(id,L('Viskas. Išeinu.','That’s it. I’m out.'),4)}
     if(IDS.filter(x=>G.people[x].quit).length>=Math.min(3,hiredN()-1)){G.over='collapse';setTimeout(endWeekNow,1800)}return}
   if(!P.trait&&P.trust>=65&&Math.random()<0.4){P.trait='resolute';P.stress=55;logE('good',NL(id,' atlaikė spaudimą',' held up under pressure'));RT.dayIns.push(NL(id,' atlaikė, nes tavimi pasitiki.',' held up because they trust you.'));toast(`<b>${esc(pn(id))}</b> ${t(L('atlaikė spaudimą ir tapo atsparesnis.','held up and became resolute.'))}`);return}
@@ -1579,7 +1596,7 @@ function step(dtReal){
   if(G.tb&&G.lead&&!G.tb.lead&&!SH&&over.hidden){openTBLeadPick();return}
   if(G.lead&&ok(G.lead)&&G.people[G.lead].stress>=75)mentor('lover',L(`${PEOPLE[G.lead].n.lt} perkrautas: kai vadovo stresas viršija 75, jis sprendžia prasčiau, o ties 100 perdega. Pasiteirauk, kaip laikosi.`,`${PEOPLE[G.lead].n.en} is overloaded: above 75 stress a lead decides worse, and at 100 burns out. Ask how they are holding up.`));
   RT.markers.filter(m=>m.leadAt&&RT.time>=m.leadAt).forEach(m=>{if(G.lead&&ok(G.lead))leadHandle(m);else m.leadAt=null});
-  RT.markers=RT.markers.filter(m=>{if(RT.time>m.until){RT.cnt.miss++;RT.combo=0;MISS[m.miss]&&MISS[m.miss](m);return false}return true});
+  RT.markers=RT.markers.filter(m=>{if(RT.time>m.until){RT.cnt.miss++;RT.combo=0;sfx('miss');buzz('warn');MISS[m.miss]&&MISS[m.miss](m);return false}return true});
   if(G.tb&&G.lead&&G.tb.lead){RT.tbT=(RT.tbT??50)-dm;if(RT.tbT<=0){RT.tbT=80+Math.random()*40;if(!RT.chars.ruta&&(RT.tbN||0)<3&&RT.time<16*60+30)spawnRuta()}}
   RT.microT-=dm;if(RT.microT<=0){RT.microT=25+Math.random()*20;if(RT.markers.length<2&&RT.time<17*60+15)spawnMicro()}
   if(!RT.player.path.length&&!RT.player.pending&&!RT.meeting)RT.idle+=dm;else RT.idle=0;
@@ -1812,7 +1829,7 @@ function endDay(){
   if(G.boss<=0)G.over='fired';
   RT.goalsDone=RT.goals.filter(k=>GOALS[k].ok());G.boss=clamp(G.boss+RT.goalsDone.length*3,0,100);
   gain(RT.goalsDone.length*4+(out>=target?8:0),null,true);
-  RT.sum={out,target};renderDay();autosave();
+  RT.sum={out,target};renderDay();autosave();sfx(out>=target?'good':'bad');
 }
 function renderDay(){
   const {out,target}=RT.sum,last=G.over||G.day>=4;
@@ -1856,7 +1873,7 @@ const realTask=()=>G.week&&weekCfg(G.week).task?weekCfg(G.week).task:G.stats.lis
 function showEnd(){
   const ek=ending(),st=starsOf(),sn=st.filter(Boolean).length;if(!G.capDone){G.capDone=1;G.capBonus={great:60,burn:30,kind:30,mid:15}[ek]||5;
     const best=starsAt(G.type,G.week||0);if(sn>best){G.capBonus+=(sn-best)*25;S.meta.stars[starKey(G.type,G.week||0)]=sn;G.newBest=1}S.meta.cap+=G.capBonus}
-  G.done=true;S.G=G;S.RT=null;save();
+  if(!G.done)setTimeout(()=>sfx(sn>=2?'win':sn?'good':'bad'),200);G.done=true;S.G=G;S.RT=null;save();
   const e=ENDINGS[ek],tot=Math.round(G.days.reduce((s,d)=>s+d.out,0)),pl=G.days.reduce((s,d)=>s+d.plan,0)||dayTarget()*5,quits=IDS.filter(id=>G.people[id].quit).length;
   const committed=S.commitment&&S.commitment.game===G.id;
   overIn.innerHTML=`<p class="eyebrow">${G.over?u('endFail'):u('endEy')}</p><h1>${t(e.t)}</h1>${starsH(sn)}<p class="lead">${t(e.d)}</p>
@@ -1884,7 +1901,7 @@ function showWelcome(){
     <p class="eyebrow">${u('choose')}</p>
     <div class="opts"><button class="opt typebtn" data-ov="type" data-type="sales"><b>${u('sales')}${starsType('sales')?` <span class="cap" style="font:500 14px var(--f-mono)">★ ${starsType('sales')}</span>`:''}</b><span>${u('salesD')}</span></button>
     <button class="opt typebtn" data-ov="type" data-type="project"><b>${u('project')}${starsType('project')?` <span class="cap" style="font:500 14px var(--f-mono)">★ ${starsType('project')}</span>`:''}</b><span>${u('projectD')}</span></button></div>
-    ${S.meta.cap||Object.keys(S.meta.up).length||Object.keys(S.meta.dos).length||cardsN()?hubBtn('welcome'):''}<p class="small">${u('basis')}</p>`;
+    ${S.meta.cap||Object.keys(S.meta.up).length||Object.keys(S.meta.dos).length||cardsN()?hubBtn('welcome'):''}${isPro()?'':`<button class="link" data-ov="pay">${t(L(`Nemokamai: pirmos ${FREE_WEEKS} savaitės · Apie pilną versiją`,`Free: the first ${FREE_WEEKS} weeks · About the full version`))}</button>`}<p class="small">${u('basis')}</p>`;
   over.hidden=false;over.scrollTop=0;drawHero();
 }
 function showHow(){
@@ -1897,12 +1914,14 @@ function showHow(){
 over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
   if(d.ck){S.checkin=d.ck;if(d.ck==='yes')S.bonus=1;S.meta.cap+={yes:40,part:20,no:0}[d.ck];save();showWelcome();return}
   if(d.buy){buy(d.buy);return}
+  if(d.pay==='buy'){iapBuy();return}if(d.pay==='restore'){iapRestore();return}
   if(d.skill){learn(d.skill);return}
   if(d.ta!==undefined&&DIAG){DIAG.A[DQ[DIAG.i].id]=+d.ta;DIAG.i++;if(DIAG.i<DQ.length)renderTest();else{const r=diagScore(DIAG.A);S.meta.diag.push({d:today(),raw:r.raw,style:r.style,A:DIAG.A});if(S.meta.diag.length>12)S.meta.diag.splice(1,1);DIAG=null;save();renderTestResult()}return}
   switch(d.ov){
     case 'type':renderCareer(d.type);break;
-    case 'week':newGame(renderCareer.ty,+d.w);RT=null;showHow();break;
-    case 'nextWeek':{const ty=G.type,w=(G.week||0)+1;newGame(ty,w);RT=null;showHow();break}
+    case 'week':if(needPro(+d.w)){renderPaywall('career');break}newGame(renderCareer.ty,+d.w);RT=null;showHow();break;
+    case 'nextWeek':{const ty=G.type,w=(G.week||0)+1;if(needPro(w)){renderPaywall('end');break}newGame(ty,w);RT=null;showHow();break}
+    case 'payBack':{const b=renderPaywall.back;if(b==='career')renderCareer();else if(b==='end'&&G&&G.done)showEnd();else if(b==='game'&&G&&RT&&!RT.ended){over.hidden=true;RT.paused=false}else showWelcome();break}
     case 'career':renderCareer(G.type);break;
     case 'go':over.hidden=true;startDay();renderAll();break;
     case 'resume':G=JSON.parse(JSON.stringify(S.G));if(S.RT){RT=S.RT;RT.ended=!!RT.ended;over.hidden=true;renderAll();if(RT.ended){renderDay();over.hidden=false}else RT.paused=false}else{RT=null;over.hidden=true;startDay();renderAll()}break;
@@ -1916,6 +1935,7 @@ over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)retur
     case 'hubBack':{const f=renderHub.from;if(f==='day')renderDay();else if(f==='end')showEnd();else showWelcome();break}
     case 'replay':{const ty=G.type;newGame(ty,G.week||0);RT=null;over.hidden=true;startDay();renderAll();break}
     case 'welcome':showWelcome();break;
+    case 'pay':renderPaywall('welcome');break;
     case 'test':DIAG={i:0,A:{}};renderTest();break;
     case 'testBack':if(DIAG&&DIAG.i>0){DIAG.i--;renderTest()}break;
     case 'testRes':renderTestResult();break;
@@ -2113,6 +2133,183 @@ function demoRT(){
     player:{x:6,y:9,path:[],dir:'down'}};
 }
 
+/* ================= app shell: sound, haptics, settings, full version ================= */
+const APP_VER='1.0.0';
+const CONTACT=''; // public support e-mail; the feedback button stays hidden while empty
+const SITE='https://arniuxas.github.io/groundwork/';
+const STORE={ios:'',android:''}; // store pages, filled in after release
+const FREE_WEEKS=2;
+const PRODUCT='groundwork_full';
+const CAP=window.Capacitor,NATIVE=!!(CAP&&CAP.isNativePlatform&&CAP.isNativePlatform());
+const PLAT=NATIVE?CAP.getPlatform():'web';
+const plug=n=>NATIVE&&CAP.Plugins&&CAP.Plugins[n];
+const SET=()=>{for(const [k,v] of Object.entries({snd:1,mus:1,vib:1,big:0}))if(!S.set||!(k in S.set))S.set=Object.assign(S.set||{},{[k]:v});return S.set};
+
+/* sound: everything is synthesised, no audio files */
+const AU={ctx:null,master:null,music:null,mt:null,step:0};
+function auInit(){
+  if(AU.ctx)return AU.ctx;const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;
+  AU.ctx=new A();AU.master=AU.ctx.createGain();AU.master.gain.value=0.5;AU.master.connect(AU.ctx.destination);
+  AU.music=AU.ctx.createGain();AU.music.gain.value=0;const lp=AU.ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1400;AU.music.connect(lp);lp.connect(AU.master);
+  return AU.ctx;
+}
+function tone(f,at,dur,{type='sine',vol=0.18,to=null,dest=null}={}){
+  const c=AU.ctx,o=c.createOscillator(),g=c.createGain(),t0=c.currentTime+at;
+  o.type=type;o.frequency.setValueAtTime(f,t0);if(to)o.frequency.exponentialRampToValueAtTime(to,t0+dur);
+  g.gain.setValueAtTime(0.0001,t0);g.gain.exponentialRampToValueAtTime(vol,t0+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t0+dur);
+  o.connect(g);g.connect(dest||AU.master);o.start(t0);o.stop(t0+dur+0.05);
+}
+const SFX={
+  tap:()=>tone(1250,0,0.05,{type:'triangle',vol:0.05}),
+  ping:()=>{tone(880,0,0.35,{vol:0.12});tone(1320,0.09,0.4,{vol:0.09})},
+  ring:()=>{for(let i=0;i<4;i++){tone(1180,i*0.11,0.09,{type:'square',vol:0.035});tone(1480,i*0.11+0.05,0.07,{type:'square',vol:0.03})}},
+  coin:()=>{tone(1568,0,0.12,{type:'triangle',vol:0.07});tone(2093,0.06,0.2,{type:'triangle',vol:0.06})},
+  card:()=>[659,784,988,1319].forEach((f,i)=>tone(f,i*0.07,0.5,{vol:0.07})),
+  streak:()=>[523,659,784,1047].forEach((f,i)=>tone(f,i*0.06,0.3,{type:'triangle',vol:0.08})),
+  miss:()=>{tone(392,0,0.28,{type:'triangle',vol:0.1,to:330});tone(311,0.14,0.4,{type:'triangle',vol:0.09,to:262})},
+  quit:()=>{tone(220,0,0.9,{type:'sawtooth',vol:0.05,to:147});tone(277,0,0.9,{vol:0.06,to:185})},
+  good:()=>[523,659,784].forEach((f,i)=>tone(f,i*0.1,0.7,{vol:0.1})),
+  bad:()=>[440,370,294].forEach((f,i)=>tone(f,i*0.14,0.7,{type:'triangle',vol:0.08})),
+  win:()=>[523,659,784,1047,784,1047].forEach((f,i)=>tone(f,i*0.11,i>3?0.9:0.35,{vol:0.1}))
+};
+let sfxLast={};
+function sfx(k){if(!SET().snd||!SFX[k])return;const c=auInit();if(!c||c.state!=='running')return;const now=performance.now();if(now-(sfxLast[k]||0)<90)return;sfxLast[k]=now;try{SFX[k]()}catch(e){}}
+/* a quiet electric-piano loop under the office day */
+const CHORDS=[[261.6,329.6,392,493.9],[220,261.6,329.6,392],[174.6,220,261.6,329.6],[196,246.9,293.7,392]];
+function musicTick(){
+  if(!AU.ctx||AU.ctx.state!=='running')return;
+  const ch=CHORDS[AU.step%4];AU.step++;
+  ch.forEach((f,i)=>{tone(f/2,i*0.05,3.6,{vol:0.05,dest:AU.music});tone(f,i*0.05+0.02,2.4,{type:'triangle',vol:0.018,dest:AU.music})});
+  if(AU.step%2)tone(ch[(AU.step>>1)%4]*2,1.6,1.4,{vol:0.02,dest:AU.music});
+}
+function musicSync(){
+  const want=SET().mus&&G&&RT&&!RT.ended&&over.hidden&&!document.hidden;
+  if(!AU.ctx){if(!want)return;if(!auInit())return}
+  AU.music.gain.setTargetAtTime(want?0.55:0,AU.ctx.currentTime,0.6);
+  if(want&&!AU.mt){musicTick();AU.mt=setInterval(musicTick,3200)}
+  if(!want&&AU.mt){clearInterval(AU.mt);AU.mt=null}
+}
+/* browsers start audio only after a user gesture */
+document.addEventListener('pointerdown',e=>{const c=auInit();if(c&&c.state==='suspended')c.resume();if(e.target.closest('button'))sfx('tap')},true);
+document.addEventListener('visibilitychange',()=>{if(!AU.ctx)return;if(document.hidden)AU.ctx.suspend();else AU.ctx.resume();musicSync()});
+setInterval(musicSync,1000);
+
+function buzz(k){
+  if(!SET().vib)return;const H=plug('Haptics');
+  if(H){try{k==='warn'?H.notification({type:'WARNING'}):k==='ok'?H.notification({type:'SUCCESS'}):H.impact({style:k==='hard'?'MEDIUM':'LIGHT'})}catch(e){}return}
+  if(navigator.vibrate&&(!navigator.userActivation||navigator.userActivation.hasBeenActive))navigator.vibrate(k==='warn'?[30,60,30]:k==='ok'?[15,40,15]:k==='hard'?25:10);
+}
+function applyBig(){document.documentElement.classList.toggle('big',!!SET().big)}
+
+/* full version */
+const IAP={price:null,ready:false,busy:false,err:''};
+const isPro=()=>!!(S.meta&&S.meta.pro);
+const needPro=w=>w>=FREE_WEEKS&&!isPro();
+function setPro(src){if(S.meta.pro)return;S.meta.pro=src;save();toast&&RT&&toast(`<b>${t(L('Pilna versija atrakinta','Full version unlocked'))}</b>`,true);sfx('win');buzz('ok');refreshPay()}
+function iapInit(){
+  const P=window.CdvPurchase;if(!NATIVE||!P)return;const {store,ProductType,Platform}=P;
+  const plat=PLAT==='ios'?Platform.APPLE_APPSTORE:Platform.GOOGLE_PLAY;
+  store.register([{id:PRODUCT,type:ProductType.NON_CONSUMABLE,platform:plat}]);
+  store.when().productUpdated(p=>{if(p.id!==PRODUCT)return;IAP.price=p.pricing&&p.pricing.price;if(p.owned)setPro('store');refreshPay()})
+    .approved(tx=>tx.verify()).verified(r=>r.finish())
+    .finished(tx=>{if(tx.products.some(p=>p.id===PRODUCT)){IAP.busy=false;setPro('store')}});
+  store.error(e=>{IAP.busy=false;IAP.err=e&&e.message||'';refreshPay()});
+  store.initialize([plat]).then(()=>{IAP.ready=true;if(store.owned(PRODUCT))setPro('store');refreshPay()});
+}
+document.addEventListener('deviceready',iapInit,false);
+function iapBuy(){
+  const P=window.CdvPurchase;if(!P||!IAP.ready)return;const p=P.store.get(PRODUCT),o=p&&p.getOffer();if(!o)return;
+  IAP.busy=true;IAP.err='';refreshPay();o.order().then(r=>{if(r&&r.isError){IAP.busy=false;IAP.err=r.message||'';refreshPay()}});
+}
+function iapRestore(){const P=window.CdvPurchase;if(!P)return;IAP.busy=true;refreshPay();P.store.restorePurchases().finally(()=>{IAP.busy=false;if(P.store.owned(PRODUCT))setPro('store');refreshPay()})}
+/* testers on the web version: open the page with #tester-<code> once */
+const TESTER='tester-ft2026';
+if(location.hash==='#'+TESTER){history.replaceState(null,'',location.pathname);setTimeout(()=>{if(S.meta&&!S.meta.pro){S.meta.pro='tester';save()}},0)}
+
+const PAYF=[L('Visos 5 karjeros savaitės ir nesibaigiantys iššūkiai','All 5 career weeks and endless challenges'),
+  L('Vadovavimas per vadovą ir dvi komandos','Leading through a lead and running two teams'),
+  L('Visos 229 įžvalgų kortelės ir žmonių bylos','All 229 insight cards and people files'),
+  L('Vienas pirkimas, be prenumeratos ir reklamų','One purchase: no subscription, no ads')];
+function payH(){
+  const owned=isPro();
+  if(owned)return `<p class="eyebrow">${t(L('Pilna versija','Full version'))}</p><p>${t(L('Atrakinta. Ačiū, kad palaikai žaidimą.','Unlocked. Thank you for supporting the game.'))}</p>`;
+  let act;
+  if(NATIVE)act=`<button class="btn" data-pay="buy"${!IAP.ready||IAP.busy?' disabled':''}>${IAP.busy?t(L('Laukiama…','Waiting…')):t(L('Atrakinti','Unlock'))+(IAP.price?' · '+esc(IAP.price):'')}</button>
+    <button class="link" data-pay="restore"${IAP.busy?' disabled':''}>${t(L('Atkurti pirkimus','Restore purchases'))}</button>${IAP.err?`<p class="small">${esc(IAP.err)}</p>`:''}${!IAP.ready?`<p class="small">${t(L('Jungiamasi prie parduotuvės…','Connecting to the store…'))}</p>`:''}`;
+  else act=(STORE.ios||STORE.android)?`<div class="opts">${STORE.ios?`<a class="btn" href="${STORE.ios}" target="_blank" rel="noopener">App Store</a>`:''}${STORE.android?`<a class="btn" href="${STORE.android}" target="_blank" rel="noopener">Google Play</a>`:''}</div>`
+    :`<p class="small">${t(L('Pilna versija netrukus bus App Store ir Google Play.','The full version is coming soon to the App Store and Google Play.'))}</p>`;
+  return `<ul class="list">${PAYF.map(f=>`<li>${t(f)}</li>`).join('')}</ul>${act}`;
+}
+function renderPaywall(back){
+  if(back)renderPaywall.back=back;
+  overIn.innerHTML=`<span data-payv hidden></span><p class="eyebrow">Groundwork · ${t(L('Pilna versija','Full version'))}</p>
+    <h1>${t(L('Tęsk savo vadovo kelią','Keep growing as a leader'))}</h1>
+    <p class="lead">${t(L(`Pirmos ${FREE_WEEKS} savaitės nemokamos. Toliau laukia sunkesni sprendimai: įsipareigojimas, atskaitomybė, rezultatai, o vėliau vadovavimas per kitus vadovus.`,`The first ${FREE_WEEKS} weeks are free. Next come harder calls: commitment, accountability, results, and later leading through other leads.`))}</p>
+    ${payH()}<button class="btn ghost" data-ov="payBack">${t(L('Grįžti','Back'))}</button>`;
+  over.hidden=false;over.scrollTop=0;
+}
+function refreshPay(){if(!over.hidden&&overIn.querySelector('[data-payv]'))renderPaywall();if(!setv.hidden)renderSettings()}
+
+/* native storage: UserDefaults / SharedPreferences survive WebView cache clearing and are in the OS backup */
+async function nativeLoad(){
+  const P=plug('Preferences');if(!P)return;
+  try{const r=await P.get({key:KEY});if(!r||!r.value)return;let local=null;try{local=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+    const n=JSON.parse(r.value);if(!local||(n.ts||0)>=(local.ts||0))localStorage.setItem(KEY,r.value)}catch(e){}
+}
+function nativeSave(j){const P=plug('Preferences');if(P)P.set({key:KEY,value:j}).catch(()=>{})}
+
+/* progress transfer between devices */
+const exportCode=()=>'GW1.'+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+function importCode(s){
+  s=(s||'').trim();if(!s.startsWith('GW1.'))return false;
+  try{const o=JSON.parse(decodeURIComponent(escape(atob(s.slice(4)))));if(!o||!o.meta)return false;
+    const pro=S.meta.pro;S=Object.assign({lang:'lt',G:null,commitment:null,checkin:null,bonus:0,meta:null},o);S.meta.pro=S.meta.pro||pro;save();return true}catch(e){return false}
+}
+
+/* settings dialog */
+const setv=document.getElementById('setv'),setIn=document.getElementById('setIn');
+let setWasPaused=false;
+function openSettings(){if(RT){setWasPaused=RT.paused;RT.paused=true}setv.hidden=false;renderSettings.mode='';renderSettings();musicSync()}
+function closeSettings(){setv.hidden=true;if(RT&&!SH&&over.hidden)RT.paused=setWasPaused;musicSync()}
+const tog=(k,lab)=>`<button class="setrow" data-set="${k}" role="switch" aria-checked="${!!SET()[k]}"><span>${t(lab)}</span><span class="sw"></span></button>`;
+function renderSettings(){
+  const m=renderSettings.mode;let body;
+  if(m==='export')body=`<h2>${t(L('Perkelti progresą','Transfer progress'))}</h2><p class="small">${t(L('Nukopijuok šį kodą ir įklijuok jį kitame įrenginyje: Nustatymai → Perkelti progresą → Įkelti.','Copy this code and paste it on another device: Settings → Transfer progress → Load.'))}</p>
+    <textarea class="code" readonly rows="5">${exportCode()}</textarea><button class="btn" data-set="copy">${t(L('Kopijuoti','Copy'))}</button><button class="btn ghost" data-set="back">${t(L('Atgal','Back'))}</button>`;
+  else if(m==='import')body=`<h2>${t(L('Įkelti progresą','Load progress'))}</h2><p class="small">${t(L('Įklijuok kodą. Dabartinis progresas šiame įrenginyje bus pakeistas.','Paste the code. The progress on this device will be replaced.'))}</p>
+    <textarea class="code" id="impTx" rows="5" placeholder="GW1.…"></textarea><button class="btn" data-set="doImport">${t(L('Įkelti','Load'))}</button>${renderSettings.err?`<p class="small" style="color:var(--bad)">${t(L('Kodas netinka.','That code does not work.'))}</p>`:''}<button class="btn ghost" data-set="back">${t(L('Atgal','Back'))}</button>`;
+  else if(m==='reset')body=`<h2>${t(L('Ištrinti visą progresą?','Delete all progress?'))}</h2><p>${t(L('Dings savaitės, žvaigždutės, kapitalas, kortelės ir bylos. To atšaukti negalima. Pilna versija liks atrakinta.','Weeks, stars, capital, cards and files will be gone. This cannot be undone. The full version stays unlocked.'))}</p>
+    <button class="btn" data-set="doReset" style="background:var(--bad);border-color:var(--bad)">${t(L('Taip, ištrinti','Yes, delete'))}</button><button class="btn ghost" data-set="back">${t(L('Atšaukti','Cancel'))}</button>`;
+  else body=`<h2>${t(L('Nustatymai','Settings'))}</h2>
+    <div class="setlist">${tog('snd',L('Garsai','Sounds'))}${tog('mus',L('Muzika','Music'))}${tog('vib',L('Vibracija','Vibration'))}${tog('big',L('Didesnis tekstas','Larger text'))}</div>
+    <div class="meter">${payH()}${!isPro()?`<button class="link" data-set="pay">${t(L('Plačiau apie pilną versiją','More about the full version'))}</button>`:''}</div>
+    <div class="setlist"><button class="setrow" data-set="export"><span>${t(L('Perkelti progresą į kitą įrenginį','Move progress to another device'))}</span><span>›</span></button>
+    <button class="setrow" data-set="import"><span>${t(L('Įkelti progresą iš kodo','Load progress from a code'))}</span><span>›</span></button>
+    ${CONTACT?`<a class="setrow" href="mailto:${CONTACT}?subject=${encodeURIComponent('Groundwork '+APP_VER+' · '+PLAT)}"><span>${t(L('Parašyk atsiliepimą','Send feedback'))}</span><span>›</span></a>`:''}
+    <a class="setrow" href="${SITE}privacy.html${S.lang==='en'?'#en':''}" target="_blank" rel="noopener"><span>${t(L('Privatumo politika','Privacy policy'))}</span><span>↗</span></a>
+    <a class="setrow" href="${SITE}terms.html${S.lang==='en'?'#en':''}" target="_blank" rel="noopener"><span>${t(L('Naudojimo sąlygos','Terms of use'))}</span><span>↗</span></a>
+    <button class="setrow" data-set="reset"><span style="color:var(--bad)">${t(L('Ištrinti progresą','Delete progress'))}</span><span>›</span></button></div>
+    <p class="small">Groundwork ${APP_VER} · ${t(L('Žaidimas remiasi P. Lencioni penkių komandos disfunkcijų modeliu. Jis nepakeičia profesionalaus koučingo.','Based on P. Lencioni’s five dysfunctions of a team model. It does not replace professional coaching.'))}</p>
+    <button class="btn" data-set="close">${t(L('Uždaryti','Close'))}</button>`;
+  setIn.innerHTML=body;setIn.scrollTop=0;
+}
+setv.addEventListener('click',e=>{
+  if(e.target===setv){closeSettings();return}
+  const b=e.target.closest('[data-set],[data-pay]');if(!b)return;const k=b.dataset.set;
+  if(b.dataset.pay==='buy'){iapBuy();return}if(b.dataset.pay==='restore'){iapRestore();return}
+  if(['snd','mus','vib','big'].includes(k)){SET()[k]=SET()[k]?0:1;save();applyBig();musicSync();renderSettings();if(k==='vib')buzz('tap');return}
+  switch(k){
+    case 'close':closeSettings();break;
+    case 'back':renderSettings.mode='';renderSettings.err=0;renderSettings();break;
+    case 'export':case 'import':case 'reset':renderSettings.mode=k;renderSettings.err=0;renderSettings();break;
+    case 'copy':{const ta=setIn.querySelector('textarea');ta.select();(navigator.clipboard?navigator.clipboard.writeText(ta.value):Promise.reject()).catch(()=>document.execCommand('copy'));b.textContent=t(L('Nukopijuota','Copied'));break}
+    case 'doImport':if(importCode(document.getElementById('impTx').value))location.reload();else{renderSettings.err=1;renderSettings()}break;
+    case 'doReset':{const keep={pro:S.meta.pro};S={lang:S.lang,G:null,commitment:null,checkin:null,bonus:0,meta:null,set:S.set};S.meta=Object.assign({cap:0,up:{},dos:{},cards:{},stars:{},skills:{},diag:[]},keep);save();location.reload();break}
+    case 'pay':closeSettings();if(SH){scrim.hidden=true;SH=null}autosave();if(RT)RT.paused=true;renderPaywall(over.hidden?'game':'welcome');break;
+  }
+});
+document.getElementById('gear').addEventListener('click',openSettings);
+
 /* ================= saving ================= */
 function autosave(){
   if(!G||!RT||SH||G.done)return;
@@ -2133,11 +2330,14 @@ function frame(now){
 }
 
 /* ================= boot ================= */
-load();setLang();resize();
-if(S.G&&!S.G.done)G=JSON.parse(JSON.stringify(S.G));
-showWelcome();
-requestAnimationFrame(frame);
-if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+(async()=>{
+  await nativeLoad();load();setLang();applyBig();resize();
+  if(S.G&&!S.G.done)G=JSON.parse(JSON.stringify(S.G));
+  showWelcome();
+  requestAnimationFrame(frame);
+  if(NATIVE){const A=plug('App');A&&A.addListener('pause',autosave);document.body.classList.add('native')}
+  else if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('sw.js').catch(()=>{});
+})();
 </script>
 </body>
 </html>
