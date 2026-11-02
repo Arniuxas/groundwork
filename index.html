@@ -286,6 +286,24 @@ html.big .over-in,html.big .sheet,html.big .side,html.big .hint,html.big .goals-
 .intro-top>span .steps{flex:1}
 .swiping{transition:none!important}
 .swipe-back{transition:transform .25s cubic-bezier(.2,.7,.2,1),opacity .25s}
+
+/* Save slots, menu tiles, name field, pause */
+.slotc{display:flex;flex-direction:column;gap:3px;text-align:left;width:100%;background:rgba(27,36,45,.94);border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;color:var(--ink);font-size:14.5px;position:relative}
+.slotc b{font:500 18px var(--f-display)}
+.slotc.main{border-color:var(--accent)}
+.slotc .go{align-self:flex-end;font:600 13px var(--f-body);color:var(--accent);margin-top:4px}
+.slotc.empty{border-style:dashed;background:transparent;align-items:center;text-align:center;color:var(--muted)}
+.slotrow{display:flex;flex-direction:column;gap:4px}
+.slotrow>.link{align-self:flex-end;font-size:12.5px;color:var(--muted)}
+.slotdel{display:flex;gap:12px;align-items:center;justify-content:flex-end}
+.menu .btn .small{margin-left:6px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:2px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:12px;border:1px solid var(--line);background:rgba(21,28,35,.92);color:var(--ink);cursor:pointer;font-size:12px;line-height:1.2}
+.tile svg{width:22px;height:22px;color:var(--accent)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field input{font:500 18px var(--f-body);color:var(--ink);background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:12px 14px;width:100%}
+.field input:focus{outline:2px solid var(--focus);outline-offset:1px}
+.pausebtn svg{width:14px;height:14px;display:block}
 @media (min-width:960px){
   .stage{grid-template-columns:minmax(0,1fr) 300px}
   .side{display:flex;flex-direction:column;gap:12px;position:sticky;top:10px}
@@ -300,7 +318,7 @@ html.big .over-in,html.big .sheet,html.big .side,html.big .hint,html.big .goals-
 <div class="app">
   <header class="top">
     <button class="brand" id="brand"><svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><polygon points="11,1.5 20.5,8.4 16.9,19.6 5.1,19.6 1.5,8.4" fill="none" stroke="#97A2AD"/><polygon points="11,2.5 16.7,9.6 13.9,15.4 8,17 4.3,9.3" fill="#C9D7E8"/></svg><span>Groundwork</span></button>
-    <div class="topr"><div class="lang" role="group" aria-label="Kalba / Language"><button data-lang="lt">LT</button><button data-lang="en">EN</button></div><button class="gear" id="gear" aria-label="Nustatymai / Settings"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button></div>
+    <div class="topr"><div class="lang" role="group" aria-label="Kalba / Language"><button data-lang="lt">LT</button><button data-lang="en">EN</button></div><button class="gear" data-ui="pause" id="pauseB" aria-label="Pauzė / Pause"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="3" y="2" width="3" height="10" rx="1" fill="currentColor"/><rect x="8" y="2" width="3" height="10" rx="1" fill="currentColor"/></svg></button><button class="gear" id="gear" aria-label="Nustatymai / Settings"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg></button></div>
   </header>
   <div class="stage">
     <section class="game">
@@ -1470,12 +1488,28 @@ const SPOT={desk:[2,2],meetP:[10,4],meet:[[9,2],[9,3],[12,2],[12,3],[10,1],[11,1
 const region=(c,r)=>(c>=1&&c<=4&&r>=1&&r<=4)?'office':(c>=9&&c<=12&&r>=1&&r<=4)?'meet':(c>=11&&c<=12&&r>=10&&r<=13)?'kitchen':'open';
 
 /* ================= state ================= */
-const KEY='groundwork.v3';
+const KEY='groundwork.v4';
 let S={lang:'lt',G:null,commitment:null,checkin:null,bonus:0,meta:null};
 let G=null; // sim state (saved at day start)
 let RT=null; // runtime (positions etc)
-function save(){try{S.ts=Date.now();const j=JSON.stringify(S);localStorage.setItem(KEY,j);if(typeof nativeSave==='function')nativeSave(j)}catch(e){}}
-function load(){try{const j=localStorage.getItem(KEY);if(j)S=Object.assign(S,JSON.parse(j))}catch(e){}S.meta=Object.assign({cap:0,up:{},dos:{},cards:{},stars:{},skills:{},diag:[]},S.meta||{});if(!S.meta.pro&&Object.keys(S.meta.stars).some(k=>+k.split('_')[1]>=FREE_WEEKS))S.meta.pro='legacy';['sales','project'].forEach(k=>{if(typeof S.meta.stars[k]==='number'){S.meta.stars[k+'_0']=S.meta.stars[k];delete S.meta.stars[k]}})}
+// Three save slots. S is always the active slot's state; language, settings, the full version and the tutorial flag are shared.
+const KEY_OLD='groundwork.v3';
+const META0=()=>({cap:0,up:{},dos:{},cards:{},stars:{},skills:{},diag:[]});
+let SLOTS={active:0,slots:[null,null,null],lang:null,set:null,pro:null,tut:0,ts:0};
+const slotUsed=o=>!!(o&&(o.G||o.name||(o.meta&&(o.meta.cap||o.meta.diag.length||Object.keys(o.meta.stars).length))));
+function freshS(){return {lang:S.lang,set:S.set,G:null,RT:null,commitment:null,checkin:null,bonus:0,meta:META0(),name:'',play:0}}
+function fixS(o){o.meta=Object.assign(META0(),o.meta||{});['sales','project'].forEach(k=>{if(typeof o.meta.stars[k]==='number'){o.meta.stars[k+'_0']=o.meta.stars[k];delete o.meta.stars[k]}});
+  if(!o.meta.pro&&Object.keys(o.meta.stars).some(k=>+k.split('_')[1]>=FREE_WEEKS))SLOTS.pro=SLOTS.pro||'legacy';return o}
+function useSlot(i,o){SLOTS.active=i;S=fixS(o||SLOTS.slots[i]||freshS());S.lang=SLOTS.lang||S.lang;S.set=SLOTS.set||S.set;S.meta.pro=SLOTS.pro||S.meta.pro||null;if(SLOTS.tut)S.meta.tutDone=1}
+function save(){try{S.ts=Date.now();SLOTS.lang=S.lang;SLOTS.set=S.set;SLOTS.pro=S.meta.pro||SLOTS.pro;if(S.meta.tutDone)SLOTS.tut=1;
+  if(SLOTS.active!==null&&(SLOTS.slots[SLOTS.active]===S||slotUsed(S)))SLOTS.slots[SLOTS.active]=S;
+  SLOTS.ts=S.ts;const j=JSON.stringify(SLOTS);localStorage.setItem(KEY,j);if(typeof nativeSave==='function')nativeSave(j)}catch(e){}}
+function load(){
+  try{const j=localStorage.getItem(KEY);if(j)SLOTS=Object.assign(SLOTS,JSON.parse(j));
+    else{const o=localStorage.getItem(KEY_OLD);if(o){const old=JSON.parse(o);SLOTS.lang=old.lang;SLOTS.set=old.set;SLOTS.pro=old.meta&&old.meta.pro;SLOTS.tut=old.meta&&old.meta.tutDone?1:0;SLOTS.slots[0]=Object.assign(old,{name:''})}}}catch(e){}
+  SLOTS.slots=SLOTS.slots.map(o=>o?fixS(o):null);
+  const a=SLOTS.active!==null&&SLOTS.active<3?SLOTS.active:0;useSlot(a);
+}
 
 const t=o=>{const r=(o&&(o[S.lang]??o.lt))||'';return r.indexOf('{')<0?r:subst(r)};
 const tx=o=>{if(!o)return '';if(o.sales||o.project)o=o[G?G.type:'sales'];return t(o)};
@@ -1959,7 +1993,7 @@ function showEnd(){
     ${hubBtn('end')}<button class="btn ghost" data-ov="replay">${u('replay')}</button><button class="btn ghost" data-ov="career">${t(L('Karjeros žemėlapis','Career map'))}</button><p class="small">${u('replayNote')}</p><button class="link" data-ov="welcome">${u('newTeam')}</button>`;
   over.hidden=false;over.scrollTop=0;
 }
-function showWelcome(){NG=null;showMenu()}
+function showWelcome(){if(NG)ngCancel();showMenu()}
 function showHow(){
   const cfg=weekCfg(G.week||0);
   overIn.innerHTML=`<span data-wkv hidden></span><p class="eyebrow">${u(G.type)} · ${t(L('Savaitė','Week'))} ${(G.week||0)+1}</p><h1>${t(cfg.n)}</h1><p class="lead">${t(cfg.intro)}</p><p class="eyebrow">${u('howH')}</p><ol class="list">${UI.how.map(h=>`<li>${t(h)}</li>`).join('')}</ol>
@@ -1988,7 +2022,7 @@ over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)retur
     case 'dos':renderDos(d.id);break;
     case 'toHub':renderHub();break;
     case 'cards':renderCards();break;
-    case 'hubBack':{const f=renderHub.from;if(f==='day')renderDay();else if(f==='end')showEnd();else showWelcome();break}
+    case 'hubBack':{const f=renderHub.from;if(f==='pause')renderPause();else if(f==='day')renderDay();else if(f==='end')showEnd();else showWelcome();break}
     case 'replay':{const ty=G.type;newGame(ty,G.week||0);RT=null;over.hidden=true;startDay();renderAll();break}
     case 'welcome':showWelcome();break;
     case 'pay':renderPaywall('welcome');break;
@@ -1997,8 +2031,13 @@ over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)retur
     case 'testRes':renderTestResult();break;
     case 'ngTest':DIAG={i:0,A:{}};renderTest();break;
     case 'ngTeam':ngTeam();break;
-    case 'ngBack':ngStart();break;
-    case 'ngGo':ngStart();break;
+    case 'pause':renderPause();break;
+    case 'unpause':over.hidden=true;if(RT)RT.paused=false;renderHUD();break;
+    case 'pHow':renderHowTo('pause');break;
+    case 'pSet':openSettings();break;
+    case 'pHub':renderHub('pause');break;
+    case 'pMenu':autosave();showWelcome();break;
+    case 'ngBack':ngStart(NG?NG.slot:undefined);break;
     case 'ngType':ngType(d.type);break;
   }});
 
@@ -2020,11 +2059,12 @@ function renderHUD(){
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-ui]');if(!b||!RT)return;
   if(b.dataset.ui==='tutskip'){tutEnd();return}
+  if(b.dataset.ui==='pause'&&!SH){renderPause();return}
   if(b.dataset.ui==='speed'){RT.speed=(RT.speed+1)%SPEEDS.length;renderHUD()}
   if(b.dataset.ui==='shop'&&!SH&&!RT.paused)openShop();
   if(b.dataset.ui==='team')openTeam();if(b.dataset.ui==='log')openLog()});
 document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{S.lang=b.dataset.lang;save();setLang();
-  if(!over.hidden){const dv=overIn.querySelector('[data-dosv]');if(overIn.querySelector('[data-testv]')&&DIAG)renderTest();else if(overIn.querySelector('[data-resv]'))renderTestResult();else if(overIn.querySelector('[data-hub]'))renderHub();else if(overIn.querySelector('[data-cardsv]'))renderCards();else if(overIn.querySelector('[data-careerv]'))renderCareer();else if(dv)renderDos(dv.dataset.dosv);else if(overIn.querySelector('[data-howv]'))renderHowTo();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
+  if(!over.hidden){const dv=overIn.querySelector('[data-dosv]');if(overIn.querySelector('[data-testv]')&&DIAG)renderTest();else if(overIn.querySelector('[data-resv]'))renderTestResult();else if(overIn.querySelector('[data-hub]'))renderHub();else if(overIn.querySelector('[data-cardsv]'))renderCards();else if(overIn.querySelector('[data-careerv]'))renderCareer();else if(dv)renderDos(dv.dataset.dosv);else if(overIn.querySelector('[data-howv]'))renderHowTo(renderHowTo.from);else if(overIn.querySelector('[data-pausev]'))renderPause();else if(overIn.querySelector('[data-slotsv]'))renderSlots();else if(G&&G.done)showEnd();else if(RT&&RT.sum&&RT.ended)renderDay();else if(G&&!RT)showHow()}
   if(SH)renderSheet();renderHUD()}));
 document.getElementById('brand').addEventListener('click',()=>{if(SH){scrim.hidden=true;SH=null;if(RT)RT.paused=false}autosave();if(RT)RT.paused=true;showWelcome()});
 function setLang(){document.documentElement.lang=S.lang;document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===S.lang))}
@@ -2291,7 +2331,7 @@ function iapBuy(){
 function iapRestore(){const P=window.CdvPurchase;if(!P)return;IAP.busy=true;refreshPay();P.store.restorePurchases().finally(()=>{IAP.busy=false;if(P.store.owned(PRODUCT))setPro('store');refreshPay()})}
 /* testers on the web version: open the page with #tester-<code> once */
 const TESTER='tester-ft2026';
-if(location.hash==='#'+TESTER){history.replaceState(null,'',location.pathname);setTimeout(()=>{if(S.meta&&!S.meta.pro){S.meta.pro='tester';save()}},0)}
+if(location.hash==='#'+TESTER){history.replaceState(null,'',location.pathname);setTimeout(()=>{if(S.meta&&!S.meta.pro){S.meta.pro='tester';SLOTS.pro='tester';save()}},0)}
 
 const PAYF=[L('Visos 5 karjeros savaitės ir nesibaigiantys iššūkiai','All 5 career weeks and endless challenges'),
   L('Vadovavimas per vadovą ir dvi komandos','Leading through a lead and running two teams'),
@@ -2320,17 +2360,19 @@ function refreshPay(){if(!over.hidden&&overIn.querySelector('[data-payv]'))rende
 /* native storage: UserDefaults / SharedPreferences survive WebView cache clearing and are in the OS backup */
 async function nativeLoad(){
   const P=plug('Preferences');if(!P)return;
+  try{const o=await P.get({key:KEY_OLD});if(o&&o.value&&!localStorage.getItem(KEY_OLD))localStorage.setItem(KEY_OLD,o.value)}catch(e){}
   try{const r=await P.get({key:KEY});if(!r||!r.value)return;let local=null;try{local=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
     const n=JSON.parse(r.value);if(!local||(n.ts||0)>=(local.ts||0))localStorage.setItem(KEY,r.value)}catch(e){}
 }
 function nativeSave(j){const P=plug('Preferences');if(P)P.set({key:KEY,value:j}).catch(()=>{})}
 
 /* progress transfer between devices */
-const exportCode=()=>'GW1.'+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+const exportCode=()=>'GW1.'+btoa(unescape(encodeURIComponent(JSON.stringify(SLOTS))));
 function importCode(s){
   s=(s||'').trim();if(!s.startsWith('GW1.'))return false;
   try{const o=JSON.parse(decodeURIComponent(escape(atob(s.slice(4)))));if(!o||!o.meta)return false;
-    const pro=S.meta.pro;S=Object.assign({lang:'lt',G:null,commitment:null,checkin:null,bonus:0,meta:null},o);S.meta.pro=S.meta.pro||pro;save();return true}catch(e){return false}
+    if(o.slots){o.pro=o.pro||S.meta.pro;localStorage.setItem(KEY,JSON.stringify(o));return true}
+    const pro=S.meta.pro;S=fixS(Object.assign(freshS(),o));S.meta.pro=S.meta.pro||pro;SLOTS.slots[SLOTS.active]=S;save();return true}catch(e){return false}
 }
 
 /* settings dialog */
@@ -2345,7 +2387,7 @@ function renderSettings(){
     <textarea class="code" readonly rows="5">${exportCode()}</textarea><button class="btn" data-set="copy">${t(L('Kopijuoti','Copy'))}</button><button class="btn ghost" data-set="back">${t(L('Atgal','Back'))}</button>`;
   else if(m==='import')body=`<h2>${t(L('Įkelti progresą','Load progress'))}</h2><p class="small">${t(L('Įklijuok kodą. Dabartinis progresas šiame įrenginyje bus pakeistas.','Paste the code. The progress on this device will be replaced.'))}</p>
     <textarea class="code" id="impTx" rows="5" placeholder="GW1.…"></textarea><button class="btn" data-set="doImport">${t(L('Įkelti','Load'))}</button>${renderSettings.err?`<p class="small" style="color:var(--bad)">${t(L('Kodas netinka.','That code does not work.'))}</p>`:''}<button class="btn ghost" data-set="back">${t(L('Atgal','Back'))}</button>`;
-  else if(m==='reset')body=`<h2>${t(L('Ištrinti visą progresą?','Delete all progress?'))}</h2><p>${t(L('Dings savaitės, žvaigždutės, kapitalas, kortelės ir bylos. To atšaukti negalima. Pilna versija liks atrakinta.','Weeks, stars, capital, cards and files will be gone. This cannot be undone. The full version stays unlocked.'))}</p>
+  else if(m==='reset')body=`<h2>${t(L('Ištrinti visą progresą?','Delete all progress?'))}</h2><p>${t(L('Dings visos trys išsaugotos karjeros: savaitės, žvaigždutės, kapitalas, kortelės ir bylos. To atšaukti negalima. Pilna versija liks atrakinta.','All three saved careers will be gone: weeks, stars, capital, cards and files. This cannot be undone. The full version stays unlocked.'))}</p>
     <button class="btn" data-set="doReset" style="background:var(--bad);border-color:var(--bad)">${t(L('Taip, ištrinti','Yes, delete'))}</button><button class="btn ghost" data-set="back">${t(L('Atšaukti','Cancel'))}</button>`;
   else body=`<h2>${t(L('Nustatymai','Settings'))}</h2>
     <div class="setlist">${tog('snd',L('Garsai','Sounds'))}${tog('mus',L('Muzika','Music'))}${tog('vib',L('Vibracija','Vibration'))}${tog('big',L('Didesnis tekstas','Larger text'))}</div>
@@ -2373,7 +2415,7 @@ setv.addEventListener('click',e=>{
     case 'export':case 'import':case 'reset':renderSettings.mode=k;renderSettings.err=0;renderSettings();break;
     case 'copy':{const ta=setIn.querySelector('textarea');ta.select();(navigator.clipboard?navigator.clipboard.writeText(ta.value):Promise.reject()).catch(()=>document.execCommand('copy'));b.textContent=t(L('Nukopijuota','Copied'));break}
     case 'doImport':if(importCode(document.getElementById('impTx').value))location.reload();else{renderSettings.err=1;renderSettings()}break;
-    case 'doReset':{const keep={pro:S.meta.pro};S={lang:S.lang,G:null,commitment:null,checkin:null,bonus:0,meta:null,set:S.set};S.meta=Object.assign({cap:0,up:{},dos:{},cards:{},stars:{},skills:{},diag:[]},keep);save();location.reload();break}
+    case 'doReset':{SLOTS.slots=[null,null,null];SLOTS.active=0;SLOTS.tut=0;S=freshS();S.meta.pro=SLOTS.pro;SLOTS.slots[0]=null;save();location.reload();break}
     case 'pay':closeSettings();if(SH){scrim.hidden=true;SH=null}autosave();if(RT)RT.paused=true;renderPaywall(over.hidden?'game':'welcome');break;
   }
 });
@@ -2417,48 +2459,92 @@ function inScene(){
 function inShow(mode){const el=document.getElementById('intro');inScene();IN.mode=mode;el.dataset.mode=mode;el.hidden=false;el.classList.remove('out');over.hidden=true}
 function inHide(){const el=document.getElementById('intro');el.hidden=true}
 function saveLabel(){const g=S.G;return `${t(L('Savaitė','Week'))} ${(g.week||0)+1} · ${t(UI.days[g.day])} ${hhmm(S.RT?S.RT.time:540)} · ${u(g.type)}`}
+function ago(ts){if(!ts)return '';const m=Math.round((Date.now()-ts)/60000);
+  if(m<2)return t(L('ką tik','just now'));if(m<60)return `${m} min`;const h=Math.round(m/60);if(h<24)return `${h} ${t(L('val.','h'))}`;const d=Math.round(h/24);return d===1?t(L('vakar','yesterday')):`${d} ${t(L('d.','d'))}`}
+function playH(o){const m=Math.round((o.play||0)/60);return m<60?`${m} min`:`${Math.floor(m/60)} ${t(L('val.','h'))} ${m%60} min`}
+function slotName(o,i){return o&&o.name?o.name:`${t(L('Karjera','Career'))} ${i+1}`}
+function slotStars(o){return Object.values(o.meta.stars).reduce((a,b)=>a+b,0)}
+// one-line state of a save: where you are and how far you got
+function slotLine(o){const g=o.G;if(!g)return Object.keys(o.meta.stars).length?t(L('Pasirink kitą savaitę','Choose your next week')):t(L('Dar nepradėta','Not started yet'));
+  return g.done?`${u(g.type)} · ${t(L('Savaitė','Week'))} ${(g.week||0)+1} ${t(L('baigta','complete'))}`:`${u(g.type)} · ${t(L('Savaitė','Week'))} ${(g.week||0)+1} · ${t(UI.days[g.day])} ${hhmm(o.RT?o.RT.time:540)}`}
+function slotCard(o,i,tag){const d=o.meta.diag,st=d.length?t(STYLES[d[d.length-1].style].n):null;
+  return `<div style="display:flex;justify-content:space-between;gap:8px"><b>${esc(slotName(o,i))}</b><span class="small">${tag||ago(o.ts)}</span></div>
+    <span class="small" style="color:var(--ink)">${slotLine(o)}</span><span class="small">${[st,`★ ${slotStars(o)}`,`◆ ${o.meta.cap}`,playH(o)].filter(Boolean).join(' · ')}</span>`}
 function showMenu(){
   if(RT&&!RT.ended)RT.paused=true;
   inShow('menu');IN.rt.player={x:6,y:9,path:[],dir:'down'};IN.G.people.egle.stress=40;
-  const resume=S.G&&!S.G.done,anyStars=starsType('sales')+starsType('project')>0,diag=S.meta.diag.length;
+  const used=SLOTS.slots.filter(slotUsed).length,cur=slotUsed(S)?S:null,diag=S.meta.diag.length;
   let check='';
-  if(S.commitment&&!S.checkin&&S.commitment.date!==today())check=`<div class="meter"><p class="eyebrow">${u('checkEy')}</p><p><b>${t(S.commitment.task)}</b></p><div class="opts"><button class="opt" data-ck="yes">${u('ckYes')}</button><button class="opt" data-ck="part">${u('ckPart')}</button><button class="opt" data-ck="no">${u('ckNo')}</button></div></div>`;
-  const row=(k,lab,right)=>`<button class="setrow" data-m="${k}"><span>${t(lab)}</span><span>${right||'›'}</span></button>`;
+  if(cur&&S.commitment&&!S.checkin&&S.commitment.date!==today())check=`<div class="meter"><p class="eyebrow">${u('checkEy')}</p><p><b>${t(S.commitment.task)}</b></p><div class="opts"><button class="opt" data-ck="yes">${u('ckYes')}</button><button class="opt" data-ck="part">${u('ckPart')}</button><button class="opt" data-ck="no">${u('ckNo')}</button></div></div>`;
+  const tile=(k,icon,lab)=>`<button class="tile" data-m="${k}">${icon}<span>${t(lab)}</span></button>`;
   document.getElementById('introSkip').hidden=true;
   document.getElementById('introMark').innerHTML='';
   document.querySelector('.intro-top>span').innerHTML=`<div class="lang" role="group" aria-label="Kalba / Language"><button data-il="lt" aria-pressed="${S.lang==='lt'}">LT</button><button data-il="en" aria-pressed="${S.lang==='en'}">EN</button></div>`;
   document.getElementById('introText').innerHTML=`<div class="menu-head">${PYR}<h1>Groundwork</h1><p>${t(L('Vadovavimo žaidimas, kuriame komanda reaguoja į kiekvieną tavo sprendimą.','A leadership game where your team reacts to every call you make.'))}</p></div>
     ${check}<nav class="menu">
-    ${resume?`<button class="btn" data-m="resume">${u('cont')}<small>${saveLabel()}</small></button>`:''}
-    <button class="btn${resume?' ghost':''}" data-m="new">${t(L('Naujas žaidimas','New game'))}</button>
-    <div class="setlist">
-      ${anyStars?row('career',L('Karjeros žemėlapis','Career map'),`★ ${starsType('sales')+starsType('project')}`):''}
-      ${row('hub',L('Biuras ir parduotuvė','Office and shop'),`◆ ${S.meta.cap}`)}
-      ${row('test',L('Vadovavimo testas','Leadership test'),diag?t(STYLES[S.meta.diag[diag-1].style].n):t(L('3 min','3 min')))}
-      ${row('how',L('Kaip žaisti','How to play'))}
-      ${row('settings',L('Nustatymai','Settings'))}
-      ${isPro()?'':row('pay',L('Pilna versija','Full version'),`${FREE_WEEKS}/∞`)}
-    </div></nav><p class="menu-foot">v${APP_VER} · ${t(L('Paremta P. Lencioni modeliu','Based on P. Lencioni’s model'))}</p>`;
+    ${cur?`<button class="slotc main" data-m="resume">${slotCard(S,SLOTS.active)}<span class="go">${S.G&&!S.G.done?u('cont'):t(L('Į karjerą','To your career'))} ›</span></button>`:''}
+    ${(()=>{const ld=`<button class="btn ghost" data-m="load">${t(L('Įkelti žaidimą','Load game'))} <span class="small">${used}/3</span></button>`,nw=`<button class="btn${cur?' ghost':''}" data-m="new">${t(L('Naujas žaidimas','New game'))}</button>`;return cur?ld+nw:nw+ld})()}
+    <div class="tiles">
+      ${tile('hub','<svg viewBox="0 0 20 20"><path d="M3 8.5 10 3l7 5.5V17H3z M8 17v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',L('Biuras','Office'))}
+      ${tile('test','<svg viewBox="0 0 20 20"><polygon points="10,2.5 17.5,8 14.6,17 5.4,17 2.5,8" fill="none" stroke="currentColor" stroke-width="1.4"/><polygon points="10,6 14,9 12.4,14 7.6,14 6,9" fill="currentColor" opacity=".35"/></svg>',diag?L('Profilis','Profile'):L('Testas','Test'))}
+      ${tile('how','<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M7.8 7.8a2.3 2.3 0 1 1 3 2.2c-.6.2-.8.7-.8 1.3v.5M10 14.3v.2" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',L('Kaip žaisti','How to play'))}
+      ${tile('settings','<svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="2.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10 2.5v2M10 15.5v2M2.5 10h2M15.5 10h2M4.7 4.7l1.4 1.4M13.9 13.9l1.4 1.4M4.7 15.3l1.4-1.4M13.9 6.1l1.4-1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',L('Nustatymai','Settings'))}
+    </div>
+    ${isPro()?'':`<button class="link" data-m="pay" style="align-self:center">${t(L(`Nemokamai: pirmos ${FREE_WEEKS} savaitės · Pilna versija`,`Free: first ${FREE_WEEKS} weeks · Full version`))}</button>`}
+    </nav><p class="menu-foot">v${APP_VER} · ${t(L('Paremta P. Lencioni modeliu','Based on P. Lencioni’s model'))}</p>`;
   sizeIntro();
 }
-// new game, step 1: leadership profile
-function ngStart(){
-  NG={step:1};
-  const d=S.meta.diag,cur=d.length?d[d.length-1]:null;
-  overIn.innerHTML=`<span data-ngv="1" hidden></span>${stepsH(1)}<h1>${t(L('Tavo vadovo profilis','Your leader profile'))}</h1>
-    ${cur?`<p class="lead">${t(L('Jau turi profilį. Gali jį naudoti arba atlikti testą iš naujo ir pamatyti, kas pasikeitė.','You already have a profile. Use it, or retake the test to see what has changed.'))}</p>
-      <div class="radar-wrap">${radarH(cur.raw,null)}</div><div class="insight"><span class="eyebrow">${t(L('Tavo stilius','Your style'))}: ${t(STYLES[cur.style].n)}</span><p>${t(STYLES[cur.style].d)}</p></div>
-      <button class="btn" data-ov="ngTeam">${t(L('Naudoti šį profilį','Use this profile'))}</button><button class="btn ghost" data-ov="ngTest">${t(L('Atlikti testą iš naujo','Retake the test'))}</button>`
-    :`<p class="lead">${t(L('Prieš pradedant – 16 klausimų apie tave ir tavo tikrą komandą. Testas parodys tavo vadovavimo stilių ir silpniausią komandos vietą, o žaidimas padės ją sustiprinti.','Before you start: 16 questions about you and your real team. The test shows your leadership style and your team’s weakest spot, and the game helps you work on it.'))}</p>
-      <ul class="list"><li>${t(L('Apie 3 minutes','About 3 minutes'))}</li><li>${t(L('Atsakyk apie savo dabartinę komandą, ne apie idealą','Answer about your current team, not the ideal'))}</li><li>${t(L('Rezultatą galėsi palyginti po kelių savaičių','You can compare results in a few weeks'))}</li></ul>
-      <button class="btn" data-ov="ngTest">${t(L('Pradėti testą','Start the test'))}</button><button class="btn ghost" data-ov="ngTeam">${t(L('Praleisti, atliksiu vėliau','Skip, I’ll do it later'))}</button>`}
-    <button class="link" data-ov="welcome">${t(L('Atšaukti','Cancel'))}</button>`;
+// load game: the three slots with what each holds
+function renderSlots(){
+  overIn.innerHTML=`<span data-slotsv hidden></span><p class="eyebrow">Groundwork</p><h1>${t(L('Išsaugoti žaidimai','Saved games'))}</h1>
+    ${renderSlots.full?`<p class="insight">${t(L('Visos trys vietos užimtos. Ištrink vieną karjerą, kad pradėtum naują.','All three slots are taken. Delete a career to start a new one.'))}</p>`:''}<p class="lead">${t(L('Kiekviena vieta – atskira karjera su savo komanda, žvaigždutėmis, kapitalu ir bylomis. Žaidimas saugomas automatiškai.','Each slot is its own career with its own team, stars, capital and files. The game saves automatically.'))}</p>
+    <div class="opts">${SLOTS.slots.map((o,i)=>slotUsed(o)?`<div class="slotrow"><button class="slotc${i===SLOTS.active?' main':''}" data-sl="${i}">${slotCard(o,i,i===SLOTS.active?t(L('dabartinė','current')):'')}</button>
+      ${renderSlots.del===i?`<div class="slotdel"><span class="small">${t(L('Ištrinti šią karjerą visam laikui?','Delete this career for good?'))}</span><button class="link" data-sldel="${i}" style="color:var(--bad)">${t(L('Ištrinti','Delete'))}</button><button class="link" data-slno="1">${t(L('Ne','No'))}</button></div>`
+      :`<button class="link small" data-slask="${i}">${t(L('Ištrinti','Delete'))}</button>`}</div>`
+      :`<button class="slotc empty" data-slnew="${i}"><b>${t(L('Tuščia vieta','Empty slot'))} ${i+1}</b><span class="small">+ ${t(L('Naujas žaidimas','New game'))}</span></button>`).join('')}</div>
+    <button class="link" data-slimp="1">${t(L('Perkelti žaidimą iš kito įrenginio (kodu)','Bring a game from another device (code)'))}</button>`;
   inHide();over.hidden=false;over.scrollTop=0;
 }
+function loadSlot(i){
+  if(RT&&!RT.ended)autosave();
+  if(i!==SLOTS.active){useSlot(i);save();G=S.G?JSON.parse(JSON.stringify(S.G)):null;RT=null;setLang()}
+  if(S.G&&!S.G.done){overAct('resume');return}
+  if(S.G||Object.keys(S.meta.stars).length){const ty=S.G?S.G.type:(starsType('project')>starsType('sales')?'project':'sales');if(S.G)G=JSON.parse(JSON.stringify(S.G));inHide();renderCareer(ty);return}
+  ngStart(i);
+}
+over.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.sl!==undefined){sfx('tap');loadSlot(+d.sl)}
+  else if(d.slnew!==undefined){sfx('tap');ngStart(+d.slnew)}
+  else if(d.slask!==undefined){renderSlots.del=+d.slask;renderSlots()}
+  else if(d.slimp){openSettings();renderSettings.mode='import';renderSettings()}
+  else if(d.slno){renderSlots.del=null;renderSlots()}
+  else if(d.sldel!==undefined){const i=+d.sldel;renderSlots.del=null;SLOTS.slots[i]=null;
+    if(i===SLOTS.active){const k=SLOTS.slots.findIndex(slotUsed);useSlot(k<0?0:k);G=S.G?JSON.parse(JSON.stringify(S.G)):null;RT=null}
+    save();if(SLOTS.slots.some(slotUsed))renderSlots();else showWelcome()}});
+// new game, step 1: leadership profile
+function ngStart(slot){
+  if(slot===undefined){slot=SLOTS.slots.findIndex(o=>!slotUsed(o));if(slot<0){renderSlots.full=1;renderSlots();return}}
+  if(!NG||NG.slot!==slot){if(NG)ngCancel();
+    NG={slot,prevActive:SLOTS.active,prevS:S,prevSlot:SLOTS.slots[slot]};
+    if(RT&&!RT.ended)autosave();const keep=slot===SLOTS.active&&slotUsed(S)&&!S.G&&!Object.keys(S.meta.stars).length;useSlot(slot,keep?S:freshS());RT=null;G=null}
+  NG.step=1;
+  const nm=S.name||'';
+  overIn.innerHTML=`<span data-ngv="1" hidden></span>${stepsH(1)}<h1>${t(L('Tavo vadovo profilis','Your leader profile'))}</h1>
+    <label class="field"><span class="eyebrow">${t(L('Kaip tave vadinti?','What should we call you?'))}</span><input id="ngName" maxlength="24" autocomplete="off" value="${esc(nm)}" placeholder="${t(L('Tavo vardas','Your name'))}"></label>
+    <p class="lead">${t(L('Prieš pradedant – 16 klausimų apie tave ir tavo tikrą komandą. Testas parodys tavo vadovavimo stilių ir silpniausią komandos vietą, o žaidimas padės ją sustiprinti.','Before you start: 16 questions about you and your real team. The test shows your leadership style and your team’s weakest spot, and the game helps you work on it.'))}</p>
+    ${S.meta.diag.length?`<div class="insight"><span class="eyebrow">${t(L('Tavo stilius','Your style'))}: ${t(STYLES[S.meta.diag[S.meta.diag.length-1].style].n)}</span></div><button class="btn" data-ov="ngTeam">${t(L('Toliau','Next'))}</button><button class="btn ghost" data-ov="ngTest">${t(L('Atlikti testą iš naujo','Retake the test'))}</button>`
+    :`<ul class="list"><li>${t(L('Apie 3 minutes','About 3 minutes'))}</li><li>${t(L('Atsakyk apie savo dabartinę komandą, ne apie idealą','Answer about your current team, not the ideal'))}</li><li>${t(L('Rezultatą galėsi palyginti po kelių savaičių','You can compare results in a few weeks'))}</li></ul>
+      <button class="btn" data-ov="ngTest">${t(L('Pradėti testą','Start the test'))}</button><button class="btn ghost" data-ov="ngTeam">${t(L('Praleisti, atliksiu vėliau','Skip, I’ll do it later'))}</button>`}
+    <p class="small">${t(L('Išsaugoma į vietą','Saving to slot'))} ${slot+1}</p>`;
+  inHide();over.hidden=false;over.scrollTop=0;
+  const inp=document.getElementById('ngName');inp.addEventListener('input',()=>{S.name=inp.value.trim()});
+}
+// leaving the new-game flow before day one puts the previous slot back
+function ngCancel(){if(!NG)return;SLOTS.slots[NG.slot]=NG.prevSlot;useSlot(NG.prevActive,NG.prevS);G=S.G?JSON.parse(JSON.stringify(S.G)):null;RT=null;NG=null;save()}
 function stepsH(n){return `<div class="steps"><span>${t(L('Naujas žaidimas','New game'))} · ${n}/3</span>${[1,2,3].map(k=>`<i class="${k<=n?'on':''}"></i>`).join('')}</div>`}
 // step 2: team
 function ngTeam(){
-  NG=NG||{};NG.step=2;
+  if(!NG){ngStart();return}NG.step=2;
   const card=(ty,d)=>`<button class="opt typebtn" data-ov="ngType" data-type="${ty}"><b>${u(ty)}${starsType(ty)?` <span class="cap" style="font:500 14px var(--f-mono)">★ ${starsType(ty)}</span>`:''}</b><span>${t(d)}</span></button>`;
   overIn.innerHTML=`<span data-ngv="2" hidden></span>${stepsH(2)}<h1>${t(L('Kokiai komandai vadovausi?','Which team will you lead?'))}</h1>
     <p class="lead">${t(L('Žmonės tie patys, bet darbas ir spaudimas skiriasi. Vėliau galėsi išbandyti ir kitą.','Same people, different work and pressure. You can try the other one later.'))}</p>
@@ -2468,8 +2554,8 @@ function ngTeam(){
 }
 // step 3: story, then day one (or the career map for players who already passed week one)
 function ngType(ty){
-  NG={step:3,type:ty};
-  if(starsAt(ty,0)>=2){renderCareer(ty);return}
+  NG.step=3;NG.type=ty;
+  if(starsAt(ty,0)>=2){SLOTS.slots[SLOTS.active]=S;NG=null;save();renderCareer(ty);return}
   showStory(false);
 }
 function showStory(replay){
@@ -2490,12 +2576,12 @@ function renderStory(){
 }
 function storyDone(){
   if(IN.replay||!NG||!NG.type){showMenu();return}
-  const ty=NG.type;NG=null;S.meta.introDone=1;
+  const ty=NG.type;NG=null;S.meta.introDone=1;SLOTS.slots[SLOTS.active]=S;
   const el=document.getElementById('intro');el.classList.add('out');
   newGame(ty,0);RT=null;startDay();renderAll();
   setTimeout(()=>{el.hidden=true;el.classList.remove('out')},450);
 }
-function renderHowTo(){
+function renderHowTo(from){renderHowTo.from=from||'';
   const sec=(h,items)=>`<section class="howsec"><h3>${t(h)}</h3><ul>${items.map(x=>`<li>${t(x)}</li>`).join('')}</ul></section>`;
   const PC=['#A3C0E2','#84A6CF','#688CB6','#52739A','#415C7C'];
   const PD={trust:L('žmonės drįsta pripažinti klaidas ir prašyti pagalbos','people dare to admit mistakes and ask for help'),conflict:L('ginčijamasi dėl idėjų, ne dėl žmonių','people argue about ideas, not each other'),commitment:L('aiškūs sprendimai, kuriuos palaiko visi','clear decisions everyone backs'),accountability:L('kolegos laiko vieni kitus atsakingais','peers hold each other to account'),results:L('komandos tikslas svarbesnis už asmeninį','the team goal beats personal goals')};
@@ -2507,7 +2593,7 @@ function renderHowTo(){
     ${sec(L('Kapitalas ◆ ir biuras','Capital ◆ and the office'),[L('◆ uždirbi už gerus sprendimus ir laiku išspręstus įvykius. Serijos didina daugiklį.','You earn ◆ for good calls and events handled in time. Streaks raise the multiplier.'),L('Biuro parduotuvėje ◆ keiti į patobulinimus: kavos aparatą, augalus, lentą ir kitus.','In the office shop ◆ buys upgrades: an espresso machine, plants, a whiteboard and more.'),L('Žmonių bylos pildosi, kai juos geriau pažįsti.','People files fill in as you get to know them.')])}
     <section class="howsec"><h3>${t(L('Penki komandos lygmenys','Five levels of a team'))}</h3><p class="small">${t(L('Žaidimas remiasi Patricko Lencioni modeliu: kiekvienas lygmuo laikosi ant žemesniojo. Kiekviena karjeros savaitė moko vieno lygmens.','The game follows Patrick Lencioni’s model: each level rests on the one below. Each career week teaches one level.'))}</p>
     <div class="pyr">${LAYERS.slice().reverse().map((k,i)=>`<div style="background:${PC[4-i]};margin:0 ${(4-i)*5}%;${4-i>=3?'color:#E7EBEE':''}"><b>${t(LAYER[k])}</b> – ${t(PD[k])}</div>`).join('')}</div></section>
-    <button class="btn" data-ov="welcome">${t(L('Grįžti į meniu','Back to menu'))}</button>`;
+    <button class="btn" data-ov="${renderHowTo.from==='pause'?'pause':'welcome'}">${t(renderHowTo.from==='pause'?L('Grįžti','Back'):L('Grįžti į meniu','Back to menu'))}</button>`;
   inHide();over.hidden=false;over.scrollTop=0;
 }
 function sizeIntro(){
@@ -2538,8 +2624,9 @@ document.getElementById('intro').addEventListener('click',e=>{const b=e.target.c
   if(d.in==='next'){IN.s++;renderStory();return}
   if(d.in==='done'||b.id==='introSkip'){if(b.id==='introSkip'){IN.s=INTRO.length-1;renderStory();return}storyDone();return}
   switch(d.m){
-    case 'resume':inHide();overAct('resume');break;
-    case 'new':if(S.G&&!S.G.done){overIn.innerHTML=`<span data-ngv="0" hidden></span><h1>${t(L('Pradėti naują žaidimą?','Start a new game?'))}</h1><p class="lead">${t(L('Dabartinė savaitė bus nutraukta. Žvaigždutės, kapitalas, įgūdžiai ir bylos lieka.','Your current week will be abandoned. Stars, capital, skills and files stay.'))}</p><p class="small">${saveLabel()}</p><button class="btn" data-ov="ngGo">${t(L('Taip, pradėti naują','Yes, start new'))}</button><button class="btn ghost" data-ov="welcome">${t(L('Atšaukti','Cancel'))}</button>`;inHide();over.hidden=false}else ngStart();break;
+    case 'resume':inHide();loadSlot(SLOTS.active);break;
+    case 'load':renderSlots.del=null;renderSlots.full=0;renderSlots();break;
+    case 'new':ngStart();break;
     case 'career':inHide();renderCareer((S.G&&S.G.type)||renderCareer.ty||(starsType('project')>starsType('sales')?'project':'sales'));break;
     case 'hub':inHide();renderHub('welcome');break;
     case 'test':inHide();if(S.meta.diag.length)renderTestResult();else{DIAG={i:0,A:{}};renderTest()}break;
@@ -2551,6 +2638,19 @@ function overAct(k){const b=document.createElement('button');b.dataset.ov=k;over
 window.addEventListener('resize',()=>{if(IN)sizeIntro()});
 
 
+
+// in-game pause: time stops while this is open
+function renderPause(){
+  if(!RT||RT.ended)return;RT.paused=true;autosave();
+  overIn.innerHTML=`<span data-pausev hidden></span><p class="eyebrow">${esc(slotName(S,SLOTS.active))} · ${t(L('Savaitė','Week'))} ${(G.week||0)+1} · ${t(UI.days[G.day])} ${hhmm(RT.time)}</p><h1>${t(L('Pauzė','Paused'))}</h1>
+    <p class="small">${t(L('Laikas sustabdytas. Progresas išsaugotas.','Time is stopped. Progress is saved.'))}</p>
+    <button class="btn" data-ov="unpause">${t(L('Tęsti dieną','Resume the day'))}</button>
+    <div class="setlist"><button class="setrow" data-ov="pHow"><span>${t(L('Kaip žaisti','How to play'))}</span><span>›</span></button>
+    <button class="setrow" data-ov="pSet"><span>${t(L('Nustatymai','Settings'))}</span><span>›</span></button>
+    <button class="setrow" data-ov="pHub"><span>${t(L('Biuras ir bylos','Office and files'))}</span><span>›</span></button>
+    <button class="setrow" data-ov="pMenu"><span>${t(L('Išsaugoti ir išeiti į meniu','Save and quit to menu'))}</span><span>›</span></button></div>`;
+  over.hidden=false;over.scrollTop=0;
+}
 /* ================= back navigation ================= */
 const BACK_SVG='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4 6.5 10l6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const backEl=document.getElementById('back');
@@ -2564,7 +2664,9 @@ function backAct(){
   if(q('[data-hub]'))return 'hubBack';
   if(q('[data-cardsv]')||q('[data-dosv]'))return 'toHub';
   if(q('[data-payv]'))return 'payBack';
-  if(q('[data-howv]'))return 'welcome';
+  if(q('[data-slotsv]'))return 'welcome';
+  if(q('[data-pausev]'))return 'unpause';
+  if(q('[data-howv]'))return renderHowTo.from==='pause'?'pause':'welcome';
   if(q('[data-wkv]'))return 'career';
   return null;
 }
@@ -2603,7 +2705,7 @@ swipeBack(document.getElementById('intro'),()=>document.getElementById('introTex
 let last=performance.now();
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;
-  if(G&&RT&&over.hidden){step(dt);checkMeeting();if(RT.tap)RT.tap.t-=dt;if(RT.floats&&!RT.paused)RT.floats=RT.floats.filter(f=>(f.t-=dt)>0);
+  if(G&&RT&&over.hidden){if(!RT.paused)S.play=(S.play||0)+dt;step(dt);checkMeeting();if(RT.tap)RT.tap.t-=dt;if(RT.floats&&!RT.paused)RT.floats=RT.floats.filter(f=>(f.t-=dt)>0);
     if(!frame.h||now-frame.h>400){frame.h=now;renderHUD()}
     if(!frame.s||now-frame.s>5000){frame.s=now;autosave()}}
   if(G&&RT){camera(dt);draw()}
@@ -2614,7 +2716,7 @@ function frame(now){
 (async()=>{
   await nativeLoad();load();setLang();applyBig();resize();
   if(S.G&&!S.G.done)G=JSON.parse(JSON.stringify(S.G));
-  if(!localStorage.getItem(KEY)&&!/^lt/i.test(navigator.language||'')){S.lang='en';setLang()}
+  if(!SLOTS.lang&&!/^lt/i.test(navigator.language||'')){S.lang='en';setLang()}
   showWelcome();
   requestAnimationFrame(frame);
   if(NATIVE){const A=plug('App');A&&A.addListener('pause',autosave);A&&A.addListener('backButton',()=>{if(goBack())return;const intro=document.getElementById('intro');if(!intro.hidden&&IN&&IN.mode==='menu'){A.exitApp();return}if(over.hidden&&RT&&!SH&&!RT.ended){autosave();showWelcome()}});document.body.classList.add('native')}
